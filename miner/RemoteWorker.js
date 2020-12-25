@@ -14,10 +14,14 @@ const locationIdFromDecStr = (location) => {
 };
 
 export class RemoteWorker {
+  constructor(url) {
+    this.url = url || 'http://0.0.0.0:8000/mine';
+  }
+
   async postMessage(msg) {
     const msgJson = JSON.parse(msg);
 
-    const resp = await fetch(`http://0.0.0.0:8000/mine`, {
+    const resp = await fetch(this.url, {
       method: 'POST',
       body: JSON.stringify({
         chunkFootprint: msgJson.chunkFootprint,
