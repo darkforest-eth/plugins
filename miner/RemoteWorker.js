@@ -1,4 +1,5 @@
 import bigInt from '/vendor/big-integer.js';
+import perlin from '/miner/perlin.js';
 
 const LOCATION_ID_UB = bigInt(
   '21888242871839275222246405745257275088548364400416034343698204186575808495617'
@@ -15,7 +16,7 @@ const locationIdFromDecStr = (location) => {
 
 export class RemoteWorker {
   constructor(url) {
-    this.url = url || 'http://0.0.0.0:8000/mine';
+    this.url = url || 'http://localhost:8000/mine';
   }
 
   async postMessage(msg) {
