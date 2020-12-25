@@ -47,7 +47,7 @@ export class RemoteWorker {
       planetLoc.biomebase = perlin({ x: planetLoc.coords.x, y: planetLoc.coords.y }, true, true);
     }
 
-    this.onmessage({ data: JSON.stringify([chunker, msgJson.jobId]) });
+    this.onmessage({ data: JSON.stringify([exploredChunk, msgJson.jobId]) });
   }
 
   onmessage = () => { };
