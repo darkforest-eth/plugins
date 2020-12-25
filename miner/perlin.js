@@ -1,6 +1,6 @@
 import { spaceTypeHash, biomeHash } from '/miner/mimc.js';
 import Fraction from '/miner/big-fraction.js';
-import BigInt from 'https://cdn.skypack.dev/big-integer';
+import BigInt from '/vendor/big-integer.js';
 
 const TRACK_LCM = false;
 
