@@ -21,6 +21,7 @@ export class MinerManager extends Emitter {
   minersComplete = {};
   currentJobId = 0;
   WorkerCtor = null;
+  perlinThreshold = 0;
 
   constructor(minedChunksStore, miningPattern, worldRadius, planetRarity, WorkerCtor) {
     super();
@@ -33,6 +34,11 @@ export class MinerManager extends Emitter {
     this.planetRarity = planetRarity;
     // this.cores = navigator.hardwareConcurrency;
     this.workers = [];
+  }
+
+  setPerlinThreshold(perlinThreshold) {
+    // Subtract just a little from the perlin to catch edges
+    this.perlinThreshold = Math.max(0, (perlinThreshold - 0.1));
   }
 
   setMiningPattern(pattern) {
@@ -213,6 +219,10 @@ export class MinerManager extends Emitter {
     const xMinAbs = Math.abs(xCenter) - sideLength / 2;
     const yMinAbs = Math.abs(yCenter) - sideLength / 2;
     const squareDist = xMinAbs ** 2 + yMinAbs ** 2;
+    const p = perlin({ x: xCenter, y: yCenter }, false);
+    if (p < this.perlinThreshold) {
+      return false;
+    }
     // should be inbounds, and unexplored
     return (
       squareDist < this.worldRadius ** 2 &&
