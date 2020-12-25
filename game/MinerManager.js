@@ -1,4 +1,4 @@
-import Emitter from 'https://cdn.skypack.dev/mitt';
+import Emitter from 'https://cdn.skypack.dev/eventemitter3';
 import range from 'https://cdn.skypack.dev/lodash.range';
 import perlin from '/miner/perlin.js';
 
