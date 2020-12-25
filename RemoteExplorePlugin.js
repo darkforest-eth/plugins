@@ -102,6 +102,8 @@ function App({ initialMiners = [], addMiner, removeMiner }) {
 class Plugin {
   constructor() {
     this.miners = [];
+
+    this.addMiner('http://0.0.0.0:8000/mine');
   }
 
   addMiner = (url) => {
