@@ -52,13 +52,13 @@ export class MinerManager extends Emitter {
     this.workers.map((x) => x.terminate());
   }
 
-  static create(chunkStore, miningPattern, worldRadius, planetRarity) {
+  static create(chunkStore, miningPattern, worldRadius, planetRarity, WorkerCtor) {
     const minerManager = new MinerManager(
       chunkStore,
       miningPattern,
       worldRadius,
       planetRarity,
-      useMockHash
+      WorkerCtor,
     );
     range(minerManager.cores).forEach((i) => minerManager.initWorker(i));
 
