@@ -49,7 +49,7 @@ function MinerUI({ miner, onRemove }) {
   `;
 }
 
-function App({ addMiner, removeMiner }) {
+function App({ initialMiners = [], addMiner, removeMiner }) {
   const wrapper = { display: 'flex' };
   const input = {
     flex: '1',
@@ -61,7 +61,7 @@ function App({ addMiner, removeMiner }) {
     marginLeft: '5px',
     outline: 'none',
   };
-  const [miners, setMiners] = useState([]);
+  const [miners, setMiners] = useState(initialMiners);
   const [nextUrl, setNextUrl] = useState(null);
 
   const onChange = (evt) => {
@@ -142,6 +142,7 @@ class Plugin {
 
     render(html`
       <${App}
+        initialMiners=${this.miners}
         addMiner=${this.addMiner}
         removeMiner=${this.removeMiner} />
     `, container)
