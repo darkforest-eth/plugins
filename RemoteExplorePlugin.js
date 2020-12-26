@@ -23,6 +23,17 @@ function MinerUI({ miner, onRemove }) {
       df.addNewChunk(chunk);
       const hashRate = chunk.chunkFootprint.sideLength ** 2 / (miningTimeMillis / 1000);
       setHashRate(Math.floor(hashRate));
+
+      const res = miner.getCurrentlyExploringChunk();
+      if (res) {
+        const { bottomLeft, sideLength } = res;
+        ui?.setExtraMinerLocation?.(miner.id, {
+          x: bottomLeft.x + sideLength / 2,
+          y: bottomLeft.y + sideLength / 2,
+        });
+      } else {
+        ui?.removeExtraMinerLocation?.(miner.id);
+      }
     }
     miner.on(NEW_CHUNK, calcHash);
 
@@ -102,20 +113,23 @@ function App({ initialMiners = [], addMiner, removeMiner }) {
 class Plugin {
   constructor() {
     this.miners = [];
+    this.id = 0;
 
     this.addMiner('http://0.0.0.0:8000/mine');
   }
 
   addMiner = (url) => {
+    const pattern = df.getMiningPattern();
     const miner = MinerManager.create(
       df.persistentChunkStore,
-      df.getMiningPattern(),
+      pattern,
       df.getWorldRadius(),
       df.planetRarity,
       RemoteWorker,
     );
 
     miner.url = url;
+    miner.id = this.id++;
     miner.workers.forEach(worker => worker.url = url);
 
     miner.startExplore();
@@ -140,7 +154,7 @@ class Plugin {
   }
 
   async render(container) {
-    container.style.width = '400px';
+    container.style.minWidth = '400px';
 
     render(html`
       <${App}
@@ -152,6 +166,7 @@ class Plugin {
 
   destroy() {
     for (const miner of this.miners) {
+      df?.removeMinerLocation?.(miner.id);
       miner.stopExplore();
       miner.destroy();
     }
