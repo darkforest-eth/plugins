@@ -254,6 +254,7 @@ class Plugin {
 
   async render(container) {
     container.style.minWidth = '450px';
+    container.style.width = 'auto';
 
     render(html`
       <${App}
