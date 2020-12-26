@@ -107,17 +107,23 @@ function MinerUI({ miner, onRemove }) {
 
   useEffect(() => {
     let hover = () => {
-      ui?.setExtraMinerLocation?.(miner.id, ui.getHoveringOverCoords())
+      let coords = ui.getHoveringOverCoords();
+      if (coords) {
+        ui?.setExtraMinerLocation?.(miner.id, coords)
+      }
     };
     let click = () => {
       window.removeEventListener('mousemove', hover);
       window.removeEventListener('click', click);
-      const pattern = getPattern(
-        ui.getHoveringOverCoords(),
-        miner.patternType,
-        miner.chunkSize
-      );
-      miner.setMiningPattern(pattern);
+      let coords = ui.getHoveringOverCoords();
+      if (coords) {
+        const pattern = getPattern(
+          coords,
+          miner.patternType,
+          miner.chunkSize
+        );
+        miner.setMiningPattern(pattern);
+      }
       miner.startExplore();
       setTargeting(false);
     }
