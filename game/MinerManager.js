@@ -140,9 +140,6 @@ export class MinerManager extends Emitter {
     this.cores = nCores;
     range(this.cores).forEach((i) => this.initWorker(i));
     this.startExplore();
-
-    const terminalEmitter = TerminalEmitter.getInstance();
-    terminalEmitter.println(`Now mining on ${nCores} core(s).`);
   }
 
   startExplore() {
