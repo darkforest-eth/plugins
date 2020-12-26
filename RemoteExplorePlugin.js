@@ -247,6 +247,7 @@ class Plugin {
   removeMiner = (miner) => {
     this.miners = this.miners.filter(m => {
       if (m === miner) {
+        ui?.removeExtraMinerLocation?.(m.id);
         m.stopExplore();
         m.destroy();
         return false;
@@ -272,7 +273,7 @@ class Plugin {
 
   destroy() {
     for (const miner of this.miners) {
-      df?.removeMinerLocation?.(miner.id);
+      ui?.removeExtraMinerLocation?.(miner.id);
       miner.stopExplore();
       miner.destroy();
     }
