@@ -174,7 +174,7 @@ function App({ initialMiners = [], addMiner, removeMiner }) {
   }
 
   const add = () => {
-    const miners = addMiner(nextUrl, patternType, 16);
+    const miners = addMiner(nextUrl, patternType);
     setMiners(miners);
     setNextUrl(null);
   }
@@ -220,7 +220,7 @@ class Plugin {
     this.addMiner('http://0.0.0.0:8000/mine');
   }
 
-  addMiner = (url, patternType = 'spiral', chunkSize = 16) => {
+  addMiner = (url, patternType = 'spiral', chunkSize = 256) => {
     // TODO: Somehow set a default coords
     const pattern = getPattern({ x: 0, y: 0 }, patternType, chunkSize)
     const miner = MinerManager.create(
