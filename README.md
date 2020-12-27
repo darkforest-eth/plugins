@@ -19,3 +19,9 @@ We use [mimc-fast](https://github.com/jacobrosenthal/mimc-fast) as a webserver t
 ![RemoteExplore screenshot](screenshots/remote-explore.png)
 
 When running this on https://zkga.me/, you might get an error about blocked insecure content. You probably just want to install a SSL Certificate on your explore server. If you can't, you can [enable mixed content](enable-mixed.md), __but this is extremely dangerous.__
+
+### UniverseScoutPlugin
+
+The universe scout plugin launches a modal that shows you the coordinates, space type, and biome of your mouse as you hover (even for unexplored space!).
+
+![UniverseScout screenshot](screenshots/universe-scout.png)
