@@ -25,3 +25,16 @@ When running this on https://zkga.me/, you might get an error about blocked inse
 The universe scout plugin launches a modal that shows you the coordinates, space type, and biome of your mouse as you hover (even for unexplored space!).
 
 ![UniverseScout screenshot](screenshots/universe-scout.png)
+
+### ArtifactoryPlugin
+
+The artifactory plugin is your one-stop-shop for things related to artifacts.
+
+* Find artifacts on your planets
+* See when artifacts unlock
+* Withdraw artifacts once they are unlocked
+* See bonuses of your artifacts
+* Deposit artifacts on your planets
+* Find untaken planets with artifacts and jump to them
+
+![ArtifactorPlugin screenshot](screenshots/artifactory.png)
