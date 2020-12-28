@@ -29,6 +29,9 @@ let canStatUpgrade = (planet, stat) => {
 }
 
 const canUpgrade = (planet) => {
+  if (!planet) {
+    return false;
+  }
   return df.entityStore.planetCanUpgrade(planet)
 };
 
@@ -67,7 +70,7 @@ class Plugin {
       console.log('upgrade')
       this.upgrade(branch);
     }
-    if (!canStatUpgrade(this.selectedPlanet, branch)) {
+    if (!canUpgrade(this.selectedPlanet) || !canStatUpgrade(this.selectedPlanet, branch)) {
       button.disabled = true;
       button.style.opacity = '0.5';
     }
@@ -89,7 +92,7 @@ class Plugin {
       console.log('upgrade')
       this.upgrade(branch);
     }
-    if (!canStatUpgrade(this.selectedPlanet, branch)) {
+    if (!canUpgrade(this.selectedPlanet) || !canStatUpgrade(this.selectedPlanet, branch)) {
       button.disabled = true;
       button.style.opacity = '0.5';
     }
@@ -111,7 +114,7 @@ class Plugin {
       console.log('upgrade')
       this.upgrade(branch);
     }
-    if (!canStatUpgrade(this.selectedPlanet, branch)) {
+    if (!canUpgrade(this.selectedPlanet) || !canStatUpgrade(this.selectedPlanet, branch)) {
       button.disabled = true;
       button.style.opacity = '0.5';
     }
