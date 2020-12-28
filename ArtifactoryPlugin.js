@@ -24,7 +24,7 @@ const {
   Defense,
   Range,
   Speed,
-} = await import('https://df-plugins.netlify.app/game/Icons.js?cachebust');
+} = await import('https://df-plugins.netlify.app/game/Icons.js');
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
