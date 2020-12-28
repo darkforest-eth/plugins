@@ -1,242 +1,409 @@
-const BiomeNames = [
-  'Unknown',
-  'Ocean',
-  'Forest',
-  'Grassland',
-  'Tundra',
-  'Swamp',
-  'Desert',
-  'Ice',
-  'Wasteland',
-  'Lava',
-];
+const {
+  html,
+  render,
+  useState,
+  useLayoutEffect,
+} = await import('https://unpkg.com/htm/preact/standalone.module.js');
 
-let emptyAddress = "0x0000000000000000000000000000000000000000";
+const {
+  BiomeNames,
+  energy,
+  coords,
+  isMine,
+  isUnowned,
+  unlockTime,
+  canWithdraw,
+  hasArtifact,
+  canHaveArtifact,
+  canFindArtifact,
+} = await import('https://df-plugins.netlify.app/utils/utils.js');
 
-let isUnowned = (planet) => planet.owner === emptyAddress;
+const {
+  Energy,
+  EnergyGrowth,
+  Defense,
+  Range,
+  Speed,
+} = await import('https://df-plugins.netlify.app/game/Icons.js?cachebust');
 
-let isMine = (planet) => planet.owner === df.account;
+// 30 seconds
+let REFRESH_INTERVAL = 1000 * 30;
 
-let unlockTimestamp = (planet) => {
-  return (planet.artifactLockedTimestamp + (12 * 60 * 60)) * 1000;
+function canDeposit(planet) {
+  return planet && isMine(planet) && !planet.heldArtifactId
 }
 
-let unlockTime = (planet) => {
-  return (new Date(unlockTimestamp(planet))).toLocaleString();
+function calcBonus(bonus) {
+  return bonus - 100
 }
 
-let canWithdraw = (planet) => {
-  if (planet && planet.artifactLockedTimestamp) {
-    return Date.now() > unlockTimestamp(planet)
-  } else {
-    return false;
+function myPlanetsWithArtifacts() {
+  return Array.from(df.getMyPlanets())
+    .filter(df.isPlanetMineable)
+    .sort((p1, p2) => parseInt(p1.locationId, 16) - parseInt(p2.locationId, 16));
+}
+
+function allPlanetsWithArtifacts() {
+  return Array.from(df.getAllPlanets())
+    .filter(canHaveArtifact)
+    .sort((p1, p2) => parseInt(p1.locationId, 16) - parseInt(p2.locationId, 16));
+}
+
+function myArtifactsToDeposit() {
+  return df.getMyArtifacts()
+    .filter(artifact => !artifact.onPlanetId)
+    .sort((a1, a2) => parseInt(a1.id, 16) - parseInt(a2.id, 16));
+}
+
+function FindButton({ planet }) {
+  let [finding, setFinding] = useState(false);
+
+  let button = {
+    marginLeft: '5px',
+    opacity: finding ? '0.5' : '1',
+  };
+
+  function findArtifact() {
+    try {
+      // Why does this f'ing throw?
+      df.findArtifact(planet.locationId);
+    } catch (err) {
+      console.log(err);
+      setFinding(true);
+    }
+    setFinding(true);
+  }
+
+  if (canFindArtifact(planet)) {
+    return html`
+      <button style=${button} onClick=${findArtifact} disabled=${finding}>
+        ${finding ? 'Finding...' : 'Find!'}
+      </button>
+    `;
   }
 }
 
-let coords = (planet) => {
-  return `(${planet.location.coords.x}, ${planet.location.coords.y})`
+function WithdrawButton({ planet }) {
+  let [withdrawing, setWithdrawing] = useState(false);
+
+  let button = {
+    marginLeft: '5px',
+    opacity: withdrawing ? '0.5' : '1',
+  };
+
+  function withdrawArtifact() {
+    df.withdrawArtifact(planet.locationId);
+    setWithdrawing(true);
+  }
+
+  if (canWithdraw(planet)) {
+    return html`
+      <button style=${button} onClick=${withdrawArtifact} disabled=${withdrawing}>
+        ${withdrawing ? 'Withdrawing...' : 'Withdraw!'}
+      </button>
+    `;
+  }
 }
 
-let energy = (planet) => {
-  return Math.floor(planet.energy / planet.energyCap * 100);
+function Multiplier({ Icon, bonus }) {
+  let diff = calcBonus(bonus);
+  let style = {
+    marginLeft: '5px',
+    marginRight: '10px',
+    color: diff < 0 ? 'red' : 'green',
+    minWidth: '32px',
+  };
+  let text = diff < 0 ? `${diff}%` : `+${diff}%`
+  return html`
+    <${Icon} />
+    <span style=${style}>${text}</span>
+  `
 }
 
-let canHazArtifact = (planet) => {
-  return df.isPlanetMineable(planet) && !planet.hasTriedFindingArtifact
+function Unfound({ selected }) {
+  if (!selected) {
+    return
+  }
+
+  let planetList = {
+    maxHeight: '100px',
+    overflowX: 'hidden',
+    overflowY: 'scroll',
+  };
+
+  let [lastLocationId, setLastLocationId] = useState(null);
+
+  let planets = myPlanetsWithArtifacts()
+    .filter(planet => !planet.hasTriedFindingArtifact);
+
+  let planetsChildren = planets.map(planet => {
+    let planetEntry = {
+      marginBottom: '10px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      color: lastLocationId === planet.locationId ? 'pink' : '',
+    };
+
+    let biome = BiomeNames[planet.biome];
+    let { x, y } = planet.location.coords;
+
+    function centerPlanet() {
+      let planet = df.getPlanetWithCoords({ x, y });
+      if (planet) {
+        ui.centerPlanet(planet);
+        setLastLocationId(planet.locationId);
+      }
+    }
+
+    let text = `${biome} at ${coords(planet)} - ${energy(planet)}% energy`;
+    return html`
+      <div key=${planet.locationId} style=${planetEntry}>
+        <span onClick=${centerPlanet}>${text}</span>
+        <${FindButton} planet=${planet} />
+      </div>
+    `;
+  });
+
+  return html`
+    <div style=${planetList}>
+      ${planetsChildren.length ? planetsChildren : 'No artifacts to find right now.'}
+    </div>
+  `;
 }
 
-let canMint = (planet) => energy(planet) >= 95;
-let hasArtifact = (planet) => planet.heldArtifactId != null;
+// TODO: Bonuses in this panel?
+function Withdraw({ selected }) {
+  if (!selected) {
+    return;
+  }
+
+  let planetList = {
+    maxHeight: '100px',
+    overflowX: 'hidden',
+    overflowY: 'scroll',
+  };
+
+  let [lastLocationId, setLastLocationId] = useState(null);
+
+  const planets = myPlanetsWithArtifacts()
+    .filter(hasArtifact)
+    .sort((p1, p2) => p1.artifactLockedTimestamp - p2.artifactLockedTimestamp);
+
+  let planetsChildren = planets.map(planet => {
+    let planetEntry = {
+      marginBottom: '10px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      color: lastLocationId === planet.locationId ? 'pink' : '',
+    };
+
+    let biome = BiomeNames[planet.biome];
+    let { x, y } = planet.location.coords;
+
+    function centerPlanet() {
+      let planet = df.getPlanetWithCoords({ x, y });
+      if (planet) {
+        ui.centerPlanet(planet);
+        setLastLocationId(planet.locationId);
+      }
+    }
+
+    let text = `${biome} at ${coords(planet)} - ${unlockTime(planet)}`;
+    return html`
+      <div key=${planet.locationId} style=${planetEntry}>
+        <span onClick=${centerPlanet}>${text}</span>
+        <${WithdrawButton} planet=${planet} />
+      </div>
+    `;
+  });
+
+  return html`
+    <div style=${planetList}>
+      ${planetsChildren.length ? planetsChildren : 'No artifacts on your planets.'}
+    </div>
+  `;
+}
+
+function Deposit({ selected }) {
+  if (!selected) {
+    return;
+  }
+
+  let artifactList = {
+    maxHeight: '100px',
+    overflowX: 'hidden',
+    overflowY: 'scroll',
+  };
+
+  let [depositing, setDepositing] = useState(false);
+
+  let [planet, setPlanet] = useState(ui.getSelectedPlanet);
+
+  useLayoutEffect(() => {
+    let onClick = () => {
+      setPlanet(ui.getSelectedPlanet());
+    }
+    window.addEventListener('click', onClick);
+
+    return () => {
+      window.removeEventListener('click', onClick);
+    }
+  }, []);
+
+  let artifacts = myArtifactsToDeposit();
+
+  let artifactChildren = artifacts.map(artifact => {
+    let wrapper = {
+      display: 'flex',
+      marginBottom: '10px',
+    };
+    let button = {
+      marginLeft: 'auto',
+      opacity: depositing ? '0.5' : '1',
+    };
+    let {
+      energyCapMultiplier,
+      energyGroMultiplier,
+      defMultiplier,
+      rangeMultiplier,
+      speedMultiplier
+    } = artifact.upgrade;
+
+    let deposit = () => {
+      if (canDeposit(planet) && !depositing) {
+        // TODO: Fast depositing
+        setDepositing(true);
+        df.depositArtifact(planet.locationId, artifact.id);
+      }
+    }
+
+    return html`
+      <div key=${artifact.id} style=${wrapper}>
+        <${Multiplier} Icon=${Energy} bonus=${energyCapMultiplier} />
+        <${Multiplier} Icon=${EnergyGrowth} bonus=${energyGroMultiplier} />
+        <${Multiplier} Icon=${Defense} bonus=${defMultiplier} />
+        <${Multiplier} Icon=${Range} bonus=${rangeMultiplier} />
+        <${Multiplier} Icon=${Speed} bonus=${speedMultiplier} />
+        ${canDeposit(planet) ? html`
+          <button style=${button} onClick=${deposit} disabled=${depositing}>
+            ${depositing ? 'Depositing...' : 'Deposit'}
+          </button>
+        ` : null
+      }
+      </div>
+    `;
+  });
+
+  return html`
+    <div style=${artifactList}>
+      ${artifactChildren.length ? artifactChildren : 'No artifacts to deposit.'}
+    </div>
+  `;
+}
+
+function Untaken({ selected }) {
+  if (!selected) {
+    return;
+  }
+
+  let planetList = {
+    maxHeight: '100px',
+    overflowX: 'hidden',
+    overflowY: 'scroll',
+  };
+
+  let [lastLocationId, setLastLocationId] = useState(null);
+
+  const planets = allPlanetsWithArtifacts()
+    .filter(isUnowned);
+
+  let planetsChildren = planets.map(planet => {
+    let planetEntry = {
+      marginBottom: '10px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      color: lastLocationId === planet.locationId ? 'pink' : '',
+    };
+
+    let biome = BiomeNames[planet.biome];
+    let { x, y } = planet.location.coords;
+
+    function centerPlanet() {
+      let planet = df.getPlanetWithCoords({ x, y });
+      if (planet) {
+        ui.centerPlanet(planet);
+        setLastLocationId(planet.locationId);
+      }
+    }
+
+    let text = `${biome} at ${coords(planet)}`;
+    return html`
+        <div key=${planet.locationId} style=${planetEntry}>
+          <span onClick=${centerPlanet}>${text}</span>
+        </div>
+      `;
+  });
+
+  return html`
+    <div style=${planetList}>
+      ${planetsChildren.length ? planetsChildren : 'No artifacts to find right now.'}
+    </div>
+  `;
+}
+
+function App() {
+  let buttonBar = {
+    display: 'flex',
+    justifyContent: 'space-around',
+    marginBottom: '20px',
+  };
+
+  // ['unfound', 'withdraw', 'deposit', 'untaken']
+  let [tab, setTab] = useState('unfound');
+  let [_, setLoop] = useState(0);
+  console.log('rerender');
+
+  useLayoutEffect(() => {
+    let intervalId = setInterval(() => {
+      setLoop(loop => loop + 1)
+    }, REFRESH_INTERVAL);
+
+    return () => {
+      clearInterval(intervalId);
+    }
+  }, []);
+
+  return html`
+    <div style=${buttonBar}>
+      <button onClick=${() => setTab('unfound')}>Unfound</button>
+      <button onClick=${() => setTab('withdraw')}>Withdraw</button>
+      <button onClick=${() => setTab('deposit')}>Deposit</button>
+      <button onClick=${() => setTab('untaken')}>Untaken</button>
+    </div>
+    <div>
+      <${Unfound} selected=${tab === 'unfound'} />
+      <${Withdraw} selected=${tab === 'withdraw'} />
+      <${Deposit} selected=${tab === 'deposit'} />
+      <${Untaken} selected=${tab === 'untaken'} />
+    </div>
+  `;
+}
 
 class Plugin {
   constructor() {
-    this.lastLocationId = null;
-
-    this.planetList = document.createElement('div');
-    this.planetList.style.maxHeight = '200px';
-    this.planetList.style.overflowX = 'hidden';
-    this.planetList.style.overflowY = 'scroll';
+    this.root = null;
+    this.container = null
   }
-
-  clearPlanetList = () => {
-    this.planetList.innerHTML = '';
-    this.planetList.innerText = '';
-  }
-
-  myPlanetsWithArtifacts() {
-    return Array.from(df.getMyPlanets())
-      .filter(df.isPlanetMineable)
-      .sort((p1, p2) => parseInt(p1.locationId, 16) - parseInt(p2.locationId, 16));
-  }
-
-  allPlanetsWithArtifacts() {
-    return Array.from(df.getAllPlanets())
-      .filter(canHazArtifact)
-      .sort((p1, p2) => parseInt(p1.locationId, 16) - parseInt(p2.locationId, 16));
-  }
-
-  renderSelectable = (planet, text) => {
-    let content = document.createElement('span');
-    content.innerText = text;
-    let { x, y } = planet.location.coords;
-    content.onclick = () => {
-      this.centerPlanet({ x, y })
-    };
-    return content;
-  }
-
-  renderMyAvailable = () => {
-    let planets = this.myPlanetsWithArtifacts().filter(planet => {
-      return !planet.hasTriedFindingArtifact
-    });
-
-    for (let planet of planets) {
-      let planetEntry = document.createElement('div');
-      planetEntry.style.marginBottom = '10px';
-      planetEntry.style.display = 'flex';
-      planetEntry.style.justifyContent = 'space-between';
-
-      let biome = BiomeNames[planet.biome];
-      let text = `${biome} at ${coords(planet)} - ${energy(planet)}% energy`;
-      let content = this.renderSelectable(planet, text)
-      planetEntry.appendChild(content);
-
-      if (canMint(planet)) {
-        let button = document.createElement('button');
-        button.style.marginLeft = '5px';
-        button.innerText = 'Find!';
-        button.onclick = () => {
-          df.findArtifact(planet.locationId);
-          button.innerText = 'Finding...';
-          button.disabled = true;
-        }
-        planetEntry.appendChild(button);
-      }
-
-      this.planetList.appendChild(planetEntry);
-    }
-
-    if (this.planetList.children.length === 0) {
-      this.planetList.innerHTML = 'No artifacts to find right now.';
-    }
-  };
-
-  renderOnPlanets = () => {
-    const planets = this.myPlanetsWithArtifacts()
-      .filter(hasArtifact)
-      .sort((p1, p2) => p1.artifactLockedTimestamp - p2.artifactLockedTimestamp)
-
-    for (let planet of planets) {
-      let planetEntry = document.createElement('div');
-
-      planetEntry.style.marginBottom = '10px';
-      let biome = BiomeNames[planet.biome];
-      let text = `${biome} at ${coords(planet)} - ${unlockTime(planet)}`;
-      let content = this.renderSelectable(planet, text)
-      planetEntry.appendChild(content);
-
-      if (canWithdraw(planet)) {
-        let button = document.createElement('button');
-        button.style.marginLeft = '5px';
-        button.innerText = 'Withdraw!'
-        button.onclick = () => {
-          df.withdrawArtifact(planet);
-          button.innerText = 'Withdrawing..';
-          button.disabled = true;
-        }
-        planetEntry.appendChild(button);
-      }
-
-      this.planetList.appendChild(planetEntry);
-    }
-
-    if (this.planetList.children.length === 0) {
-      this.planetList.innerHTML = 'No artifacts on your planets.';
-    }
-  };
-
-  renderUntaken = () => {
-    let planets = this.allPlanetsWithArtifacts()
-      .filter(isUnowned);
-
-    for (let planet of planets) {
-      let planetEntry = document.createElement('div');
-      planetEntry.style.marginBottom = '10px';
-      planetEntry.style.display = 'flex';
-      planetEntry.style.justifyContent = 'space-between';
-      planetEntry.dataset.locationId = planet.locationId;
-
-      let biome = BiomeNames[planet.biome];
-      let text = `${biome} at ${coords(planet)}`;
-      let content = this.renderSelectable(planet, text);
-      planetEntry.appendChild(content);
-      this.planetList.appendChild(planetEntry);
-    }
-
-    if (this.planetList.children.length === 0) {
-      this.planetList.innerHTML = 'No artifacts to find right now.';
-    }
-  };
-
-  centerPlanet = (coords) => {
-    let planet = df.getPlanetWithCoords(coords);
-    if (planet) {
-      this.lastLocationId = planet.locationId;
-    }
-
-    ui.centerPlanet(planet);
-
-    if (this.planetList) {
-      Array.from(this.planetList.children).forEach(el => {
-        if (el.dataset.locationId === this.lastLocationId) {
-          el.style.color = 'pink';
-        } else {
-          el.style.color = '';
-        }
-      });
-    }
-  }
-
   async render(container) {
+    this.container = container;
+
     container.style.width = '450px';
 
-    let buttonBar = document.createElement('div');
-    buttonBar.style.display = 'flex';
-    buttonBar.style.justifyContent = 'space-around';
-    buttonBar.style.marginBottom = '20px';
-    let contentPane = document.createElement('div');
+    this.root = render(html`<${App} />`, container);
+  }
 
-    const myAvailable = document.createElement('button');
-    myAvailable.innerText = 'My unminted';
-    buttonBar.appendChild(myAvailable);
-    const onPlanets = document.createElement('button');
-    onPlanets.innerText = 'On my planets'
-    buttonBar.appendChild(onPlanets);
-    const untaken = document.createElement('button');
-    untaken.innerText = 'Untaken planets'
-    buttonBar.appendChild(untaken);
-
-    container.appendChild(buttonBar);
-    container.appendChild(contentPane);
-
-    myAvailable.onclick = () => {
-      this.clearPlanetList();
-      this.renderMyAvailable()
-      contentPane.appendChild(this.planetList);
-    }
-    onPlanets.onclick = () => {
-      this.clearPlanetList();
-      this.renderOnPlanets();
-      contentPane.appendChild(this.planetList);
-    }
-    untaken.onclick = () => {
-      this.clearPlanetList();
-      this.renderUntaken();
-      contentPane.appendChild(this.planetList);
-    }
-
-    this.renderMyAvailable()
-    contentPane.appendChild(this.planetList);
+  destroy() {
+    render(null, this.container, this.root);
   }
 }
 
