@@ -11,7 +11,6 @@ async function importChunks(chunks) {
     for (const planetLocation of chunk.planetLocations) {
       if (df.entityStore.isPlanetInContract(planetLocation.hash)) {
         let planet = df.getPlanetWithId(planetLocation.hash);
-        console.log(planet);
         if (planet && planet.syncedWithContract) {
           // skip things we know about
           continue;
