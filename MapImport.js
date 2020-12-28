@@ -18,7 +18,7 @@ async function importChunks(chunks) {
         }
 
         // Await this so we don't crash the game
-        await this.hardRefreshPlanet(planetLocation.hash);
+        await df.hardRefreshPlanet(planetLocation.hash);
       }
     }
   }
