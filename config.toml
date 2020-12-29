@@ -1,0 +1,20 @@
+baseURL = "https://plugins.zkga.me"
+languageCode = "en-us"
+title = "Dark Forest Plugins"
+Paginate = 1000
+googleAnalytics = ""
+theme = "showcase"
+disableKinds = ["taxonomy", "taxonomyTerm", "RSS"]
+staticDir = ["screenshots", "static", "javascript"]
+
+[params]
+  name = "Dark Forest Plugins"
+  author = "Dark Forest Plugins"
+  description = "A showcase of Dark Forest plugins from the community!"
+  message = "Welcome to the Dark Forest Plugin Showcase!"
+  hideAutoMenu = false
+  repo = "phated/df-plugins"
+  branch = "showcase"
+
+[social]
+  twitter = "https://twitter.com/darkforest_eth"

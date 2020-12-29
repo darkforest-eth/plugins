@@ -1,0 +1,3 @@
+[submodule "themes/showcase"]
+	path = themes/showcase
+	url = https://github.com/apvarun/showcase-hugo-theme.git

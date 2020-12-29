@@ -1,0 +1,35 @@
+{{ define "main" }}
+
+<section class="body-font">
+  <div class="container px-5 py-8 mx-auto">
+    {{- partial "custom-message.html" . -}}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:gap-4 sm:-m-4 -mx-4 -mb-10 -mt-4">
+      {{ range where .Site.Pages "Kind" "page" }}
+      {{ if ne .Params.Exclude true }}
+      <a target="_blank" rel="noopener"
+        href="https://github.com/{{ .Site.Params.Repo }}/blob/{{ .Site.Params.Branch }}/{{ .File.Dir }}{{ .File.BaseFileName }}.js"
+        class="card border-2 border-green-400 sm:mb-4 mb-6 hover:shadow-xl hover:bg-green-400 text-gray-400 hover:text-black transition duration-200 ease-in rounded-lg {{ lower .Section }}">
+        <div class="flex flex-col justify-between h-full relative">
+          <span
+            class="bg-green-400 text-black px-3 py-1 tracking-widest text-xs absolute right-0 top-0 rounded-bl">{{ title .Section }}</span>
+          <h2
+            class="px-2 py-2 mt-6 lg:mt-0 tracking-widest text-2xl leading-tight font-extrabold font-bree text-center w-1/2 self-center justify-center">
+            {{ .Title }}
+          </h2>
+          {{ if (or .Params.Image .CurrentSection.Params.Image) }}
+          <img alt="{{ .Title }}" class="object-contain object-center mx-auto px-1"
+            src="{{ (or .Params.Image .CurrentSection.Params.Image) }}" />
+          {{ end }}
+          <p class="px-2 py-1 tracking-widest text-md leading-tight font-light w-full text-center">
+            {{ .Params.Subtitle }}
+          </p>
+        </div>
+      </a>
+      {{ end }}
+      {{ end }}
+    </div>
+  </div>
+</section>
+
+{{ end }}
