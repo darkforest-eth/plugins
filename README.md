@@ -38,3 +38,9 @@ The artifactory plugin is your one-stop-shop for things related to artifacts.
 * Find untaken planets with artifacts and jump to them
 
 ![ArtifactorPlugin screenshot](screenshots/artifactory.png)
+
+### BgmPlugin
+
+The BGM plugin allows you to add background music to your Dark Forest experience! Via https://github.com/ichub.
+
+![BGM screenshot](screenshots/bgm.png)
