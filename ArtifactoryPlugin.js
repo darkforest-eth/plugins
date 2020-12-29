@@ -28,6 +28,8 @@ const {
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
+// 10 minutes
+let AUTO_INTERVAL = 1000 * 60 * 10;
 
 function canDeposit(planet) {
   return planet && isMine(planet) && !planet.heldArtifactId
@@ -53,6 +55,23 @@ function myArtifactsToDeposit() {
   return df.getMyArtifacts()
     .filter(artifact => !artifact.onPlanetId)
     .sort((a1, a2) => parseInt(a1.id, 16) - parseInt(a2.id, 16));
+}
+
+function findArtifacts() {
+  Array.from(df.getMyPlanets())
+    .filter(canHaveArtifact)
+    .filter(canFindArtifact)
+    .forEach(planet => {
+      df.findArtifact(planet.locationId);
+    });
+}
+
+function withdrawArtifacts() {
+  Array.from(df.getMyPlanets())
+    .filter(canWithdraw)
+    .forEach(planet => {
+      df.withdrawArtifact(planet.locationId);
+    });
 }
 
 function FindButton({ planet }) {
@@ -351,17 +370,49 @@ function Untaken({ selected }) {
   `;
 }
 
+function AutoButton({ loop, onText, offText }) {
+  let button = {
+    marginLeft: '10px',
+  };
+
+  let [isOn, setIsOn] = useState(false);
+  let [timerId, setTimerId] = useState(null);
+
+  function toggle() {
+    setIsOn(!isOn);
+  }
+
+  useLayoutEffect(() => {
+    if (timerId) {
+      clearInterval(timerId);
+      setTimerId(null);
+    }
+
+    if (isOn) {
+      let timerId = setInterval(loop, AUTO_INTERVAL);
+      setTimerId(timerId);
+    }
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [isOn]);
+
+  return html`
+    <button style=${button} onClick=${toggle}>${isOn ? onText : offText}</button>
+  `;
+}
+
 function App() {
   let buttonBar = {
     display: 'flex',
     justifyContent: 'space-around',
-    marginBottom: '20px',
+    marginBottom: '10px',
   };
 
   // ['unfound', 'withdraw', 'deposit', 'untaken']
   let [tab, setTab] = useState('unfound');
   let [_, setLoop] = useState(0);
-  console.log('rerender');
 
   useLayoutEffect(() => {
     let intervalId = setInterval(() => {
@@ -385,6 +436,11 @@ function App() {
       <${Withdraw} selected=${tab === 'withdraw'} />
       <${Deposit} selected=${tab === 'deposit'} />
       <${Untaken} selected=${tab === 'untaken'} />
+    </div>
+    <div>
+      <span>Auto:</span>
+      <${AutoButton} onText="Cancel Find" offText="Find" loop=${findArtifacts} />
+      <${AutoButton} onText="Cancel Withdraw" offText="Withdraw" loop=${withdrawArtifacts} />
     </div>
   `;
 }
