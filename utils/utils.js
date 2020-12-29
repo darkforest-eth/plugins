@@ -67,5 +67,5 @@ export let canHaveArtifact = (planet) => {
   return df.isPlanetMineable(planet) && !planet.hasTriedFindingArtifact
 }
 
-export let canFindArtifact = (planet) => energy(planet) >= 95;
+export let canFindArtifact = (planet) => energy(planet) >= 96;
 export let hasArtifact = (planet) => planet.heldArtifactId != null;
