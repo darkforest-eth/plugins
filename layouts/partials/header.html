@@ -1,0 +1,18 @@
+<header class="text-green-400 body-font sticky top-0 bg-black z-10">
+  <div class="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center">
+    <a class="flex title-font font-medium items-center text-green-400 mb-4 md:mb-0" href="{{ .Site.BaseURL }}">
+      {{- partial "logo.html" . -}}
+    </a>
+    <nav class="md:ml-auto flex flex-wrap items-center text-base justify-center">
+      {{ if and (eq .Site.Params.hideAutoMenu false) (eq $.IsNode true ) }}
+      <a class="mr-2 px-2 rounded cursor-pointer select-none hover:text-gray-400 show-all">All</a>
+      {{ range .Site.Sections }}
+      <a class="mr-2 px-2 rounded cursor-pointer select-none hover:text-gray-400 filter-{{lower .Title}}">{{.Title}}</a>
+      {{ end }}
+      {{ end }}
+      {{ range .Site.Menus.main }}
+      <a href="{{ .URL }}" class="mr-2 px-2 rounded cursor-pointer select-none hover:text-gray-400">{{ .Name }}</a>
+      {{ end }}
+    </nav>
+  </div>
+</header>
