@@ -1,6 +1,6 @@
 const {
   default: perlin,
-} = await import('https://df-plugins.netlify.app/miner/perlin.js')
+} = await import('https://plugins.zkga.me/miner/perlin.js')
 
 // Fake their enum
 const SpaceType = {

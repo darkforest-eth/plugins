@@ -16,7 +16,7 @@ const {
   hasArtifact,
   canHaveArtifact,
   canFindArtifact,
-} = await import('https://df-plugins.netlify.app/utils/utils.js');
+} = await import('https://plugins.zkga.me/utils/utils.js');
 
 const {
   Energy,
@@ -24,7 +24,7 @@ const {
   Defense,
   Range,
   Speed,
-} = await import('https://df-plugins.netlify.app/game/Icons.js');
+} = await import('https://plugins.zkga.me/game/Icons.js');
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
