@@ -326,15 +326,46 @@ function Untaken({ selected }) {
   }
 
   let planetList = {
-    maxHeight: '100px',
+    maxHeight: '300px',
     overflowX: 'hidden',
     overflowY: 'scroll',
   };
+  const inputGroup = {
+    display: 'flex',
+    alignItems: 'center',
+  };
+  const input = {
+    flex: '1',
+    padding: '5px',
+    margin: 'auto 5px',
+    outline: 'none',
+    color: 'black',
+  };
+
+  let {x: homeX, y: homeY} = ui.getHomeCoords()
 
   let [lastLocationId, setLastLocationId] = useState(null);
+  let [centerX, setCenterX] = useState(homeX);
+  let [centerY, setCenterY] = useState(homeY);
+  
+  const onChangeX = (e) => {
+    return setCenterX(e.target.value)
+  }
+
+  const onChangeY = (e) => {
+    setCenterY(e.target.value)
+  }
 
   const planets = allPlanetsWithArtifacts()
     .filter(isUnowned);
+  
+  planets.forEach(planet => {
+    let x = planet.location.coords.x;
+    let y = planet.location.coords.y;
+    planet.location.distanceFromHome = parseInt(Math.sqrt(Math.pow((x-centerX),2) + Math.pow((y-centerY),2)));
+  })
+
+  planets.sort((p1,p2) => (p1.location.distanceFromHome - p2.location.distanceFromHome));
 
   let planetsChildren = planets.map(planet => {
     let planetEntry = {
@@ -355,7 +386,7 @@ function Untaken({ selected }) {
       }
     }
 
-    let text = `${biome} at ${coords(planet)}`;
+    let text = `${biome} ${planet.location.distanceFromHome} away at ${coords(planet)}`;
     return html`
         <div key=${planet.locationId} style=${planetEntry}>
           <span onClick=${centerPlanet}>${text}</span>
@@ -364,9 +395,25 @@ function Untaken({ selected }) {
   });
 
   return html`
+  <div>
+    <div style=${inputGroup}>
+      <div>X: </div>
+      <input
+        style=${input}
+        value=${centerX}
+        onChange=${onChangeX}
+        placeholder="center X" />
+      <div>Y: </div>
+      <input
+        style=${input}
+        value=${centerY}
+        onChange=${onChangeY}
+        placeholder="center Y" />
+    </div>
     <div style=${planetList}>
       ${planetsChildren.length ? planetsChildren : 'No artifacts to find right now.'}
     </div>
+  </div>
   `;
 }
 
