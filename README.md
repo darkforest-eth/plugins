@@ -1,4 +1,4 @@
-# df-plugins
+# Dark Forest Plugins
 
 In v0.5 of [Dark Forest](https://zkga.me/), we added the ability to customize the game through "Plugins". These are scripts that are run by the game and provided access to specific aspects of the game.
 
