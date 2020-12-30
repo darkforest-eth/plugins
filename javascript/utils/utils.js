@@ -55,6 +55,14 @@ export let canStatUpgrade = (planet, stat) => {
   return canUpgrade[stat];
 }
 
+const canCapture = (fromPlanet, toPlanet, maxEnergyPercent) => {
+  const energyNeededUponArrivalDoubled = planetToTake.energy * 2;
+  const energyNeededToSend = df.getEnergyNeededForMove(fromPlanet.locationId, toPlanet.locationId, energyNeededUponArrivalDoubled);
+  const fromPlanetEnergy = sendingPlanet.energy * (maxEnergyPercent/100);
+
+  return fromPlanetEnergy >= energyNeededToSend;
+}
+
 export let isAsteroid = (planet) => planet.planetResource === 1
 
 export let getPlanetRank = (planet) => {

@@ -31,6 +31,8 @@ let REFRESH_INTERVAL = 1000 * 30;
 // 10 minutes
 let AUTO_INTERVAL = 1000 * 60 * 10;
 
+let MAX_SENDABLE_ENERGY_PERCENT = 85;
+
 function canDeposit(planet) {
   return planet && isMine(planet) && !planet.heldArtifactId
 }
@@ -354,7 +356,7 @@ function Untaken({ selected }) {
   let [centerY, setCenterY] = useState(homeY);
   
   const onChangeX = (e) => {
-    return setCenterX(e.target.value)
+    setCenterX(e.target.value)
   }
 
   const onChangeY = (e) => {
@@ -363,22 +365,60 @@ function Untaken({ selected }) {
 
   const planets = allPlanetsWithArtifacts()
     .filter(isUnowned);
+
+  const myPlanets = df.getMyPlanets();
+
+  const canCapture = (fromPlanet, toPlanet, maxEnergyPercent) => {
+    const energyNeededUponArrivalDoubled = toPlanet.energy * 2;
+    const energyNeededToSend = df.getEnergyNeededForMove(fromPlanet.locationId, toPlanet.locationId, energyNeededUponArrivalDoubled);
+    const fromPlanetEnergy = fromPlanet.energy * (maxEnergyPercent/100);
+  
+    return fromPlanetEnergy >= energyNeededToSend;
+  }
+
+  const getEnergyNeededToCaptureFromClosetPlanet = (fromPlanet, toPlanet) => {
+    const energyNeededUponArrivalDoubled = toPlanet.energy * 2;
+    return Math.ceil(df.getEnergyNeededForMove(fromPlanet.locationId, toPlanet.locationId, energyNeededUponArrivalDoubled));
+  }
   
   let planetsArray = planets.map(planet => {
     let x = planet.location.coords.x;
     let y = planet.location.coords.y;
     let distanceFromTargeting = parseInt(Math.sqrt(Math.pow((x-centerX),2) + Math.pow((y-centerY),2)));
 
-    return {locationId: planet.locationId, biome: planet.biome, x, y, distanceFromTargeting};
+    let closestPlanetToCaptureWith = myPlanets.find(fromPlanet => canCapture(fromPlanet, planet, MAX_SENDABLE_ENERGY_PERCENT));
+    let energyNeededToCaptureFromClosetPlanet = null;
+
+    if (closestPlanetToCaptureWith) {
+      energyNeededToCaptureFromClosetPlanet = getEnergyNeededToCaptureFromClosetPlanet(closestPlanetToCaptureWith, planet);
+    }
+
+    return {
+      locationId: planet.locationId, 
+      biome: planet.biome, 
+      x, 
+      y, 
+      distanceFromTargeting,
+      energyNeededToCaptureFromClosetPlanet,
+      closestPlanetToCaptureWithLocationId: closestPlanetToCaptureWith?.locationId};
   });
 
   planetsArray.sort((p1,p2) => (p1.distanceFromTargeting - p2.distanceFromTargeting));
 
   let planetsChildren = planetsArray.map(planet => {
 
-    let {locationId, x, y, distanceFromTargeting} = planet;
+    let {
+      locationId,
+      x,
+      y,
+      distanceFromTargeting,
+      energyNeededToCaptureFromClosetPlanet,
+      closestPlanetToCaptureWithLocationId
+    } = planet;
     let biome = BiomeNames[planet.biome];
 
+    let [capturing, setCapturing] = useState(false);
+    
     let planetEntry = {
       marginBottom: '10px',
       display: 'flex',
@@ -386,6 +426,16 @@ function Untaken({ selected }) {
       color: lastLocationId === locationId ? 'pink' : '',
     };
 
+    let button = {
+      marginLeft: '5px',
+      opacity: capturing ? '0.5' : '1',
+    };
+
+    const capturePlanet = (fromPlanetLocatinId, toPlanetLocationId, energy) => {
+      df.move(fromPlanetLocatinId, toPlanetLocationId, energy, 0);
+      setCapturing(true);
+    }
+    
     function centerPlanet() {
       let planet = df.getPlanetWithCoords({ x, y });
       if (planet) {
@@ -394,10 +444,16 @@ function Untaken({ selected }) {
       }
     }
 
+    const captureButton = html`
+      <button key=${locationId} style=${button} onClick=${() => capturePlanet(closestPlanetToCaptureWithLocationId, locationId, energyNeededToCaptureFromClosetPlanet)} disabled=${capturing}>
+        ${capturing ? 'capturing...' : 'Capture!'}
+      </button>`
+
     let text = `${biome} ${distanceFromTargeting} away at (${x}, ${y})`;
     return html`
         <div key=${locationId} style=${planetEntry}>
           <span onClick=${centerPlanet}>${text}</span>
+          ${closestPlanetToCaptureWithLocationId ? captureButton : ''}
         </div>
       `;
   });
