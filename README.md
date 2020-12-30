@@ -8,6 +8,12 @@ Plugins are evaluated in the context of your game and can access all of your pri
 
 You should not use any plugins that you haven't written yourself or by someone you trust completely. You or someone you trust should control the entire pipeline (such as imported dependencies) and should review plugins before you use them.
 
+## Utilities
+
+We provide a series of utilities that plugin authors can use. These are served directly from our website (`https://plugins.zkga.me`) and you can load them in your plugins. Check out what is available in the [javascript directory](javascript/)
+
+If we are missing a utility that would be helpful, feel free to open an issue!
+
 ## Adding your plugin
 
 You can submit your own plugins by sending a Pull Request to this repository!
