@@ -14,7 +14,7 @@ class Plugin {
     const utils = await import('https://plugins.zkga.me/utils/utils.js');
     
     window.utils = utils; 
-    console.log('utils imported. Access via window.utils');
+    console.log('utils imported. Access via `utils`');
   }
 
   destroy() { }
