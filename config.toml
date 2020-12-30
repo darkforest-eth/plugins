@@ -13,12 +13,12 @@ staticDir = ["screenshots", "static", "javascript"]
   description = "A showcase of Dark Forest plugins from the community!"
   message = "Welcome to the Dark Forest Plugin showcase!"
   hideAutoMenu = false
-  repo = "phated/df-plugins"
-  branch = "showcase"
+  repo = "darkforest-eth/plugins"
+  branch = "master"
 
 [[menu.main]]
   name = "Submit plugin"
-  url = "https://github.com/phated/df-plugins##adding-your-plugin"
+  url = "https://github.com/darkforest-eth/plugins#adding-your-plugin"
 
 [social]
   twitter = "https://twitter.com/darkforest_eth"
