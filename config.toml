@@ -16,5 +16,9 @@ staticDir = ["screenshots", "static", "javascript"]
   repo = "phated/df-plugins"
   branch = "showcase"
 
+[[menu.main]]
+  name = "Submit plugin"
+  url = "https://github.com/phated/df-plugins##adding-your-plugin"
+
 [social]
   twitter = "https://twitter.com/darkforest_eth"
