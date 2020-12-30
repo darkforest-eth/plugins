@@ -359,24 +359,27 @@ function Untaken({ selected }) {
   const planets = allPlanetsWithArtifacts()
     .filter(isUnowned);
   
-  planets.forEach(planet => {
+  let planetsArray = planets.map(planet => {
     let x = planet.location.coords.x;
     let y = planet.location.coords.y;
-    planet.location.distanceFromHome = parseInt(Math.sqrt(Math.pow((x-centerX),2) + Math.pow((y-centerY),2)));
-  })
+    let distanceFromTargeting = parseInt(Math.sqrt(Math.pow((x-centerX),2) + Math.pow((y-centerY),2)));
 
-  planets.sort((p1,p2) => (p1.location.distanceFromHome - p2.location.distanceFromHome));
+    return {locationId: planet.locationId, biome: planet.biome, x, y, distanceFromTargeting};
+  });
 
-  let planetsChildren = planets.map(planet => {
+  planetsArray.sort((p1,p2) => (p1.distanceFromTargeting - p2.distanceFromTargeting));
+
+  let planetsChildren = planetsArray.map(planet => {
+
+    let {locationId, x, y, distanceFromTargeting} = planet;
+    let biome = BiomeNames[planet.biome];
+
     let planetEntry = {
       marginBottom: '10px',
       display: 'flex',
       justifyContent: 'space-between',
-      color: lastLocationId === planet.locationId ? 'pink' : '',
+      color: lastLocationId === locationId ? 'pink' : '',
     };
-
-    let biome = BiomeNames[planet.biome];
-    let { x, y } = planet.location.coords;
 
     function centerPlanet() {
       let planet = df.getPlanetWithCoords({ x, y });
@@ -386,16 +389,15 @@ function Untaken({ selected }) {
       }
     }
 
-    let text = `${biome} ${planet.location.distanceFromHome} away at ${coords(planet)}`;
+    let text = `${biome} ${distanceFromTargeting} away at (${x}, ${y})`;
     return html`
-        <div key=${planet.locationId} style=${planetEntry}>
+        <div key=${locationId} style=${planetEntry}>
           <span onClick=${centerPlanet}>${text}</span>
         </div>
       `;
   });
 
   return html`
-  <div>
     <div style=${inputGroup}>
       <div>X: </div>
       <input
@@ -413,7 +415,6 @@ function Untaken({ selected }) {
     <div style=${planetList}>
       ${planetsChildren.length ? planetsChildren : 'No artifacts to find right now.'}
     </div>
-  </div>
   `;
 }
 
