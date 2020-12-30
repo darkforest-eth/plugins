@@ -331,26 +331,60 @@ function Untaken({ selected }) {
   }
 
   let planetList = {
-    maxHeight: '100px',
+    maxHeight: '300px',
     overflowX: 'hidden',
     overflowY: 'scroll',
   };
+  const inputGroup = {
+    display: 'flex',
+    alignItems: 'center',
+  };
+  const input = {
+    flex: '1',
+    padding: '5px',
+    margin: 'auto 5px',
+    outline: 'none',
+    color: 'black',
+  };
+
+  let {x: homeX, y: homeY} = ui.getHomeCoords()
 
   let [lastLocationId, setLastLocationId] = useState(null);
+  let [centerX, setCenterX] = useState(homeX);
+  let [centerY, setCenterY] = useState(homeY);
+  
+  const onChangeX = (e) => {
+    return setCenterX(e.target.value)
+  }
+
+  const onChangeY = (e) => {
+    setCenterY(e.target.value)
+  }
 
   const planets = allPlanetsWithArtifacts()
     .filter(isUnowned);
+  
+  let planetsArray = planets.map(planet => {
+    let x = planet.location.coords.x;
+    let y = planet.location.coords.y;
+    let distanceFromTargeting = parseInt(Math.sqrt(Math.pow((x-centerX),2) + Math.pow((y-centerY),2)));
 
-  let planetsChildren = planets.map(planet => {
+    return {locationId: planet.locationId, biome: planet.biome, x, y, distanceFromTargeting};
+  });
+
+  planetsArray.sort((p1,p2) => (p1.distanceFromTargeting - p2.distanceFromTargeting));
+
+  let planetsChildren = planetsArray.map(planet => {
+
+    let {locationId, x, y, distanceFromTargeting} = planet;
+    let biome = BiomeNames[planet.biome];
+
     let planetEntry = {
       marginBottom: '10px',
       display: 'flex',
       justifyContent: 'space-between',
-      color: lastLocationId === planet.locationId ? 'pink' : '',
+      color: lastLocationId === locationId ? 'pink' : '',
     };
-
-    let biome = BiomeNames[planet.biome];
-    let { x, y } = planet.location.coords;
 
     function centerPlanet() {
       let planet = df.getPlanetWithCoords({ x, y });
@@ -360,15 +394,29 @@ function Untaken({ selected }) {
       }
     }
 
-    let text = `${biome} at ${coords(planet)}`;
+    let text = `${biome} ${distanceFromTargeting} away at (${x}, ${y})`;
     return html`
-        <div key=${planet.locationId} style=${planetEntry}>
+        <div key=${locationId} style=${planetEntry}>
           <span onClick=${centerPlanet}>${text}</span>
         </div>
       `;
   });
 
   return html`
+    <div style=${inputGroup}>
+      <div>X: </div>
+      <input
+        style=${input}
+        value=${centerX}
+        onChange=${onChangeX}
+        placeholder="center X" />
+      <div>Y: </div>
+      <input
+        style=${input}
+        value=${centerY}
+        onChange=${onChangeY}
+        placeholder="center Y" />
+    </div>
     <div style=${planetList}>
       ${planetsChildren.length ? planetsChildren : 'No artifacts to find right now.'}
     </div>
