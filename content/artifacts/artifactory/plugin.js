@@ -39,9 +39,15 @@ function calcBonus(bonus) {
   return bonus - 100
 }
 
-function myPlanetsWithArtifacts() {
+function myPlanetsWithFindable() {
   return Array.from(df.getMyPlanets())
     .filter(df.isPlanetMineable)
+    .sort((p1, p2) => parseInt(p1.locationId, 16) - parseInt(p2.locationId, 16));
+}
+
+function myPlanetsWithArtifacts() {
+  return Array.from(df.getMyPlanets())
+    .filter(hasArtifact)
     .sort((p1, p2) => parseInt(p1.locationId, 16) - parseInt(p2.locationId, 16));
 }
 
@@ -152,7 +158,7 @@ function Unfound({ selected }) {
 
   let [lastLocationId, setLastLocationId] = useState(null);
 
-  let planets = myPlanetsWithArtifacts()
+  let planets = myPlanetsWithFindable()
     .filter(planet => !planet.hasTriedFindingArtifact);
 
   let planetsChildren = planets.map(planet => {
@@ -205,7 +211,6 @@ function Withdraw({ selected }) {
   let [lastLocationId, setLastLocationId] = useState(null);
 
   const planets = myPlanetsWithArtifacts()
-    .filter(hasArtifact)
     .sort((p1, p2) => p1.artifactLockedTimestamp - p2.artifactLockedTimestamp);
 
   let planetsChildren = planets.map(planet => {
