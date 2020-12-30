@@ -8,21 +8,15 @@
 
 class Plugin {
   constructor() { }
-
-  /**
-   * Called when plugin is launched with the "run" button.
-   */
   async render(container) { 
     console.log('importing utils to dev console...');
 
-    utils = await import('https://plugins.zkga.me/utils/utils.js');
+    const utils = await import('https://plugins.zkga.me/utils/utils.js');
     
-    window.uitls = utils; 
+    window.utils = utils; 
     console.log('utils imported. Access via window.utils');
   }
-  /**
-   * Called when plugin modal is closed.
-   */
+
   destroy() { }
 }
 
