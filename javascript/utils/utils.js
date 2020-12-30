@@ -1,10 +1,59 @@
+// Enums
+export let BiomeNames = [
+  'Unknown',
+  'Ocean',
+  'Forest',
+  'Grassland',
+  'Tundra',
+  'Swamp',
+  'Desert',
+  'Ice',
+  'Wasteland',
+  'Lava',
+];
+
+export let UpgradeBranchName = {
+  Defense: 0,
+  Range: 1,
+  Speed: 2,
+};
+
+export let SpaceType = {
+  NEBULA: 0,
+  SPACE: 1,
+  DEEP_SPACE: 2,
+};
+
+// Functions
 export let coords = (planet) => {
   return `(${planet.location.coords.x}, ${planet.location.coords.y})`
 }
 
-export let canUpgrade = (planet) => {
+export let canPlanetUpgrade = (planet) => {
+  if (!planet) {
+    return false;
+  }
   return df.entityStore.planetCanUpgrade(planet)
 };
+// Old name
+export let canUpgrade = canPlanetUpgrade;
+
+export let canStatUpgrade = (planet, stat) => {
+  if (!planet) {
+    return false;
+  }
+  // [defenseCan, rangeCan, speedCan]
+  let canUpgrade = planet.upgradeState.map((level, i) => {
+    if (
+      i === UpgradeBranchName.Defense &&
+      planet.spaceType === SpaceType.DEEP_SPACE
+    )
+      return level < 2;
+    return level < 4;
+  });
+
+  return canUpgrade[stat];
+}
 
 export let isAsteroid = (planet) => planet.planetResource === 1
 
@@ -23,19 +72,6 @@ export let getSilver = (planet) => {
   if (!planet) return 0;
   return Math.floor(planet.silver);
 };
-
-export let BiomeNames = [
-  'Unknown',
-  'Ocean',
-  'Forest',
-  'Grassland',
-  'Tundra',
-  'Swamp',
-  'Desert',
-  'Ice',
-  'Wasteland',
-  'Lava',
-];
 
 export let emptyAddress = "0x0000000000000000000000000000000000000000";
 
