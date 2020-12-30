@@ -4,7 +4,7 @@ const {
   getSilver,
   canUpgrade,
   getSilverNeeded,
-} = await import('https://df-plugins.netlify.app//utils/utils.js');
+} = await import('https://plugins.zkga.me/utils/utils.js');
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;

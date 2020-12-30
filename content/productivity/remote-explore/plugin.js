@@ -1,16 +1,16 @@
 const {
   MinerManager,
   MinerManagerEvent
-} = await import('https://df-plugins.netlify.app/game/MinerManager.js');
+} = await import('https://plugins.zkga.me/game/MinerManager.js');
 const {
   SpiralPattern
-} = await import('https://df-plugins.netlify.app/game/SpiralPattern.js');
+} = await import('https://plugins.zkga.me/game/SpiralPattern.js');
 const {
   SwissCheesePattern
-} = await import('https://df-plugins.netlify.app/game/SwissCheesePattern.js');
+} = await import('https://plugins.zkga.me/game/SwissCheesePattern.js');
 const {
   RemoteWorker
-} = await import('https://df-plugins.netlify.app/miner/RemoteWorker.js');
+} = await import('https://plugins.zkga.me/miner/RemoteWorker.js');
 const {
   html,
   render,
