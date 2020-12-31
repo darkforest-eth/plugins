@@ -1,5 +1,5 @@
-let { Manager } = await import(
-  "https://practical-snyder-a3b69f.netlify.app/core.js?#v1"
+const { default: Manager } = await import(
+  "https://plugins.zkga.me/utils/RepeatAttackCore.js"
 );
 
 const { html, render, useState, useLayoutEffect } = await import(
@@ -25,10 +25,7 @@ let ActionEntry = {
 };
 
 function centerPlanet(id) {
-  let planet = df.getPlanetWithId(id);
-  if (planet) {
-    ui.centerPlanet(planet);
-  }
+  ui.centerLocationId(planet);
 }
 
 function Attack({ action }) {
