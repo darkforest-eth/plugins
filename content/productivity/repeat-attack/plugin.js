@@ -81,7 +81,6 @@ function AddAttack() {
       <button
         style=${VerticalSpacing}
         onClick=${() => {
-          console.log("clicked");
           setSource(planet);
         }}
       >
