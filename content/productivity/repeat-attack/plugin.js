@@ -63,7 +63,6 @@ function AddAttack() {
   let [source, setSource] = useState(false);
   let [target, setTarget] = useState(false);
   let onClick = () => {
-    console.log("onclick");
     setPlanet(ui.getSelectedPlanet());
   };
   useLayoutEffect(() => {
