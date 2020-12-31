@@ -25,7 +25,7 @@ let ActionEntry = {
 };
 
 function centerPlanet(id) {
-  ui.centerLocationId(planet);
+  ui.centerLocationId(id);
 }
 
 function Attack({ action }) {
