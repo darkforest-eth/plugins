@@ -887,7 +887,8 @@ class Manager {
   }
   checkForOOMThreat() {
     return (
-      df.getUnconfirmedMoves().length == df.getUnconfirmedUpgrades().length > 2
+      df.getUnconfirmedMoves().length > 2 &&
+      df.getUnconfirmedUpgrades().length > 2
     );
   }
 
