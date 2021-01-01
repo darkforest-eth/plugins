@@ -59,15 +59,15 @@ function AddAttack() {
   let [planet, setPlanet] = useState(ui.getSelectedPlanet());
   let [source, setSource] = useState(false);
   let [target, setTarget] = useState(false);
-  let onClick = () => {
-    setPlanet(ui.getSelectedPlanet());
-  };
   useLayoutEffect(() => {
+    let onClick = () => {
+      setPlanet(ui.getSelectedPlanet());
+    };
     window.addEventListener("click", onClick);
     return () => {
       window.removeEventListener("click", onClick);
     };
-  }, [onClick]);
+  }, []);
 
   function createAttack(source, target) {
     op.pester(source.locationId, target.locationId);
