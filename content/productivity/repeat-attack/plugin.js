@@ -147,7 +147,7 @@ function AttackList() {
 }
 
 function App() {
-  return html` <${AttackList} /> `;
+  return html`<${AttackList} />`;
 }
 
 
