@@ -121,7 +121,7 @@ function AttackList() {
   let actionsChildren = actions
     .filter((a) => a.type == "PESTER")
     .map((action) => {
-      return html`<${Attack} action=${action}></${Attack}>`;
+      return html`<${Attack} action=${action} />`;
     });
 
   return html`
