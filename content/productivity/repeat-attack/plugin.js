@@ -150,14 +150,6 @@ function App() {
   return html` <${AttackList} /> `;
 }
 
-/**
- * Remember, you have access these globals:
- * 1. df - Just like the df object in your console.
- * 2. ui - For interacting with the game's user interface.
- * 3. plugin - To register the plugin, plus other helpful things.
- *
- * Let's log these to the console when you run your plugin!
- */
 
 class Plugin {
   constructor() {
