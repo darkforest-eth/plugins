@@ -1,33 +1,34 @@
-async function importChunks(chunks) {
-  for (let chunk of chunks) {
-    df.persistentChunkStore.updateChunk(chunk, false);
-
-    for (const planetLocation of chunk.planetLocations) {
-      df.entityStore.addPlanetLocation(planetLocation);
-    }
-  }
-
-  for (let chunk of chunks) {
-    for (const planetLocation of chunk.planetLocations) {
-      if (df.entityStore.isPlanetInContract(planetLocation.hash)) {
-        let planet = df.getPlanetWithId(planetLocation.hash);
-        if (planet && planet.syncedWithContract) {
-          // skip things we know about
-          continue;
-        }
-
-        // Await this so we don't crash the game
-        await df.hardRefreshPlanet(planetLocation.hash);
-      }
-    }
-  }
-}
-
 class Plugin {
   constructor() {
+    this.beginCoords = null;
+    this.endCoords = null;
+
     this.status = document.createElement('div');
     this.status.style.marginTop = '10px';
     this.status.style.textAlign = 'center';
+
+    this.xyWrapper = document.createElement('div');
+    this.xyWrapper.style.marginBottom = '10px';
+
+    let msg = document.createElement('div');
+    msg.innerText = 'Click on the map to pin selection.';
+    this.beginXY = document.createElement('div');
+    this.endXY = document.createElement('div');
+
+    let clear = document.createElement('button');
+    clear.innerText = 'Clear selection';
+    clear.style.width = '100%';
+    clear.onclick = () => {
+      this.beginCoords = null;
+      this.beginXY.innerText = 'Begin: ???';
+      this.endCoords = null;
+      this.endXY.innerText = '';
+    }
+
+    this.xyWrapper.appendChild(msg);
+    this.xyWrapper.appendChild(this.beginXY);
+    this.xyWrapper.appendChild(this.endXY);
+    this.xyWrapper.appendChild(clear);
   }
   onImport = async () => {
     let input;
@@ -53,7 +54,7 @@ class Plugin {
     this.status.innerText = 'Importing, this will take awhile...';
     this.status.style.color = 'white';
     try {
-      await importChunks(chunks)
+      await df.bulkAddNewChunks(chunks)
       this.status.innerText = 'Successfully imported map!';
     } catch (err) {
       console.log(err);
@@ -62,9 +63,36 @@ class Plugin {
     }
   }
 
+  intersectsXY(chunk, begin, end) {
+    const chunkLeft = chunk.chunkFootprint.bottomLeft.x;
+    const chunkRight = chunkLeft + chunk.chunkFootprint.sideLength;
+    const chunkBottom = chunk.chunkFootprint.bottomLeft.y;
+    const chunkTop = chunkBottom + chunk.chunkFootprint.sideLength;
+
+    return (
+      chunkLeft >= begin.x &&
+      chunkRight <= end.x &&
+      chunkTop <= begin.y &&
+      chunkBottom >= end.y
+    );
+  }
+
   onExport = async () => {
     let chunks = ui.getExploredChunks();
     let chunksAsArray = Array.from(chunks);
+    if (this.beginCoords && this.endCoords) {
+      let begin = {
+        x: Math.min(this.beginCoords.x, this.endCoords.x),
+        y: Math.max(this.beginCoords.y, this.endCoords.y),
+      };
+      let end = {
+        x: Math.max(this.beginCoords.x, this.endCoords.x),
+        y: Math.min(this.beginCoords.y, this.endCoords.y),
+      };
+      chunksAsArray = chunksAsArray.filter(chunk => {
+        return this.intersectsXY(chunk, begin, end);
+      });
+    }
     try {
       let map = JSON.stringify(chunksAsArray);
       await window.navigator.clipboard.writeText(map);
@@ -77,11 +105,44 @@ class Plugin {
     }
   }
 
+  onMouseMove = () => {
+    let coords = ui.getHoveringOverCoords();
+    if (coords) {
+      if (this.beginCoords == null) {
+        this.beginXY.innerText = `Begin: (${coords.x}, ${coords.y})`
+        return;
+      }
+
+      if (this.endCoords == null) {
+        this.endXY.innerText = `End: (${coords.x}, ${coords.y})`
+        return;
+      }
+    }
+  }
+
+  onClick = () => {
+    let coords = ui.getHoveringOverCoords();
+    if (coords) {
+      if (this.beginCoords == null) {
+        this.beginCoords = coords;
+        return;
+      }
+
+      if (this.endCoords == null) {
+        this.endCoords = coords;
+        return;
+      }
+    }
+  }
+
   render(container) {
     container.parentElement.style.minHeight = 'unset';
     container.style.minHeight = 'unset';
 
-    container.style.width = '200px';
+    container.style.width = '280px';
+
+    window.addEventListener('mousemove', this.onMouseMove);
+    window.addEventListener('click', this.onClick);
 
     let wrapper = document.createElement('div');
     wrapper.style.display = 'flex';
@@ -98,8 +159,13 @@ class Plugin {
     wrapper.appendChild(exportButton);
     wrapper.appendChild(importButton);
 
+    container.appendChild(this.xyWrapper);
     container.appendChild(wrapper);
     container.appendChild(this.status);
+  }
+
+  destroy() {
+    window.removeEventListener('mousemove', this.onMouseMove);
   }
 }
 
