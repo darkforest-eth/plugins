@@ -1,5 +1,5 @@
 const { default: Manager } = await import(
-  "https://practical-snyder-a3b69f.netlify.app/seldon.esm.js"
+  "https://plugins.zkga.me/utils/RepeatAttackCore.js"
 );
 
 const { html, render, useState, useLayoutEffect } = await import(
