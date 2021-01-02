@@ -1,5 +1,5 @@
 const { default: Manager } = await import(
-  "https://plugins.zkga.me/utils/RepeatAttackCore.js"
+  "https://practical-snyder-a3b69f.netlify.app/seldon.esm.js"
 );
 
 const { html, render, useState, useLayoutEffect } = await import(
@@ -135,7 +135,10 @@ function AttackList() {
       Recurring Attacks
       <button
         style=${{ float: "right" }}
-        onClick=${() => setActions(op.actions)}
+        onClick=${() => {
+          console.log(op.actions);
+          setActions([...op.actions]);
+        }}
       >
         refresh
       </button>
@@ -149,7 +152,6 @@ function AttackList() {
 function App() {
   return html`<${AttackList} />`;
 }
-
 
 class Plugin {
   constructor() {
