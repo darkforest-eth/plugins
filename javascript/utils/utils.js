@@ -105,3 +105,13 @@ export let canHaveArtifact = (planet) => {
 
 export let canFindArtifact = (planet) => energy(planet) >= 96;
 export let hasArtifact = (planet) => planet.heldArtifactId != null;
+
+// From main client
+export let getPlanetShortHash = (planet) => {
+  if (!planet) return '00000';
+  else return planet.locationId.substring(4, 9);
+};
+
+export let getPlayerShortHash = (address) => {
+  return address.substring(0, 6);
+};
