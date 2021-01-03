@@ -13,12 +13,15 @@ let Spacing = {
 let VerticalSpacing = {
   marginBottom: "12px",
 };
+let HalfVerticalSpacing = {
+  marginBottom: "6px",
+};
 let Clickable = {
   cursor: "pointer",
   textDecoration: "underline",
 };
 let ActionEntry = {
-  marginBottom: "10px",
+  marginBottom: "5px",
   display: "flex",
   justifyContent: "space-between",
   color: "",
@@ -28,34 +31,36 @@ function centerPlanet(id) {
   ui.centerLocationId(id);
 }
 
-function Attack({ action }) {
+function planetShort(locationId) {
+  return locationId.substring(4, 9);
+}
+
+function Attack({ action, onDelete }) {
+  let remoteAttack = () => {
+    op.delete(action.id);
+    onDelete();
+  };
   return html`
     <div key=${action.id} style=${ActionEntry}>
       <span>
         <span
           style=${{ ...Spacing, ...Clickable }}
           onClick=${() => centerPlanet(action.payload.srcId)}
-          >${action.payload.srcId.substring(5, 10)}</span
+          >${planetShort(action.payload.srcId)}</span
         >
         →
         <span
           style=${{ ...Spacing, ...Clickable }}
           onClick=${() => centerPlanet(action.payload.syncId)}
-          >${action.payload.syncId.substring(5, 10)}</span
+          >${planetShort(action.payload.syncId)}</span
         ></span
       >
-      <button
-        onClick=${() => {
-          op.delete(action.id);
-        }}
-      >
-        ✕
-      </button>
+      <button onClick=${remoteAttack}>✕</button>
     </div>
   `;
 }
 
-function AddAttack() {
+function AddAttack({ onCreate }) {
   let [planet, setPlanet] = useState(ui.getSelectedPlanet());
   let [source, setSource] = useState(false);
   let [target, setTarget] = useState(false);
@@ -71,41 +76,36 @@ function AddAttack() {
 
   function createAttack(source, target) {
     op.pester(source.locationId, target.locationId);
+    onCreate();
   }
 
   return html`
-    <div>
+    <div style=${{ display: 'flex' }}>
       <button
         style=${VerticalSpacing}
-        onClick=${() => {
-          setSource(planet);
-        }}
+        onClick=${() => setSource(planet)}
       >
         Set Source
       </button>
-      <span style=${{ ...Spacing }}
-        >${source ? source.locationId.substring(5, 10) : ""}</span
+      <span style=${{ ...Spacing, marginRight: 'auto' }}
+        >${source ? planetShort(source.locationId) : "?????"}</span
       >
-    </div>
-    <div>
       <button
         style=${VerticalSpacing}
-        onClick=${() => {
-          setTarget(planet);
-        }}
+        onClick=${() => setTarget(planet)}
       >
         Set Target
       </button>
-      <span style=${{ ...Spacing }}
-        >${target ? target.locationId.substring(5, 10) : ""}</span
+      <span style=${{ ...Spacing, marginRight: 'auto' }}
+        >${target ? planetShort(target.locationId) : "?????"}</span
       >
+      <button
+        style=${VerticalSpacing}
+        onClick=${() => createAttack(source, target)}
+      >
+        start
+      </button>
     </div>
-    <button
-      style=${VerticalSpacing}
-      onClick=${() => createAttack(source, target)}
-    >
-      submit
-    </button>
   `;
 }
 
@@ -113,7 +113,7 @@ function AttackList() {
   const [actions, setActions] = useState(op.actions);
 
   let actionList = {
-    maxHeight: "100px",
+    maxHeight: "70px",
     overflowX: "hidden",
     overflowY: "scroll",
   };
@@ -121,29 +121,31 @@ function AttackList() {
   let actionsChildren = actions
     .filter((a) => a.type == "PESTER")
     .map((action) => {
-      return html`<${Attack} action=${action} />`;
+      return html`
+        <${Attack}
+          action=${action}
+          onDelete=${() => setActions([...op.actions])} />
+        `;
     });
 
   return html`
-    <h1 style=${VerticalSpacing}>Create a Recurring Attack</h1>
+    <h1>Set-up a Recurring Attack</h1>
 
-    <i style=${VerticalSpacing}
-      >When the source planet energy is >75% it will launch an attack
+    <i style=${{ ...VerticalSpacing, display: 'block' }}
+      >Auto-attack when source planet >75% energy
     </i>
-    <${AddAttack} />
-    <h1 style=${VerticalSpacing}>
-      Recurring Attacks
+
+    <${AddAttack} onCreate=${() => setActions([...op.actions])} />
+    <h1 style=${HalfVerticalSpacing}>
+      Recurring Attacks (${actionsChildren.length})
       <button
         style=${{ float: "right" }}
-        onClick=${() => {
-          console.log(op.actions);
-          setActions([...op.actions]);
-        }}
+        onClick=${() => setActions([...op.actions])}
       >
         refresh
       </button>
     </h1>
-    <div style=${{ ...actionList, ...VerticalSpacing }}>
+    <div style=${actionList}>
       ${actionsChildren.length ? actionsChildren : "No Actions."}
     </div>
   `;
@@ -163,24 +165,15 @@ class Plugin {
     this.container = null;
   }
 
-  /**
-   * Called when plugin is launched with the "run" button.
-   */
   async render(container) {
     this.container = container;
-    container.style.width = "450px";
+    container.style.width = "380px";
     this.root = render(html`<${App} />`, container);
   }
 
-  /**
-   * Called when plugin modal is closed.
-   */
   destroy() {
     render(null, this.container, this.root);
   }
 }
 
-/**
- * And don't forget to register it!
- */
 plugin.register(new Plugin());
