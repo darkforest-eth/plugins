@@ -1,3 +1,5 @@
+let viewport = ui.getViewport();
+
 class Plugin {
   constructor() {
     this.beginCoords = null;
@@ -162,6 +164,30 @@ class Plugin {
     container.appendChild(this.xyWrapper);
     container.appendChild(wrapper);
     container.appendChild(this.status);
+  }
+
+  draw(ctx) {
+    let begin = this.beginCoords;
+    let end = this.endCoords || ui.getHoveringOverCoords();
+    if (begin && end) {
+      let beginX = Math.min(begin.x, end.x);
+      let beginY = Math.max(begin.y, end.y);
+      let endX = Math.max(begin.x, end.x);
+      let endY = Math.min(begin.y, end.y);
+      let width = endX - beginX;
+      let height = beginY - endY;
+
+      ctx.save();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+        viewport.worldToCanvasX(beginX),
+        viewport.worldToCanvasY(beginY),
+        viewport.worldToCanvasDist(width),
+        viewport.worldToCanvasDist(height)
+      );
+      ctx.restore();
+    }
   }
 
   destroy() {
