@@ -208,8 +208,6 @@ export function move(from, to, forces, silver) {
 }
 
 export function setConcurrency(num) {
-  df.contractsAPI.txRequestExecutor.txRequests.concurrency = num;
   df.snarkHelper.snarkProverQueue.taskQueue.concurrency = num;
   moveSnarkQueue.concurrency = num;
-  contractQueue.concurrency = num;
 }
