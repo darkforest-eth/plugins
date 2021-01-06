@@ -206,3 +206,10 @@ export function move(from, to, forces, silver) {
 
   moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
 }
+
+export function setConcurrency(num) {
+  df.contractsAPI.txRequestExecutor.txRequests.concurrency = num;
+  df.snarkHelper.snarkProverQueue.taskQueue.concurrency = num;
+  moveSnarkQueue.concurrency = num;
+  contractQueue.concurrency = num;
+}
