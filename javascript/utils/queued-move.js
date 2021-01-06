@@ -1,6 +1,4 @@
-let {
-  default: PromiseQueue,
-} = await import('https://cdn.skypack.dev/p-queue');
+import PromiseQueue from 'https://cdn.skypack.dev/p-queue';
 
 let moveSnarkQueue;
 if (window.moveSnarkQueue === undefined) {
