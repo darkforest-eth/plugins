@@ -16,7 +16,7 @@ if (window.moveSnarkQueue === undefined) {
 
 let contractQueue;
 if (window.contractQueue === undefined) {
-  let contractQueue = new PromiseQueue({ concurrency: 1 });
+  contractQueue = new PromiseQueue({ concurrency: 1 });
   contractQueue.on('add', () => {
     console.log('Adding to task to the Contract Queue. Size:', contractQueue.size);
   });
