@@ -16,7 +16,8 @@ if (window.moveSnarkQueue === undefined) {
 
 let contractQueue;
 if (window.contractQueue === undefined) {
-  contractQueue = new PromiseQueue({ concurrency: 1 });
+  // Timeout a TX after 2 minutes
+  contractQueue = new PromiseQueue({ concurrency: 1, timeout: 120000 });
   contractQueue.on('add', () => {
     console.log('Adding to task to the Contract Queue. Size:', contractQueue.size);
   });
