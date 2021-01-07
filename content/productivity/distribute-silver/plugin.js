@@ -5,6 +5,7 @@ let {
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 85;
+	this.minPlanetLevel = 3;
   }
   render(container) {
     container.style.width = '200px';
@@ -34,8 +35,34 @@ class Plugin {
         console.error('could not parse energy percent', e);
       }
     }
+	
+	let message = document.createElement('div');
 
-    let message = document.createElement('div');
+
+    let levelLabel = document.createElement('label');
+    levelLabel.innerText = 'Min. Lvl to send to:';
+    levelLabel.style.display = 'block';
+
+    let level = document.createElement('select');
+    level.style.background = 'rgb(8,8,8)';
+    level.style.width = '100%';
+    level.style.marginTop = '10px';
+    level.style.marginBottom = '10px';
+    [0, 1, 2, 3, 4, 5, 6, 7].forEach(lvl => {
+      let opt = document.createElement('option');
+      opt.value = `${lvl}`;
+      opt.innerText = `Level ${lvl}`;
+      level.appendChild(opt);
+    });
+    level.value = `${this.minPlanetLevel}`;
+
+    level.onchange = (evt) => {
+      try {
+        this.minPlanetLevel = parseInt(evt.target.value);
+      } catch (e) {
+        console.error('could not parse planet level', e);
+      }
+    }
 
     let button = document.createElement('button');
     button.style.width = '100%';
@@ -48,6 +75,7 @@ class Plugin {
         distributeSilver(
           planet.locationId,
           this.maxEnergyPercent,
+		  this.minPlanetLevel
         );
       } else {
         console.log('no planet selected');
@@ -65,7 +93,7 @@ class Plugin {
       for (let planet of df.getMyPlanets()) {
         if (isAsteroid(planet)) {
           setTimeout(() => {
-            moves += distributeSilver(planet.locationId, this.maxEnergyPercent)
+            moves += distributeSilver(planet.locationId, this.maxEnergyPercent, this.minPlanetLevel)
             message.innerText = `Sending to ${moves} planets.`;
           }, 0);
         }
@@ -75,6 +103,8 @@ class Plugin {
     container.appendChild(stepperLabel);
     container.appendChild(stepper);
     container.appendChild(percent);
+	container.appendChild(levelLabel);
+	container.appendChild(level);
     container.appendChild(button);
     container.appendChild(asteroidButton);
     container.appendChild(message);
@@ -83,12 +113,13 @@ class Plugin {
 
 plugin.register(new Plugin());
 
-function distributeSilver(fromId, maxDistributeEnergyPercent) {
+function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel) {
   const from = df.getPlanetWithId(fromId);
 
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter(p => p.owner === df.getAccount())
     .filter(p => !isAsteroid(p))
+	.filter(p => p.planetLevel >= minPLevel)
     .map(to => [to, distance(from, to)])
     .sort((a, b) => a[1] - b[1]);
 
