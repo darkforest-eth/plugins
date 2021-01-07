@@ -68,7 +68,11 @@ function findArtifacts() {
     .filter(canHaveArtifact)
     .filter(canFindArtifact)
     .forEach(planet => {
-      df.findArtifact(planet.locationId);
+      try {
+        df.findArtifact(planet.locationId);
+      } catch (err) {
+        console.log(err);
+      }
     });
 }
 
@@ -76,7 +80,11 @@ function withdrawArtifacts() {
   Array.from(df.getMyPlanets())
     .filter(canWithdraw)
     .forEach(planet => {
-      df.withdrawArtifact(planet.locationId);
+      try {
+        df.withdrawArtifact(planet.locationId);
+      } catch (err) {
+        console.log(err);
+      }
     });
 }
 
@@ -117,7 +125,12 @@ function WithdrawButton({ planet }) {
   };
 
   function withdrawArtifact() {
-    df.withdrawArtifact(planet.locationId);
+    try {
+      // Does this throw too?
+      df.withdrawArtifact(planet.locationId);
+    } catch (err) {
+      console.log(err);
+    }
     setWithdrawing(true);
   }
 
@@ -347,12 +360,12 @@ function Untaken({ selected }) {
     color: 'black',
   };
 
-  let {x: homeX, y: homeY} = ui.getHomeCoords()
+  let { x: homeX, y: homeY } = ui.getHomeCoords()
 
   let [lastLocationId, setLastLocationId] = useState(null);
   let [centerX, setCenterX] = useState(homeX);
   let [centerY, setCenterY] = useState(homeY);
-  
+
   const onChangeX = (e) => {
     return setCenterX(e.target.value)
   }
@@ -363,20 +376,20 @@ function Untaken({ selected }) {
 
   const planets = allPlanetsWithArtifacts()
     .filter(isUnowned);
-  
+
   let planetsArray = planets.map(planet => {
     let x = planet.location.coords.x;
     let y = planet.location.coords.y;
-    let distanceFromTargeting = parseInt(Math.sqrt(Math.pow((x-centerX),2) + Math.pow((y-centerY),2)));
+    let distanceFromTargeting = parseInt(Math.sqrt(Math.pow((x - centerX), 2) + Math.pow((y - centerY), 2)));
 
-    return {locationId: planet.locationId, biome: planet.biome, x, y, distanceFromTargeting};
+    return { locationId: planet.locationId, biome: planet.biome, x, y, distanceFromTargeting };
   });
 
-  planetsArray.sort((p1,p2) => (p1.distanceFromTargeting - p2.distanceFromTargeting));
+  planetsArray.sort((p1, p2) => (p1.distanceFromTargeting - p2.distanceFromTargeting));
 
   let planetsChildren = planetsArray.map(planet => {
 
-    let {locationId, x, y, distanceFromTargeting} = planet;
+    let { locationId, x, y, distanceFromTargeting } = planet;
     let biome = BiomeNames[planet.biome];
 
     let planetEntry = {
@@ -442,6 +455,8 @@ function AutoButton({ loop, onText, offText }) {
     }
 
     if (isOn) {
+      // Run once before interval
+      loop();
       let timerId = setInterval(loop, AUTO_INTERVAL);
       setTimerId(timerId);
     }
