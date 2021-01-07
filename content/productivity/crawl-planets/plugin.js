@@ -1,3 +1,7 @@
+let {
+  move,
+} = await import('https://plugins.zkga.me/utils/queued-move.js');
+
 class Plugin {
   constructor() {
     this.minPlanetLevel = 3;
@@ -57,19 +61,44 @@ class Plugin {
       }
     }
 
+    let message = document.createElement('div');
+
     let button = document.createElement('button');
     button.style.width = '100%';
-    button.innerHTML = 'Crawl!'
+    button.style.marginBottom = '10px';
+    button.innerHTML = 'Crawl from selected!'
     button.onclick = () => {
       let planet = ui.getSelectedPlanet();
       if (planet) {
-        capturePlanets(
+        message.innerText = 'Please wait...';
+        let moves = capturePlanets(
           planet.locationId,
           this.minPlanetLevel,
           this.maxEnergyPercent,
         );
+        message.innerText = `Crawling ${moves} planets.`;
       } else {
-        console.log('no planet selected');
+        message.innerText = 'No planet selected.';
+      }
+    }
+
+    let globalButton = document.createElement('button');
+    globalButton.style.width = '100%';
+    globalButton.style.marginBottom = '10px';
+    globalButton.innerHTML = 'Crawl everything!'
+    globalButton.onclick = () => {
+      message.innerText = 'Please wait...';
+
+      let moves = 0;
+      for (let planet of df.getMyPlanets()) {
+        setTimeout(() => {
+          moves += capturePlanets(
+            planet.locationId,
+            this.minPlanetLevel,
+            this.maxEnergyPercent,
+          );
+          message.innerText = `Crawling ${moves} planets.`;
+        }, 0);
       }
     }
 
@@ -79,6 +108,8 @@ class Plugin {
     container.appendChild(levelLabel);
     container.appendChild(level);
     container.appendChild(button);
+    container.appendChild(globalButton);
+    container.appendChild(message);
   }
 }
 
@@ -96,9 +127,11 @@ function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent) {
   }
 
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
-    .filter(p => p.owner !== df.account)
-    .filter(p => p.owner === "0x0000000000000000000000000000000000000000")
-    .filter(p => p.planetLevel >= minCaptureLevel)
+    .filter(p => (
+      p.owner !== df.account &&
+      p.owner === "0x0000000000000000000000000000000000000000" &&
+      p.planetLevel >= minCaptureLevel
+    ))
     .map(to => {
       return [to, distance(from, to)]
     })
@@ -108,13 +141,13 @@ function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent) {
   const energyBudget = Math.floor((maxDistributeEnergyPercent / 100) * planet.energy);
 
   let energySpent = 0;
+  let moves = 0;
   while (energyBudget - energySpent > 0 && i < candidates_.length) {
 
     const energyLeft = energyBudget - energySpent;
 
     // Remember its a tuple of candidates and their distance
     const candidate = candidates_[i++][0];
-    console.log(candidate);
 
     // Rejected if has unconfirmed pending arrivals
     const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === candidate.locationId)
@@ -135,10 +168,12 @@ function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent) {
       continue;
     }
 
-    console.log(`df.move("${fromId}","${candidate.locationId}",${energyNeeded},0)`);
-    df.move(fromId, candidate.locationId, energyNeeded, 0);
+    move(fromId, candidate.locationId, energyNeeded, 0);
     energySpent += energyNeeded;
+    moves += 1;
   }
+
+  return moves;
 }
 
 function getArrivalsForPlanet(planetId) {
