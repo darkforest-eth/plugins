@@ -1,3 +1,7 @@
+let {
+  move,
+} = await import('https://plugins.zkga.me/utils/queued-move.js');
+
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 85;
@@ -31,9 +35,11 @@ class Plugin {
       }
     }
 
+    let message = document.createElement('div');
+
     let button = document.createElement('button');
     button.style.width = '100%';
-    button.style.marginBlockEnd = '10px';
+    button.style.marginBottom = '10px';
     button.innerHTML = 'Distribute selected'
     button.onclick = () => {
       let planet = ui.getSelectedPlanet();
@@ -48,18 +54,35 @@ class Plugin {
       }
     }
 
+    let asteroidButton = document.createElement('button');
+    asteroidButton.style.width = '100%';
+    asteroidButton.style.marginBottom = '10px';
+    asteroidButton.innerHTML = 'Distribute asteroids'
+    asteroidButton.onclick = () => {
+      message.innerText = 'Please wait...';
+
+      let moves = 0;
+      for (let planet of df.getMyPlanets()) {
+        if (isAsteroid(planet)) {
+          setTimeout(() => {
+            moves += distributeSilver(planet.locationId, this.maxEnergyPercent)
+            message.innerText = `Sending to ${moves} planets.`;
+          }, 0);
+        }
+      }
+    }
+
     container.appendChild(stepperLabel);
     container.appendChild(stepper);
     container.appendChild(percent);
     container.appendChild(button);
+    container.appendChild(asteroidButton);
+    container.appendChild(message);
   }
 }
 
 plugin.register(new Plugin());
 
-// distribute all silver to your closest owned planets who need until you run out
-// of silver or energy, but don't go below 25% total energy
-// distribute_funds("0000589000f2b5ff2e7823c5fd51eba81e283d0fb4487d6d1d9ea4d5b22eae39", 25);
 function distributeSilver(fromId, maxDistributeEnergyPercent) {
   const from = df.getPlanetWithId(fromId);
 
@@ -76,6 +99,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent) {
 
   let energySpent = 0;
   let silverSpent = 0;
+  let moves = 0;
   while (energyBudget - energySpent > 0 && i < candidates_.length) {
 
     const silverLeft = silverBudget - silverSpent;
@@ -111,10 +135,13 @@ function distributeSilver(fromId, maxDistributeEnergyPercent) {
       continue;
     }
 
-    df.move(fromId, candidate.locationId, energyNeeded, silverNeeded);
+    move(fromId, candidate.locationId, energyNeeded, silverNeeded);
     energySpent += energyNeeded;
     silverSpent += silverNeeded;
+    moves += 1;
   }
+
+  return moves;
 }
 
 function isAsteroid(planet) {
