@@ -1,5 +1,5 @@
 ---
 title: Distribute Silver
-date: 2021-01-04T20:43:19-07:00
-subtitle: Distribute all silver from a planet or asteroid.
+date: 2021-01-06T18:36:00-07:00
+subtitle: Distribute your silver!
 ---
