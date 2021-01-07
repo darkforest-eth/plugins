@@ -89,17 +89,17 @@ class Plugin {
     globalButton.onclick = () => {
       message.innerText = 'Please wait...';
 
-      setTimeout(() => {
-        let moves = 0;
-        for (let planet of df.getMyPlanets()) {
+      let moves = 0;
+      for (let planet of df.getMyPlanets()) {
+        setTimeout(() => {
           moves += capturePlanets(
             planet.locationId,
             this.minPlanetLevel,
             this.maxEnergyPercent,
           );
-        }
-        message.innerText = `Crawling ${moves} planets.`;
-      }, 0);
+          message.innerText = `Crawling ${moves} planets.`;
+        }, 0);
+      }
     }
 
     container.appendChild(stepperLabel);
