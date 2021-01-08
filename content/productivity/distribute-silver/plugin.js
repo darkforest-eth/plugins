@@ -35,7 +35,6 @@ class Plugin {
         console.error('could not parse energy percent', e);
       }
     }
-	
     let message = document.createElement('div');
 
 
