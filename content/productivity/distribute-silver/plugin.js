@@ -5,7 +5,7 @@ let {
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 85;
-	this.minPlanetLevel = 3;
+    this.minPlanetLevel = 3;
   }
   render(container) {
     container.style.width = '200px';
@@ -36,7 +36,7 @@ class Plugin {
       }
     }
 	
-	let message = document.createElement('div');
+    let message = document.createElement('div');
 
 
     let levelLabel = document.createElement('label');
@@ -75,7 +75,7 @@ class Plugin {
         distributeSilver(
           planet.locationId,
           this.maxEnergyPercent,
-		  this.minPlanetLevel
+          this.minPlanetLevel
         );
       } else {
         console.log('no planet selected');
@@ -103,8 +103,8 @@ class Plugin {
     container.appendChild(stepperLabel);
     container.appendChild(stepper);
     container.appendChild(percent);
-	container.appendChild(levelLabel);
-	container.appendChild(level);
+    container.appendChild(levelLabel);
+    container.appendChild(level);
     container.appendChild(button);
     container.appendChild(asteroidButton);
     container.appendChild(message);
@@ -119,7 +119,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel) {
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter(p => p.owner === df.getAccount())
     .filter(p => !isAsteroid(p))
-	.filter(p => p.planetLevel >= minPLevel)
+    .filter(p => p.planetLevel >= minPLevel)
     .map(to => [to, distance(from, to)])
     .sort((a, b) => a[1] - b[1]);
 
