@@ -55,7 +55,10 @@ class PerformanceOptimizerState {
   }
   
   destroy() {
-    console.log('destroyed.');
+    this.pluginWindow = null;
+    window.requestAnimationFrame= window._requestAnimationFrame;
+    df.snarkHelper.getMoveArgs = df.snarkHelper._getMoveArgs;
+    console.log("original functions restored.");
   }
 }
 
