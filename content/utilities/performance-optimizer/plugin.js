@@ -11,32 +11,62 @@ class PerformanceOptimizerState {
     this.caching = false;
     this.cache = {};
     this.cacheCount = 0;
+
+    this.destroyed = false;
     
-    this.lastRenderStart = 0;
-    this.lastRenderDuration = 0;
-    
+    const requestIDMap = {};
+    let nextRequestID = 0;
+
     window._requestAnimationFrame = window.requestAnimationFrame;
-    window.requestAnimationFrame = callback => window._requestAnimationFrame(() => {
-      if (this.rendering === "fps") {
-        const now = Date.now();
-        if (this.renderingFps > 0 && now - this.lastRenderStart >= 1000 / this.renderingFps) {
-          this.lastRenderStart = now;
-          return callback();
+    const requestAnimationFrame = callback => {
+      let currentCallback, requestID;
+      let lastRenderStart = 0;
+      let lastRenderDuration = 0;
+
+      const execute = () => {
+        delete requestIDMap[requestID];
+        window.requestAnimationFrame = startLoop;
+        currentCallback();
+        window.requestAnimationFrame = requestAnimationFrame;
+      };
+
+      const loop = () => {
+        if (this.destroyed) return currentCallback();
+
+        if (this.rendering === "fps") {
+          const now = Date.now();
+          if (this.renderingFps > 0 && now - lastRenderStart >= 1000 / this.renderingFps) {
+            lastRenderStart = now;
+            return execute();
+          }
+        } else if (this.rendering === "percent") {
+          const now = Date.now();
+          if (this.renderingPercentage > 0 && now - lastRenderStart >= Math.min(lastRenderDuration * 100 / this.renderingPercentage, 1000)) {
+            lastRenderStart = now;
+            execute();
+            lastRenderDuration = Date.now() - now;
+            return;
+          }
+        } else if (this.rendering !== "stopped") {
+          return execute();
         }
-      } else if (this.rendering === "percent") {
-        const now = Date.now();
-        if (this.renderingPercentage > 0 && now - this.lastRenderStart >= Math.min(this.lastRenderDuration * 100 / this.renderingPercentage, 1000)) {
-          this.lastRenderStart = now;
-          callback();
-          this.lastRenderDuration = Date.now() - now;
-          return;
-        }
-      } else if (this.rendering === "stopped") {
-      } else {
-        return callback();
+        requestIDMap[requestID] = window._requestAnimationFrame(loop);
       }
-      window.requestAnimationFrame(callback);
-    });
+      const startLoop = callback => {
+        requestID = nextRequestID++;
+        currentCallback = callback;
+        requestIDMap[requestID] = window._requestAnimationFrame(loop);
+        return requestID;
+      }
+      return startLoop(callback);
+    };
+    window.requestAnimationFrame = requestAnimationFrame;
+
+    window._cancelAnimationFrame = window.cancelAnimationFrame;
+    window.cancelAnimationFrame = requestID => {
+      window._cancelAnimationFrame(requestIDMap[requestID]);
+      delete requestIDMap[requestID];
+    };
     
     df.snarkHelper._getMoveArgs = df.snarkHelper.getMoveArgs;
     df.snarkHelper.getMoveArgs = async (x1, y1, x2, y2, r, distMax) => {
@@ -55,10 +85,13 @@ class PerformanceOptimizerState {
   }
   
   destroy() {
+    this.destroyed = true;
     this.pluginWindow = null;
+    window.cancelAnimationFrame = window._cancelAnimationFrame;
     window.requestAnimationFrame= window._requestAnimationFrame;
     df.snarkHelper.getMoveArgs = df.snarkHelper._getMoveArgs;
     console.log("original functions restored.");
+    delete df.performanceOptimizerState;
   }
 }
 
@@ -82,7 +115,7 @@ class PerformanceOptimizer {
         .append($('<span> unlimited</span>'))
       )
       .append($('<div />')
-        .append($('<input type="radio" name="rendering" value="fps" disabled=true />'))
+        .append($('<input type="radio" name="rendering" value="fps" />'))
         .append($('<span> max FPS: </span>'))
         .append($(`<input type="range" min="0" max="30" value="${state.renderingFps}" class="slider" id="fpsRange">`))
         .append($(`<span id="fpsSpan"> ${state.renderingFps} FPS</span>`))
