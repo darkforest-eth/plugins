@@ -1,5 +1,5 @@
 // dark forest terrain mini-map
-// 
+//
 // use at your own risk!
 //
 // this plugin:
@@ -33,14 +33,14 @@ class Plugin {
       div.style.maxHeight = '1200px';
 
       const radius = ui.getWorldRadius();
-
+      const sizeFactor = (this.canvas.width / 2) + 30;
       let step = 5000;
       let dot = 4;
 
       // utility functions
 
       const normalize = (val) => {
-        return Math.floor( ( val + radius) / 400);
+        return Math.floor( ( val + radius) / sizeFactor);
       }
 
       const checkBounds = (a, b, x, y, r) => {
@@ -131,16 +131,30 @@ class Plugin {
 
         const ctx = this.canvas.getContext('2d');
 
+        let inner = 0;
+        let outer = 0;
+        let space = 0;
+
         for (let i = 0; i < data.length; i++) {
           if (data[i].type === 0) {
             ctx.fillStyle = '#21215d'; // inner nebula
+            inner++;
           } else if (data[i].type === 1) {
             ctx.fillStyle = '#24247d'; // outer nebula
+            outer++;
           } else if (data[i].type === 2) {
             ctx.fillStyle = '#000000'; // deep space
+            space++;
           }
           ctx.fillRect( normalize(data[i].x) + 10, normalize(data[i].y * -1) + 10, dot, dot );
         }
+
+        let total = inner+outer+space;
+        console.log(`
+        inner: ${inner} -  ${((inner / total) * 100).toFixed(2)}%,
+        outer: ${outer} -  ${((outer / total) * 100).toFixed(2)}%,
+        space: ${space} -  ${((space / total) * 100).toFixed(2)}%,
+        total: ${total} - 100.00%`);
 
         // draw larger white pixel at home coordinates
 
@@ -150,11 +164,26 @@ class Plugin {
 
         // draw extents of map
 
+        let radiusNormalized = normalize(radius) / 2;
+
         ctx.beginPath();
-        ctx.arc(380, 380, 372, 0, 2 * Math.PI);
+        ctx.arc(radiusNormalized + 12, radiusNormalized + 12, radiusNormalized, 0, 2 * Math.PI);
         ctx.strokeStyle = '#DDDDDD';
         ctx.lineWidth = 2;
         ctx.stroke();
+
+        // get viewport extents
+
+        const topLeft = ui.getViewport().canvasToWorldCoords({x:0,y:0});
+        ctx.strokeStyle = '#DDDDDD';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(
+          normalize(topLeft.x),
+          normalize(topLeft.y * -1),
+          Math.floor(ui.getViewport().widthInWorldUnits / sizeFactor),
+          Math.floor(ui.getViewport().heightInWorldUnits / sizeFactor)
+        );
+
       }
 
       div.appendChild(getButton);
