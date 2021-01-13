@@ -6,20 +6,22 @@
 // 1) samples the entire map in a grid
 // 2) determines the space type at each coordinate
 // 3) renders a rough map of every inner nebula, outer nebula, and deep space
+// 4) overlays the viewport and home location
+// 5) re-centers the viewport around the location clicked on the mini-map
 //
 // there are three sliders to control the map resolution:
 // A) control sample spacing to increase and decrease the resolution (and processing time)
 // B) change the pixel size of each sample point
 // C) change the dimensions of the mini-map
 //
-// most maps render in <15 seconds
+// notes:
+// - most maps render in <15 seconds
+// - viewport boundry not redrawn when location is changed via click
 
 class Plugin {
 
   constructor() {
     this.canvas = document.createElement('canvas');
-    this.canvas.width = '400';
-    this.canvas.height = '200';
     this.minDensity = 1000;
     this.maxDensity = 10000;
   }
@@ -28,8 +30,8 @@ class Plugin {
 
       // default values
 
-      div.style.width = '100%';
-      div.style.height = '100%';
+      div.style.width = '400px';
+      div.style.height = '180px';
       div.style.maxWidth = '1200px';
       div.style.maxHeight = '1200px';
 
@@ -37,12 +39,20 @@ class Plugin {
       let step = 5000;
       let dot = 4;
       let canvasSize = 800;
-      let sizeFactor = 420;
+      let sizeFactor = 380;
 
       // utility functions
 
       const normalize = (val) => {
-        return Math.floor( ( val + radius ) * sizeFactor / ( radius * 2 ) );
+        return Math.floor( ( ( val + radius ) * sizeFactor ) / ( radius * 2 ) );
+      }
+
+      const toPixels = (val) => {
+        return Math.floor( ( val * sizeFactor ) / ( radius * 2 ) );
+      }
+
+      const toWorldCoord = (val) => {
+        return Math.floor( ( ( val * radius * 2 ) / sizeFactor ) - radius );
       }
 
       const checkBounds = (a, b, x, y, r) => {
@@ -129,6 +139,8 @@ class Plugin {
       // sample points in a grid and determine space type
 
       const generate = () => {
+        div.style.width = '100%';
+        div.style.height = '100%';
         this.canvas.width = canvasSize;
         this.canvas.height = canvasSize;
         sizeFactor = canvasSize - 20;
@@ -181,7 +193,7 @@ class Plugin {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // get viewport extents
+        // draw initial viewport extents
 
         const topLeft = ui.getViewport().canvasToWorldCoords({x:0,y:0});
         ctx.strokeStyle = '#DDDDDD';
@@ -189,9 +201,22 @@ class Plugin {
         ctx.strokeRect(
           normalize(topLeft.x),
           normalize(topLeft.y * -1),
-          Math.floor(ui.getViewport().widthInWorldUnits / sizeFactor),
-          Math.floor(ui.getViewport().heightInWorldUnits / sizeFactor)
+          Math.floor(toPixels(ui.getViewport().widthInWorldUnits)),
+          Math.floor(toPixels(ui.getViewport().heightInWorldUnits))
         );
+
+        // recenter viewport based on click location
+
+        this.canvas.style='cursor: pointer;';
+
+        this.canvas.addEventListener('click', function(event) {
+          let x = event.offsetX;
+          let y = event.offsetY;
+          let xWorld = toWorldCoord(x);
+          let yWorld = toWorldCoord(y) * -1;
+
+          ui.centerCoords({x:xWorld,y:yWorld});
+        }, false);
 
       }
 
