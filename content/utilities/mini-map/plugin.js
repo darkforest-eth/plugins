@@ -80,6 +80,8 @@ class Plugin {
         clearButton.addEventListener('click', async () => {
           const ctx = this.canvas.getContext('2d');
           ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          div.style.width = '400px';
+          div.style.height = '180px';
         });
 
       let stepper = document.createElement('input');
