@@ -7,9 +7,10 @@
 // 2) determines the space type at each coordinate
 // 3) renders a rough map of every inner nebula, outer nebula, and deep space
 //
-// there are two sliders to control the map resolution:
+// there are three sliders to control the map resolution:
 // A) control sample spacing to increase and decrease the resolution (and processing time)
 // B) change the pixel size of each sample point
+// C) change the dimensions of the mini-map
 //
 // most maps render in <15 seconds
 
@@ -36,12 +37,12 @@ class Plugin {
       let step = 5000;
       let dot = 4;
       let canvasSize = 800;
-      let sizeFactor = 430;
+      let sizeFactor = 420;
 
       // utility functions
 
       const normalize = (val) => {
-        return Math.floor( ( val + radius) / sizeFactor);
+        return Math.floor( ( val + radius ) * sizeFactor / ( radius * 2 ) );
       }
 
       const checkBounds = (a, b, x, y, r) => {
@@ -130,7 +131,7 @@ class Plugin {
       const generate = () => {
         this.canvas.width = canvasSize;
         this.canvas.height = canvasSize;
-        sizeFactor = (1200 - canvasSize) + 20;
+        sizeFactor = canvasSize - 20;
         let data = [];
 
         // generate x coordinates
