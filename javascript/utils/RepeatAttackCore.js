@@ -1,13 +1,7 @@
 function checkNumInboundVoyages(planetId, from = "") {
   if (from == "") {
     return (
-      df
-        .getAllVoyages()
-        .filter(
-          (v) =>
-            v.toPlanet == planetId &&
-            v.arrivalTime > new Date().getTime() / 1000
-        ).length +
+      getArrivalsForPlanet(planetId).length +
       df.getUnconfirmedMoves().filter((m) => m.to == planetId).length
     );
   } else {
@@ -118,10 +112,11 @@ function findWeapons(
   return mapped.map((p) => p.planet).slice(0, numOfPlanets);
 }
 function planetIsRevealed(planetId) {
-  return !!contractsAPI.getLocationOfPlanet(planetId);
+  return !!df.getLocationOfPlanet(planetId);
 }
 async function waitingForPassengers(locationId, passengersArray) {
-  const arrivals = await df.contractsAPI.getArrivalsForPlanet(locationId);
+  const arrivals = getArrivalsForPlanet(locationId);
+
   return (
     arrivals
       .filter((a) => a.player == df.account)
@@ -639,9 +634,7 @@ async function capturePlanets(
       const candidate = candidates_[i++][0];
 
       // Check if has incoming moves from another planet to safe
-      const arrivals = await df.contractsAPI.getArrivalsForPlanet(
-        candidate.locationId
-      );
+      const arrivals = getArrivalsForPlanet(candidate.locationId);
       if (arrivals.length !== 0) {
         continue;
       }
@@ -715,9 +708,7 @@ async function distributeSilver(fromId, maxDistributeEnergyPercent) {
     const candidate = candidates_[i++][0];
 
     // Check if has incoming moves from a previous asteroid to be safe
-    const arrivals = await df.contractsAPI.getArrivalsForPlanet(
-      candidate.locationId
-    );
+    const arrivals = getArrivalsForPlanet(candidate.locationId);
     if (arrivals.length !== 0) {
       continue;
     }
@@ -753,6 +744,10 @@ async function distributeSilver(fromId, maxDistributeEnergyPercent) {
     energySpent += energyNeeded;
     silverSpent += silverNeeded;
   }
+}
+
+function getArrivalsForPlanet(planetId) {
+  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
 }
 
 function checkPlanetUpgradeLevel(planet) {

@@ -177,7 +177,7 @@ function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent) {
 }
 
 function getArrivalsForPlanet(planetId) {
-  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId);
+  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
 }
 
 //returns tuples of [planet,distance]

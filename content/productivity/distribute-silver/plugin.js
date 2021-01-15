@@ -186,7 +186,7 @@ function distance(from, to) {
 }
 
 function getArrivalsForPlanet(planetId) {
-  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId);
+  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
 }
 
 plugin.register(new Plugin());
