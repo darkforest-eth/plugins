@@ -1,3 +1,8 @@
+// # Universe Scout
+// The universe scout plugin launches a modal that shows you the coordinates,
+// space type, and biome of your mouse as you hover (even for unexplored
+// space!).
+
 const {
   default: perlin,
 } = await import('https://plugins.zkga.me/miner/perlin.js')
