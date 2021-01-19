@@ -30,6 +30,14 @@ After you've created a new plugin directory, update the `index.md`, `plugin.js`,
 
 Feel free to add additional information to your plugin directory, such as we did with `remote-explorer`.
 
+## Contribution Guidelines
+
+- Has to have screenshot, ideally with result of action and or the ui, should to be ~20kb in size unless you really need more
+- Check desctructors cleanup all constructors, delete all new, reset all listeners and timers
+- Comments on top of the script explaining what is is and how to use it
+- Simple clean auditable javascript, expect to go through a little back and forth code review
+- No external scripts being loaded except for from us https://plugins.zkga.me/utils/ or a few REALLY big names from knowns cdns have been allowed so far like: https://unpkg.com/htm/preact/standalone.module.js and https://cdn.skypack.dev/lodash.range
+
 ## Showcase local development
 
 To develop on the showcase page or theme itself, you can use `hugo` by installing as per above, then running `hugo server -D` in this repository.
