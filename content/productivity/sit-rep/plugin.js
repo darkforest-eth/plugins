@@ -333,7 +333,6 @@ function Assess({ selected }) {
     let p = simulatedPlanet;
     if (!p) return `Error`;
     if (p.event !== "INIT" && p.event !== "GROWTH") {
-      //            console.log (p.event.fromPlanet);
       return p.event.fromPlanet;
     }
     return "nothing to do";
@@ -344,8 +343,6 @@ function Assess({ selected }) {
     let damage;
     let ret = "";
     if (!p) return `Error`;
-
-    //        console.log (p);
 
     switch (p.event) {
       case "INIT": {
@@ -383,10 +380,6 @@ function Assess({ selected }) {
 
     let text = `t=${Math.round(planet.futureTinSeconds)}s @${Math.round(planet.energy / planet.energyCap * 100)}%`;
     text += getArrivalText(planet);
-
-    // debug
-    //        console.log(planet);
-
 
     return html`
         <div key=${getVoyId(planet)} style=${planetEntry}>
@@ -455,8 +448,6 @@ function SitRep({ selected }) {
   if (arrivals.length !== 0) {
     voyAttackingUs = arrivals.length;
   }
-
-  console.log("voyInMap", voyInMyMap);
 
   ////
   let arrivalsChildren = arrivals.map(arrival => {
