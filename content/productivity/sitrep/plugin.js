@@ -414,7 +414,6 @@ function SitRep({ selected }) {
   };
 
 
-  //    let report = sitRep();
   let notMyVoages = df.getAllVoyages()
     .filter((v) => v.player !== df.getAccount())
     .filter((v) => v.arrivalTime > Date.now() / 1000)
@@ -509,7 +508,7 @@ function App() {
 
   return html`
     <div style=${buttonBar}>
-    <button onClick=${() => setTab('sitRep')}>Sit Rep </button>
+    <button onClick=${() => setTab('sitRep')}>SitRep </button>
     <button onClick=${() => setTab('assess')}>Assess</button>
     </div>
     <div>

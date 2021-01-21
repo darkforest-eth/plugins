@@ -1,4 +1,4 @@
-# Sit Rep Dashboard
+# SitRep Dashboard
 
 See how many other players are active in your map.
 See incoming attacks.
