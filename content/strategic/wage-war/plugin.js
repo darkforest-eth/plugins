@@ -542,9 +542,7 @@ class Plugin {
                     scheduledAttack: fullAttack,
                     targetDefender: fullAttack[0].targetDefender
                 })
-            } else {
-                console.debug('[TEST_MODE]: handleAttacks triggered.')
-            } 
+            }
         }
     }
 
@@ -553,7 +551,6 @@ class Plugin {
         // Filter out this.attacksInProgress to remove now-irrelevant attacks
         if (this.attacksInProgress) {
             this.attacksInProgress.forEach((atkInProgress, idx) => {
-                //console.debug('atkInProgress',atkInProgress)
                 if (atkInProgress.atkEnd && Date.now() > atkInProgress.atkEnd) {
                     this.attacksInProgress.splice(idx, 1);
                     this.finishedAttacks.push(atkInProgress)
@@ -623,10 +620,6 @@ class Plugin {
             // Add new scheduled attacks to the state
             this.myScheduledAttacks = [ ...this.myScheduledAttacks, ...scheduledAttacks ];
         }
-        console.debug(`Scheduled Targets: ${this.myScheduledAttacks.length} - Scheduled Attacks: ${(this.myScheduledAttacks || []).reduce((allAttacks, attack) => [ ...allAttacks, ...attack ], []).length} - Attacks In Progress: ${this.attacksInProgress.length} - FinishedAttacks: ${this.finishedAttacks.length}`)
-        console.debug("this.myScheduledAttacks", this.myScheduledAttacks)
-        console.debug("this.attacksInProgress", this.attacksInProgress)
-        console.debug("this.finishedAttacks", this.finishedAttacks)
         render(html`
             <${WageWarApp}
                 df=${df}
