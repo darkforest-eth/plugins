@@ -2,7 +2,7 @@ const { html, render, useState, useEffect } = await import('https://unpkg.com/ht
 
 /* start-region:config */
 // Test mode toggle. Test mode stops transactions from being created, so dev can check target priority is correct
-const TEST_MODE = true;
+const TEST_MODE = false;
 
 // Never send more than 70% of total energyCap to attack, always maintain 30% defense threshold
 const DEFENSE_MAINTENANCE_MANDATORY_PERCENTAGE = 30;
