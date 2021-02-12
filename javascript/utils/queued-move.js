@@ -146,7 +146,7 @@ async function snark(actionId, oldX, oldY, newX, newY) {
   const distMax = Math.ceil(Math.sqrt(xDiff ** 2 + yDiff ** 2));
 
   try {
-    let [callArgs] = await df.snarkHelper.getMoveArgs(
+    let callArgs = await df.snarkHelper.getMoveArgs(
       oldX,
       oldY,
       newX,
