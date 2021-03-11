@@ -27,6 +27,7 @@ export class RemoteWorker {
       body: JSON.stringify({
         chunkFootprint: msgJson.chunkFootprint,
         planetRarity: msgJson.planetRarity,
+        spaceTypeKey: msgJson.spaceTypeKey,
       }),
       headers: {
         'Content-Type': 'application/json',

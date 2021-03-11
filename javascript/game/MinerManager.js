@@ -23,7 +23,7 @@ export class MinerManager extends Emitter {
   WorkerCtor = null;
   perlinThreshold = 0;
 
-  constructor(minedChunksStore, miningPattern, worldRadius, planetRarity, WorkerCtor) {
+  constructor(minedChunksStore, miningPattern, worldRadius, planetRarity, WorkerCtor, spaceTypeKey) {
     super();
 
     this.WorkerCtor = WorkerCtor;
@@ -34,6 +34,7 @@ export class MinerManager extends Emitter {
     this.planetRarity = planetRarity;
     // this.cores = navigator.hardwareConcurrency;
     this.workers = [];
+    this.spaceTypeKey = spaceTypeKey;
   }
 
   setPerlinThreshold(perlinThreshold) {
@@ -58,13 +59,14 @@ export class MinerManager extends Emitter {
     this.workers.map((x) => x.terminate());
   }
 
-  static create(chunkStore, miningPattern, worldRadius, planetRarity, WorkerCtor) {
+  static create(chunkStore, miningPattern, worldRadius, planetRarity, WorkerCtor, spaceTypeKey) {
     const minerManager = new MinerManager(
       chunkStore,
       miningPattern,
       worldRadius,
       planetRarity,
       WorkerCtor,
+      spaceTypeKey
     );
     range(minerManager.cores).forEach((i) => minerManager.initWorker(i));
 
@@ -238,6 +240,7 @@ export class MinerManager extends Emitter {
         workerIndex,
         totalWorkers: this.workers.length,
         planetRarity: this.planetRarity,
+        spaceTypeKey: this.spaceTypeKey,
         jobId,
         useMockHash: this.useMockHash,
       };

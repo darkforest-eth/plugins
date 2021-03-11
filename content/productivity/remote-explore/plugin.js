@@ -231,10 +231,10 @@ class Plugin {
     this.miners = [];
     this.id = 0;
 
-    this.addMiner('http://0.0.0.0:8000/mine');
+    this.addMiner('http://0.0.0.0:8000/mine',);
   }
 
-  addMiner = (url, patternType = 'spiral', chunkSize = 256) => {
+  addMiner = (url, spaceTypeKey, patternType = 'spiral', chunkSize = 256) => {
     // TODO: Somehow set a default coords
     const pattern = getPattern({ x: 0, y: 0 }, patternType, chunkSize)
     const miner = MinerManager.create(
@@ -243,6 +243,7 @@ class Plugin {
       df.getWorldRadius(),
       df.planetRarity,
       RemoteWorker,
+      ui.getSpaceTypeKey(),
     );
 
     miner.url = url;
