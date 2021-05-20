@@ -1,6 +1,6 @@
-let {
-  move,
-} = await import('https://plugins.zkga.me/utils/queued-move.js');
+import {
+  move
+} from 'https://plugins.zkga.me/utils/queued-move.js';
 
 class Plugin {
   constructor() {
@@ -110,7 +110,6 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
 
 function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel) {
   const from = df.getPlanetWithId(fromId);
@@ -189,4 +188,4 @@ function getArrivalsForPlanet(planetId) {
   return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
 }
 
-plugin.register(new Plugin());
+export default Plugin;
