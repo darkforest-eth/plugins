@@ -1,4 +1,4 @@
-import {Manager} from "https://practical-snyder-a3b69f.netlify.app/core.esm.js";
+import {Manager} from "https://plugins.zkga.me/utils/RepeatAttackCore.js";
 import figures from 'https://cdn.skypack.dev/figures';
 import {html, render, useState, useLayoutEffect } from 
   "https://unpkg.com/htm/preact/standalone.module.js";
