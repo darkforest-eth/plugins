@@ -3,15 +3,13 @@
 // space type, and biome of your mouse as you hover (even for unexplored
 // space!).
 
-const {
-  default: perlin,
-} = await import('https://plugins.zkga.me/miner/perlin.js')
 
 // Fake their enum
 const SpaceType = {
   0: 'Nebula',
   1: 'Space',
   2: 'Deep Space',
+  3: 'Dead Space',
 }
 
 // Fake their enum
@@ -26,6 +24,7 @@ const BiomeNames = [
   'Ice',
   'Wasteland',
   'Lava',
+  "Corrupted",
 ];
 
 class Plugin {
@@ -51,11 +50,11 @@ class Plugin {
     if (coords) {
       this.coords.innerHTML = `(${coords.x}, ${coords.y})`
       // Space perlin stuff
-      let spacePerlin = perlin(coords);
+      let spacePerlin = df.spaceTypePerlin(coords);
       let sk = df.spaceTypeFromPerlin(spacePerlin);
       this.spaceType.innerHTML = `Space: ${SpaceType[sk]}`;
       // Biome perlin stuff
-      let biomePerlin = perlin(coords, true, true);
+      let biomePerlin = df.biomebasePerlin(coords, true, true);
       let fakeLoc = {
         coords,
         perlin: spacePerlin,
@@ -78,4 +77,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
