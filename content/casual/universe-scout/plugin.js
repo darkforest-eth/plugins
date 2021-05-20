@@ -50,11 +50,11 @@ class Plugin {
     if (coords) {
       this.coords.innerHTML = `(${coords.x}, ${coords.y})`
       // Space perlin stuff
-      let spacePerlin = df.spaceTypePerlin(coords);
+      let spacePerlin = df.spaceTypePerlin(coords, true);
       let sk = df.spaceTypeFromPerlin(spacePerlin);
       this.spaceType.innerHTML = `Space: ${SpaceType[sk]}`;
       // Biome perlin stuff
-      let biomePerlin = df.biomebasePerlin(coords, true, true);
+      let biomePerlin = df.biomebasePerlin(coords, true);
       let fakeLoc = {
         coords,
         perlin: spacePerlin,
