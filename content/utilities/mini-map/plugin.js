@@ -24,7 +24,7 @@ class Plugin {
     this.canvas = document.createElement('canvas');
     this.minDensity = 1000;
     this.maxDensity = 10000;
-  }
+  } 
 
   async render(div) {
 
@@ -125,7 +125,7 @@ class Plugin {
       canvasStepper.min = '400';
       canvasStepper.max = '1000';
       canvasStepper.step = '10';
-      canvasStepper.value = '800';
+      canvasStepper.value = '400';
       canvasStepper.style.width = '100%';
       canvasStepper.style.height = '12px';
 
@@ -158,7 +158,9 @@ class Plugin {
               data.push({
                 x: i,
                 y: j,
-                type: df.spaceTypeFromPerlin(df.getPerlin({x: i, y: j}))
+                type: df.spaceTypeFromPerlin(
+                  df.spaceTypePerlin({ x: i, y: j })
+                ),
               })
             }
           }
@@ -175,6 +177,8 @@ class Plugin {
             ctx.fillStyle = '#24247d'; // outer nebula
           } else if (data[i].type === 2) {
             ctx.fillStyle = '#000000'; // deep space
+          } else if (data[i].type === 3) {
+            ctx.fillStyle = "#460046"; // Corrupted slightly brighter for better visibility
           }
           ctx.fillRect( normalize(data[i].x) + 10, normalize(data[i].y * -1) + 10, dot, dot );
         }
@@ -239,4 +243,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
