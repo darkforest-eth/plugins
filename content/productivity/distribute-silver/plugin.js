@@ -110,7 +110,6 @@ class Plugin {
   }
 }
 
-export default Plugin;
 
 function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel) {
   const from = df.getPlanetWithId(fromId);
