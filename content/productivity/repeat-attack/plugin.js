@@ -1,19 +1,8 @@
-// # Repeat Attack
-//
-// Setup and manage your repeat attacks.
-//
-// Potential Uses:
-//  - Keep your big planets topped up with energy
-//  - Take a large pirate owned planet overtime
-//  - Mitigate a large enemy planet's energy growth during a siege
+import {Manager} from "https://practical-snyder-a3b69f.netlify.app/core.esm.js";
+import figures from 'https://cdn.skypack.dev/figures';
+import {html, render, useState, useLayoutEffect } from 
+  "https://unpkg.com/htm/preact/standalone.module.js";
 
-const { default: Manager } = await import(
-  "https://plugins.zkga.me/utils/RepeatAttackCore.js"
-);
-
-const { html, render, useState, useLayoutEffect } = await import(
-  "https://unpkg.com/htm/preact/standalone.module.js"
-);
 
 let Spacing = {
   marginLeft: "12px",
@@ -57,14 +46,14 @@ function Attack({ action, onDelete }) {
           onClick=${() => centerPlanet(action.payload.srcId)}
           >${planetShort(action.payload.srcId)}</span
         >
-        →
+    ${figures.arrowRight}
         <span
           style=${{ ...Spacing, ...Clickable }}
           onClick=${() => centerPlanet(action.payload.syncId)}
           >${planetShort(action.payload.syncId)}</span
         ></span
       >
-      <button onClick=${remoteAttack}>✕</button>
+      <button onClick=${remoteAttack}>${figures.cross}</button>
     </div>
   `;
 }
@@ -139,11 +128,9 @@ function AttackList() {
 
   return html`
     <h1>Set-up a Recurring Attack</h1>
-
     <i style=${{ ...VerticalSpacing, display: 'block' }}
       >Auto-attack when source planet >75% energy
     </i>
-
     <${AddAttack} onCreate=${() => setActions([...op.actions])} />
     <h1 style=${HalfVerticalSpacing}>
       Recurring Attacks (${actionsChildren.length})
@@ -169,7 +156,6 @@ class Plugin {
     if (typeof window.op === "undefined") {
       window.op = new Manager();
     }
-    this.op = window.op;
     this.root = null;
     this.container = null;
   }
@@ -185,4 +171,7 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+/**
+ * And don't forget to export it!
+ */
+export default Plugin;
