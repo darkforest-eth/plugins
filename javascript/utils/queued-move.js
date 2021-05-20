@@ -211,7 +211,7 @@ export function move(from, to, forces, silver, artifactMoved) {
   };
 
   if (artifactMoved) {
-    const artifact = this.entityStore.getArtifactById(artifactMoved);
+    const artifact = df.entityStore.getArtifactById(artifactMoved);
     if (!artifact) {
       throw new Error("couldn't find this artifact");
     }
