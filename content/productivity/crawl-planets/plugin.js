@@ -113,7 +113,7 @@ class Plugin {
   }
 }
 
-export default Plugin
+export default Plugin;
 
 
 function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent) {
