@@ -158,7 +158,6 @@ class Plugin {
               data.push({
                 x: i,
                 y: j,
-
                 type: df.spaceTypeFromPerlin(
                   df.spaceTypePerlin({ x: i, y: j })
                 ),
