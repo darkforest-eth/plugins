@@ -1,5 +1,6 @@
 import PromiseQueue from 'https://cdn.skypack.dev/p-queue';
 import Serde  from 'https://cdn.skypack.dev/@darkforest_eth/serde';
+import { CONTRACT_PRECISION } from 'https://cdn.skypack.dev/@darkforest_eth/constants';
 
 let moveSnarkQueue;
 if (window.moveSnarkQueue === undefined) {
@@ -71,7 +72,6 @@ let MoveArgIdxs = {
   SHIPS_SENT: 5,
   SILVER_SENT: 6,
 }
-let contractPrecision = 1000;
 
 // Kinda ContractsAPI.move() but without `waitFor` logic
 async function send(actionId, snarkArgs) {
@@ -84,8 +84,8 @@ async function send(actionId, snarkArgs) {
       snarkArgs[ZKArgIdx.PROOF_C],
       [
         ...snarkArgs[ZKArgIdx.DATA],
-        (txIntent.forces * contractPrecision).toString(),
-        (txIntent.silver * contractPrecision).toString(),
+        (txIntent.forces * CONTRACT_PRECISION).toString(),
+        (txIntent.silver * CONTRACT_PRECISION).toString(),
         "0"
       ],
 
@@ -123,8 +123,8 @@ async function send(actionId, snarkArgs) {
       to: Serde.locationIdFromDecStr(
         args[ZKArgIdx.DATA][MoveArgIdxs.TO_ID]
       ),
-      forces: forcesFloat / contractPrecision,
-      silver: silverFloat / contractPrecision,
+      forces: forcesFloat / CONTRACT_PRECISION,
+      silver: silverFloat / CONTRACT_PRECISION,
     };
 
     if (txIntent?.artifact) unminedMoveTx.artifact = txIntent.artifact;
