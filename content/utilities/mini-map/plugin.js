@@ -178,7 +178,7 @@ class Plugin {
           } else if (data[i].type === 2) {
             ctx.fillStyle = '#000000'; // deep space
           } else if (data[i].type === 3) {
-            ctx.fillStyle = "magenta"; // Corrupted... Will sub out with actual color
+            ctx.fillStyle = "#250025"; // Corrupted
           }
           ctx.fillRect( normalize(data[i].x) + 10, normalize(data[i].y * -1) + 10, dot, dot );
         }
