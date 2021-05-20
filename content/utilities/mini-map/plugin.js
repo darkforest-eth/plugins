@@ -24,7 +24,7 @@ class Plugin {
     this.canvas = document.createElement('canvas');
     this.minDensity = 1000;
     this.maxDensity = 10000;
-  }
+  } 
 
   async render(div) {
 
@@ -125,7 +125,7 @@ class Plugin {
       canvasStepper.min = '400';
       canvasStepper.max = '1000';
       canvasStepper.step = '10';
-      canvasStepper.value = '800';
+      canvasStepper.value = '400';
       canvasStepper.style.width = '100%';
       canvasStepper.style.height = '12px';
 
@@ -178,7 +178,7 @@ class Plugin {
           } else if (data[i].type === 2) {
             ctx.fillStyle = '#000000'; // deep space
           } else if (data[i].type === 3) {
-            ctx.fillStyle = "#250025"; // Corrupted
+            ctx.fillStyle = "#460046"; // Corrupted slightly brighter for better visibility
           }
           ctx.fillRect( normalize(data[i].x) + 10, normalize(data[i].y * -1) + 10, dot, dot );
         }
