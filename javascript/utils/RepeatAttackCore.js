@@ -119,6 +119,7 @@ function findWeapons(
 function planetIsRevealed(planetId) {
   return !!df.contractsAPI.getLocationOfPlanet(planetId);
 }
+
 async function waitingForPassengers(locationId, passengersArray) {
   const arrivals = await df.contractsAPI.getArrivalsForPlanet(locationId);
   return (
@@ -422,7 +423,7 @@ async function chainedMove(action) {
     console.log("too soon, waiting for passengers to depart");
     return false;
   } else if (await waitingForPassengers(srcId, passengers)) {
-    console.log("Waiting for passengers to arrive'");
+    console.log("Waiting for passengers for passengers to arrive'");
     return false;
   } else {
     return send();
