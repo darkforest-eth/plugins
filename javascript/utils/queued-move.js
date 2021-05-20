@@ -1,9 +1,7 @@
 import PromiseQueue from 'https://cdn.skypack.dev/p-queue';
 import Serde  from 'https://cdn.skypack.dev/@darkforest_eth/serde';
-<<<<<<< HEAD
 import { CONTRACT_PRECISION } from 'https://cdn.skypack.dev/@darkforest_eth/constants';
-=======
->>>>>>> 0183883... updated queued-move to use Serde and handle artifactMoved
+
 
 let moveSnarkQueue;
 if (window.moveSnarkQueue === undefined) {
