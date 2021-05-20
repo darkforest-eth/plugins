@@ -158,7 +158,7 @@ class Plugin {
               data.push({
                 x: i,
                 y: j,
-                type: df.entityStore.spaceTypeFromPerlin(
+                type: df.spaceTypeFromPerlin(
                   df.spaceTypePerlin({ x: i, y: j })
                 ),
               })
