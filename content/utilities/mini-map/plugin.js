@@ -158,7 +158,9 @@ class Plugin {
               data.push({
                 x: i,
                 y: j,
-                type: df.spaceTypeFromPerlin(df.getPerlin({x: i, y: j}))
+                type: df.entityStore.spaceTypeFromPerlin(
+                  df.spaceTypePerlin({ x: i, y: j })
+                ),
               })
             }
           }
@@ -175,6 +177,8 @@ class Plugin {
             ctx.fillStyle = '#24247d'; // outer nebula
           } else if (data[i].type === 2) {
             ctx.fillStyle = '#000000'; // deep space
+          } else if (data[i].type === 3) {
+            ctx.fillStyle = "magenta"; // Corrupted... Will sub out with actual color
           }
           ctx.fillRect( normalize(data[i].x) + 10, normalize(data[i].y * -1) + 10, dot, dot );
         }
@@ -239,4 +243,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
