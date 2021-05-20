@@ -5,7 +5,8 @@
     {{- partial "custom-message.html" . -}}
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:gap-4 sm:-m-4 -mx-4 -mb-10 -mt-4">
-      {{ range where .Site.Pages "Kind" "page" }}
+
+      {{ range ((((where .Site.Pages "Kind" "page").ByParam "date")).ByParam "version").Reverse   }}
       {{ if ne .Params.Exclude true }}
       <a target="_blank" rel="noopener"
         href="https://github.com/{{ .Site.Params.Repo }}/blob/{{ .Site.Params.Branch }}/content/{{ .File.Dir }}plugin.js"
