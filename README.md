@@ -10,7 +10,9 @@ You should not use any plugins that you haven't written yourself or by someone y
 
 ## Utilities
 
-We provide a series of utilities that plugin authors can use. These are served directly from our website (`https://plugins.zkga.me`) and you can load them in your plugins. Check out what is available in the [javascript directory](javascript/)
+The Dark Forest in game api has two typical interaction points. In the Dark Forest client you'll find the documentation for the [df object](https://github.com/darkforest-eth/client/blob/master/docs/classes/backend_gamelogic_gamemanager.default.md) and the [ui object](https://github.com/darkforest-eth/client/blob/master/docs/classes/backend_gamelogic_gameuimanager.default.md).
+
+We also provide a series of utilities that plugin authors can use. These are served directly from our website (`https://plugins.zkga.me`) and you can load them in your plugins. Check out what is available in the [javascript directory](javascript/)
 
 If we are missing a utility that would be helpful, feel free to open an issue!
 
