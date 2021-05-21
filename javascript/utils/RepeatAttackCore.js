@@ -119,6 +119,7 @@ function findWeapons(
 function planetIsRevealed(planetId) {
   return !!df.contractsAPI.getLocationOfPlanet(planetId);
 }
+
 async function waitingForPassengers(locationId, passengersArray) {
   const arrivals = await df.contractsAPI.getArrivalsForPlanet(locationId);
   return (
@@ -216,7 +217,7 @@ function pester(
     );
 
     //send attack
-    df.terminal.current.jsShell(
+    df.terminal.current.printShellLn(
       `df.move('${
         source.locationId
       }', '${opponentsPlanetLocationsId}', ${FORCES}, ${0})`
@@ -276,7 +277,7 @@ function explore(
       )
     );
     //send attack
-    df.terminal.current.jsShell(
+    df.terminal.current.printShellLn(
       `df.move('${explorer.locationId}', '${
         target.locationId
       }', ${FORCES}, ${0})`
@@ -354,7 +355,7 @@ function delayedMove(action) {
     );
 
     //send attack
-    df.terminal.current.jsShell(
+    df.terminal.current.printShellLn(
       `df.move('${srcId}', '${syncId}', ${FORCES}, ${0})`
     );
     df.move(srcId, syncId, FORCES, 0);
@@ -410,7 +411,7 @@ async function chainedMove(action) {
     df.terminal.current.println("[chained]: launching attack", 4);
 
     //send attack
-    df.terminal.current.jsShell(
+    df.terminal.current.printShellLn(
       `df.move('${srcId}', '${syncId}', ${FORCES}, ${0})`
     );
     df.move(srcId, syncId, FORCES, 0);
