@@ -40,4 +40,4 @@ Feel free to add additional information to your plugin directory, such as we did
 
 ## Showcase local development
 
-To develop on the showcase page or theme itself, you can use `hugo` by installing as per above, then running `hugo server -D` in this repository.
+To develop on the showcase page or theme itself, you can use `hugo` by installing as per above. You need to checkout the git submodules for the theme with `git submodule update --init --recursive` and then running `hugo server -D` in this repository will start a local webserver you can visit with your browser.
