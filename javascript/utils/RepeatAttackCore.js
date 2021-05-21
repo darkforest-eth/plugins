@@ -217,7 +217,7 @@ function pester(
     );
 
     //send attack
-    df.terminal.current.jsShell(
+    df.terminal.current.printShellLn(
       `df.move('${
         source.locationId
       }', '${opponentsPlanetLocationsId}', ${FORCES}, ${0})`
@@ -277,7 +277,7 @@ function explore(
       )
     );
     //send attack
-    df.terminal.current.jsShell(
+    df.terminal.current.printShellLn(
       `df.move('${explorer.locationId}', '${
         target.locationId
       }', ${FORCES}, ${0})`
@@ -355,7 +355,7 @@ function delayedMove(action) {
     );
 
     //send attack
-    df.terminal.current.jsShell(
+    df.terminal.current.printShellLn(
       `df.move('${srcId}', '${syncId}', ${FORCES}, ${0})`
     );
     df.move(srcId, syncId, FORCES, 0);
@@ -411,7 +411,7 @@ async function chainedMove(action) {
     df.terminal.current.println("[chained]: launching attack", 4);
 
     //send attack
-    df.terminal.current.jsShell(
+    df.terminal.current.printShellLn(
       `df.move('${srcId}', '${syncId}', ${FORCES}, ${0})`
     );
     df.move(srcId, syncId, FORCES, 0);
@@ -423,7 +423,7 @@ async function chainedMove(action) {
     console.log("too soon, waiting for passengers to depart");
     return false;
   } else if (await waitingForPassengers(srcId, passengers)) {
-    console.log("Waiting for passengers for passengers to arrive'");
+    console.log("Waiting for passengers to arrive'");
     return false;
   } else {
     return send();
