@@ -1,7 +1,12 @@
 function checkNumInboundVoyages(planetId, from = "") {
   if (from == "") {
     return (
-      getArrivalsForPlanet(planetId).length +
+      df.getAllVoyages()
+        .filter(
+          (v) =>
+            v.toPlanet == planetId &&
+            v.arrivalTime > new Date().getTime() / 1000
+        ).length +
       df.getUnconfirmedMoves().filter((m) => m.to == planetId).length
     );
   } else {
@@ -112,11 +117,10 @@ function findWeapons(
   return mapped.map((p) => p.planet).slice(0, numOfPlanets);
 }
 function planetIsRevealed(planetId) {
-  return !!df.getLocationOfPlanet(planetId);
+  return !!df.contractsAPI.getLocationOfPlanet(planetId);
 }
 async function waitingForPassengers(locationId, passengersArray) {
-  const arrivals = getArrivalsForPlanet(locationId);
-
+  const arrivals = await df.contractsAPI.getArrivalsForPlanet(locationId);
   return (
     arrivals
       .filter((a) => a.player == df.account)
@@ -137,7 +141,7 @@ function modelEnergyNeededToTake(srcId, syncId) {
   return power_needed_to_send;
 }
 
-var planet = /*#__PURE__*/ Object.freeze({
+var planet = /*#__PURE__*/Object.freeze({
   __proto__: null,
   checkNumInboundVoyages: checkNumInboundVoyages,
   planetPower: planetPower$1,
@@ -150,7 +154,7 @@ var planet = /*#__PURE__*/ Object.freeze({
   findWeapons: findWeapons,
   planetIsRevealed: planetIsRevealed,
   waitingForPassengers: waitingForPassengers,
-  modelEnergyNeededToTake: modelEnergyNeededToTake,
+  modelEnergyNeededToTake: modelEnergyNeededToTake
 });
 
 const PIRATES = "0x0000000000000000000000000000000000000000";
@@ -206,10 +210,13 @@ function pester(
 
     const FORCES = Math.floor((source.energyCap * overflow_send) / 100);
     console.log(`[pester]: launching attack from ${source.locationId}`);
-    terminal.println(`[pester]: launching attack from ${source.locationId}`, 4);
+    df.terminal.current.println(
+      `[pester]: launching attack from ${source.locationId}`,
+      4
+    );
 
     //send attack
-    terminal.jsShell(
+    df.terminal.current.jsShell(
       `df.move('${
         source.locationId
       }', '${opponentsPlanetLocationsId}', ${FORCES}, ${0})`
@@ -259,8 +266,7 @@ function explore(
     );
   takeable.sort((a, b) => b.planetLevel - a.planetLevel);
   if (takeable.length > 0) {
-    console.log("[explore]: launching exploration");
-    terminal.println("[explore]: launching exploration", 4);
+    df.terminal.current.println("[explore]: launching exploration", 4);
     const target = takeable[0];
     const FORCES = Math.floor(
       df.getEnergyNeededForMove(
@@ -269,9 +275,8 @@ function explore(
         planetPower(target) + 200
       )
     );
-
     //send attack
-    terminal.jsShell(
+    df.terminal.current.jsShell(
       `df.move('${explorer.locationId}', '${
         target.locationId
       }', ${FORCES}, ${0})`
@@ -281,7 +286,7 @@ function explore(
     console.error(
       `[explore]: ${explorer.id} has not valid targets consider increasing percentageSend`
     );
-    terminal.println(
+    df.terminal.current.println(
       `[explore]: ${explorer.id} has not valid targets consider increasing percentageSend`,
       3
     );
@@ -317,11 +322,11 @@ function within5Minutes(before, now) {
   return (now - before) / 1000 / 60 < 5;
 }
 
-var time = /*#__PURE__*/ Object.freeze({
+var time = /*#__PURE__*/Object.freeze({
   __proto__: null,
   secondsToMs: secondsToMs,
   msToSeconds: msToSeconds,
-  within5Minutes: within5Minutes,
+  within5Minutes: within5Minutes
 });
 
 function delayedMove(action) {
@@ -343,10 +348,15 @@ function delayedMove(action) {
 
   if (sendAt < new Date().getTime()) {
     console.log(`[delay]: ${source.locationId} attack launch`);
-    terminal.println(`[delay]: ${source.locationId} attack launch`, 4);
+    df.terminal.current.println(
+      `[delay]: ${source.locationId} attack launch`,
+      4
+    );
 
     //send attack
-    terminal.jsShell(`df.move('${srcId}', '${syncId}', ${FORCES}, ${0})`);
+    df.terminal.current.jsShell(
+      `df.move('${srcId}', '${syncId}', ${FORCES}, ${0})`
+    );
     df.move(srcId, syncId, FORCES, 0);
     return true;
   } else {
@@ -382,14 +392,8 @@ function createDelayedMove(
 }
 
 async function chainedMove(action) {
-  const {
-    srcId,
-    syncId,
-    passengers,
-    departure,
-    percentageSend,
-    createdAt,
-  } = action.payload;
+  const { srcId, syncId, passengers, departure, percentageSend, createdAt } =
+    action.payload;
 
   const match = df.getMyPlanets().filter((t) => t.locationId == srcId);
   if (match.length == 0) {
@@ -403,10 +407,12 @@ async function chainedMove(action) {
   }
   const send = () => {
     console.log("[chained]: launching attack");
-    terminal.println("[chained]: launching attack", 4);
+    df.terminal.current.println("[chained]: launching attack", 4);
 
     //send attack
-    terminal.jsShell(`df.move('${srcId}', '${syncId}', ${FORCES}, ${0})`);
+    df.terminal.current.jsShell(
+      `df.move('${srcId}', '${syncId}', ${FORCES}, ${0})`
+    );
     df.move(srcId, syncId, FORCES, 0);
     return true;
   };
@@ -499,7 +505,6 @@ function createFlood(
     console.log(
       `all energy will land with ${totalLandingEnergy} at ${locationId}`
     );
-    return [];
   }
   return weapons.map((p) => {
     return createDelayedMove(
@@ -511,6 +516,7 @@ function createFlood(
       {
         ROUTINE: c.FLOOD,
         sent: false,
+        arriveAt: ETA_MS,
       }
     );
   });
@@ -576,8 +582,8 @@ function createOverload(
         addedEnergy
       )}`
     );
-    return [];
   }
+
   const launch = createChainedMove(
     srcId,
     targetId,
@@ -634,7 +640,9 @@ async function capturePlanets(
       const candidate = candidates_[i++][0];
 
       // Check if has incoming moves from another planet to safe
-      const arrivals = getArrivalsForPlanet(candidate.locationId);
+      const arrivals = await df.contractsAPI.getArrivalsForPlanet(
+        candidate.locationId
+      );
       if (arrivals.length !== 0) {
         continue;
       }
@@ -678,12 +686,16 @@ function isAsteroid(p) {
   return p.silverGrowth > 0;
 }
 
-async function distributeSilver(fromId, maxDistributeEnergyPercent) {
+async function distributeSilver(
+  fromId,
+  maxDistributeEnergyPercent,
+  minPlanetLevel = 4
+) {
   const planet = df.getPlanetWithId(fromId);
   const candidates_ = df
     .getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter((p) => p.owner === df.getAccount())
-    .filter((p) => p.planetLevel >= 4)
+    .filter((p) => p.planetLevel >= minPlanetLevel)
     .filter((p) => !isAsteroid(p))
     .map((to) => {
       const fromLoc = df.getLocationOfPlanet(fromId);
@@ -708,7 +720,9 @@ async function distributeSilver(fromId, maxDistributeEnergyPercent) {
     const candidate = candidates_[i++][0];
 
     // Check if has incoming moves from a previous asteroid to be safe
-    const arrivals = getArrivalsForPlanet(candidate.locationId);
+    const arrivals = await df.contractsAPI.getArrivalsForPlanet(
+      candidate.locationId
+    );
     if (arrivals.length !== 0) {
       continue;
     }
@@ -746,22 +760,6 @@ async function distributeSilver(fromId, maxDistributeEnergyPercent) {
   }
 }
 
-function getArrivalsForPlanet(planetId) {
-  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
-}
-
-function checkPlanetUpgradeLevel(planet) {
-  return planet.upgradeState.reduce((acc, i) => acc + i, 0);
-}
-
-async function autoUpgrade(location) {
-  const planet = df.getPlanetById(location);
-  if (planet.planetLevel < 4 && checkPlanetUpgradeLevel(planet) < 4) {
-    //auto upgrade defense
-    df.upgrade(planet.locationId, 0);
-  }
-}
-
 function parseVersionString(string) {
   const [major, minor, patch] = string.split(".");
   return { major, minor, patch };
@@ -787,16 +785,16 @@ function areVersionsCompatible(newVersion, oldVersion) {
   }
 }
 
-var version = /*#__PURE__*/ Object.freeze({
+var version = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  areVersionsCompatible: areVersionsCompatible,
+  areVersionsCompatible: areVersionsCompatible
 });
 
-var utils = /*#__PURE__*/ Object.freeze({
+var utils = /*#__PURE__*/Object.freeze({
   __proto__: null,
   planet: planet,
   version: version,
-  time: time,
+  time: time
 });
 
 async function asyncForEach(array, callback) {
@@ -851,20 +849,29 @@ class Manager {
     const owned = df.getMyPlanets();
     let captured = [];
     owned.forEach(async (p) => {
-      captured = await capturePlanets(p.locationId, 4, 50, captured);
+      captured = await capturePlanets(p.locationId, 3, 50, captured);
     });
   }
 
-  distribute() {
+  distribute(minPlanetLevel = 4) {
     const owned = df.getMyPlanets().filter((p) => p.silverGrowth > 0);
     let captured = [];
     owned.forEach(async (p) => {
-      captured = await distributeSilver(p.locationId, 40);
+      captured = await distributeSilver(p.locationId, 40, minPlanetLevel);
     });
   }
 
+  upgrade() {
+    const getNextUpgrade = (planet) => {
+      return planet.upgradeState[0] < 2 ? 0 : 1;
+    };
+    df.getMyPlanets()
+      .filter((p) => df.entityStore.planetCanUpgrade(p))
+      .forEach((p) => df.upgrade(p.locationId, getNextUpgrade(p)));
+  }
+
   exploreDirective() {
-    terminal.println("[CORE]: Running Directive Explore", 2);
+    df.terminal.current.println("[CORE]: Running Directive Explore", 2);
     try {
       const busy = this.actions
         .filter((a) => a.type == this.c.PESTER)
@@ -889,7 +896,7 @@ class Manager {
 
   async coreLoop() {
     if (this.actions.length > 0) {
-      terminal.println("[CORE]: Running Subroutines", 2);
+      df.terminal.current.println("[CORE]: Running Subroutines", 2);
     }
     asyncForEach(this.actions, async (action) => {
       if (this.checkForOOMThreat()) {
@@ -961,13 +968,19 @@ class Manager {
       console.log("[CORELOOP IS DEAD], flood ignored");
       return;
     }
-    createFlood(
+
+    let actions = createFlood(
       planetId,
       levelLimit,
       numOfPlanets,
       searchRangeSec,
       test
-    ).forEach((a) => this.createAction(a));
+    );
+    if (test) {
+      return actions;
+    } else {
+      actions.forEach((a) => this.createAction(a));
+    }
   }
   overload(
     srcId,
@@ -981,14 +994,20 @@ class Manager {
       console.log("[CORELOOP IS DEAD], flood ignored");
       return;
     }
-    createOverload(
+
+    let actions = createOverload(
       srcId,
       targetId,
       searchRangeSec,
       levelLimit,
       numOfPlanets,
       test
-    ).forEach((a) => this.createAction(a));
+    );
+    if (test) {
+      return actions;
+    } else {
+      actions.forEach((a) => this.createAction(a));
+    }
   }
 
   swarm(planetId, maxDistance = 5000, levelLimit = 5, numOfPlanets = 5) {
@@ -1107,4 +1126,4 @@ class Manager {
   }
 }
 
-export default Manager;
+export { Manager, utils };
