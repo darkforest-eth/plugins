@@ -117,7 +117,7 @@ function findWeapons(
   return mapped.map((p) => p.planet).slice(0, numOfPlanets);
 }
 function planetIsRevealed(planetId) {
-  return !!contractsAPI.getLocationOfPlanet(planetId);
+  return !!df.contractsAPI.getLocationOfPlanet(planetId);
 }
 async function waitingForPassengers(locationId, passengersArray) {
   const arrivals = await df.contractsAPI.getArrivalsForPlanet(locationId);
