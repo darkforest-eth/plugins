@@ -1,10 +1,5 @@
 // rendering adopted from artifactory and from repeat-attacks
-const {
-  html,
-  render,
-  useState,
-  useLayoutEffect,
-} = await import('https://unpkg.com/htm/preact/standalone.module.js');
+import { html, render, useState, useLayoutEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
