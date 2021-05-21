@@ -2,7 +2,6 @@ import PromiseQueue from 'https://cdn.skypack.dev/p-queue';
 import Serde  from 'https://cdn.skypack.dev/@darkforest_eth/serde';
 import { CONTRACT_PRECISION } from 'https://cdn.skypack.dev/@darkforest_eth/constants';
 
-
 let moveSnarkQueue;
 if (window.moveSnarkQueue === undefined) {
   moveSnarkQueue = new PromiseQueue({ concurrency: 1 });
