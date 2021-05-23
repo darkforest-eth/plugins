@@ -38,7 +38,7 @@ class Plugin {
       const radius = ui.getWorldRadius();
       let step = 5000;
       let dot = 4;
-      let canvasSize = 800;
+      let canvasSize = 400;
       let sizeFactor = 380;
 
       // utility functions
