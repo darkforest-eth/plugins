@@ -4,7 +4,6 @@ import {
   html,
   render,
   useState,
-
   useLayoutEffect,
 } from "https://unpkg.com/htm/preact/standalone.module.js";
 
@@ -105,7 +104,6 @@ function getRandomActionId() {
   return ret;
 }
 
-
 // Split from GameManager.move() to using our queue
 async function snark(actionId, oldX, oldY, newX, newY) {
   let snarker = poolManager.getAvailableSnarker();
@@ -125,6 +123,7 @@ async function snark(actionId, oldX, oldY, newX, newY) {
       df.worldRadius,
       distMax
     );
+<<<<<<< HEAD
     const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
     df.snarkHelper.moveSnarkCache.set(cacheKey, callArgs);
     return df.contractsAPI.move(
@@ -132,6 +131,15 @@ async function snark(actionId, oldX, oldY, newX, newY) {
       callArgs,
       txIntent.forces,
       txIntent.silver,
+=======
+    const cacheKey = `${x1}-${y1}-${x2}-${y2}-${r}-${distMax}`;
+    df.snarkHelper.moveSnarkCache.set(cacheKey, callArgs);
+    return this.contractsAPI.move(
+      actionId,
+      callArgs,
+      (txIntent.forces * CONTRACT_PRECISION).toString(),
+      (txIntent.silver * CONTRACT_PRECISION).toString(),
+>>>>>>> ddef505... snarker plugin clean-up
       txIntent.artifact
     );
   } catch (err) {
@@ -186,7 +194,11 @@ function move(from, to, forces, silver, artifactMoved) {
   };
 
   if (artifactMoved) {
+<<<<<<< HEAD
     const artifact = df.entityStore.getArtifactById(artifactMoved);
+=======
+    const artifact = this.entityStore.getArtifactById(artifactMoved);
+>>>>>>> ddef505... snarker plugin clean-up
     if (!artifact) {
       throw new Error("couldn't find this artifact");
     }
@@ -201,12 +213,16 @@ function move(from, to, forces, silver, artifactMoved) {
 
   df.handleTxIntent(txIntent);
 
+<<<<<<< HEAD
   const xDiff = newX - oldX;
   const yDiff = newY - oldY;
 
   const distMax = Math.ceil(Math.sqrt(xDiff ** 2 + yDiff ** 2));
 
   const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
+=======
+  const cacheKey = `${x1}-${y1}-${x2}-${y2}-${r}-${distMax}`;
+>>>>>>> ddef505... snarker plugin clean-up
   const cachedResult = df.snarkHelper.moveSnarkCache.get(cacheKey);
   if (cachedResult) {
     return df.contractsAPI.move(
@@ -216,9 +232,15 @@ function move(from, to, forces, silver, artifactMoved) {
       silverMoved,
       artifactMoved
     );
+<<<<<<< HEAD
   } else {
     moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
   }
+=======
+  }
+
+  moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
+>>>>>>> ddef505... snarker plugin clean-up
 }
 
 function updateConcurrency() {
