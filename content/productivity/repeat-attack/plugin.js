@@ -111,7 +111,7 @@ function AttackList() {
   const [actions, setActions] = useState(op.actions);
 
   let actionList = {
-    maxHeight: "70px",
+    maxHeight: "700px",
     overflowX: "hidden",
     overflowY: "scroll",
   };
@@ -163,6 +163,7 @@ class Plugin {
   async render(container) {
     this.container = container;
     container.style.width = "380px";
+    container.style.height = "760px";
     this.root = render(html`<${App} />`, container);
   }
 
