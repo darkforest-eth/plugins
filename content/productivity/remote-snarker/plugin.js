@@ -1,10 +1,14 @@
-const { default: PromiseQueue } = await import(
-  "https://cdn.skypack.dev/p-queue"
-);
+import PromiseQueue from "https://cdn.skypack.dev/p-queue";
+import Serde from "https://cdn.skypack.dev/@darkforest_eth/serde";
+import { CONTRACT_PRECISION } from "https://cdn.skypack.dev/@darkforest_eth/constants";
 
-const { html, render, useState, useEffect, useLayoutEffect } = await import(
-  "https://unpkg.com/htm/preact/standalone.module.js"
-);
+import {
+  html,
+  render,
+  useState,
+  useEffect,
+  useLayoutEffect,
+} from "https://unpkg.com/htm/preact/standalone.module.js";
 
 function shortenFloat(num) {
   return Number.parseFloat(num).toFixed(2);
@@ -165,8 +169,6 @@ let MoveArgIdxs = {
   SHIPS_SENT: 5,
   SILVER_SENT: 6,
 };
-let contractPrecision = 1000;
-let CheckedTypeUtils = df.getCheckedTypeUtils();
 
 // Kinda ContractsAPI.move() but without `waitFor` logic
 async function send(actionId, snarkArgs) {
@@ -179,10 +181,17 @@ async function send(actionId, snarkArgs) {
       snarkArgs[ZKArgIdx.PROOF_C],
       [
         ...snarkArgs[ZKArgIdx.DATA],
-        (txIntent.forces * contractPrecision).toString(),
-        (txIntent.silver * contractPrecision).toString(),
+        (txIntent.forces * CONTRACT_PRECISION).toString(),
+        (txIntent.silver * CONTRACT_PRECISION).toString(),
+        "0",
       ],
     ];
+
+    if (txIntent?.artifact) {
+      args[ZKArgIdx.DATA][MoveArgIdxs.ARTIFACT_SENT] = Serde.artifactIdToDecStr(
+        txIntent.artifact
+      );
+    }
 
     const tx = df.contractsAPI.txRequestExecutor.makeRequest(
       "MOVE",
@@ -206,16 +215,14 @@ async function send(actionId, snarkArgs) {
       type: "MOVE",
       txHash: (await tx.submitted).hash,
       sentAtTimestamp: Math.floor(Date.now() / 1000),
-      from: CheckedTypeUtils.locationIdFromDecStr(
+      from: Serde.locationIdFromDecStr(
         args[ZKArgIdx.DATA][MoveArgIdxs.FROM_ID]
       ),
-      to: CheckedTypeUtils.locationIdFromDecStr(
-        args[ZKArgIdx.DATA][MoveArgIdxs.TO_ID]
-      ),
-      forces: forcesFloat / contractPrecision,
-      silver: silverFloat / contractPrecision,
+      to: Serde.locationIdFromDecStr(args[ZKArgIdx.DATA][MoveArgIdxs.TO_ID]),
+      forces: forcesFloat / CONTRACT_PRECISION,
+      silver: silverFloat / CONTRACT_PRECISION,
     };
-
+    if (txIntent?.artifact) unminedMoveTx.artifact = txIntent.artifact;
     onTxSubmit(unminedMoveTx);
 
     try {
@@ -242,7 +249,7 @@ async function snark(actionId, oldX, oldY, newX, newY) {
   const distMax = Math.ceil(Math.sqrt(xDiff ** 2 + yDiff ** 2));
 
   try {
-    let [callArgs] = await snarker.execute(
+    let callArgs = await snarker.execute(
       oldX,
       oldY,
       newX,
@@ -311,10 +318,8 @@ function move(from, to, forces, silver) {
 }
 
 function updateConcurrency() {
-  let num = (df.snarkHelper.snarkProverQueue.taskQueue.concurrency = poolManager.pool.reduce(
-    (acc, s) => s.concurrency + acc,
-    0
-  ));
+  let num = (df.snarkHelper.snarkProverQueue.taskQueue.concurrency =
+    poolManager.pool.reduce((acc, s) => s.concurrency + acc, 0));
   moveSnarkQueue.concurrency = num;
 }
 
@@ -443,7 +448,6 @@ class Plugin {
   constructor() {
     df._move = df.move;
     df.move = move;
-    poolManager.addSnarker(new Snarker("https://snarker.onrender.com/move", 1));
   }
 
   addSnarker = (url, concurrency) => {
@@ -479,4 +483,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
