@@ -1,4 +1,4 @@
-const $ = (await import('https://cdn.skypack.dev/pin/jquery@v3.5.1-GJsJJ2VEWnBDZuot9fRf/min/jquery.js')).default;
+import $ from 'https://cdn.skypack.dev/pin/jquery@v3.5.1-GJsJJ2VEWnBDZuot9fRf/min/jquery.js';
 
 class PerformanceOptimizerState {
   constructor() {
@@ -156,4 +156,4 @@ class PerformanceOptimizer {
   }
 }
 
-plugin.register(new PerformanceOptimizer());
+export default PerformanceOptimizer;
