@@ -2,6 +2,8 @@ import {
   move
 } from 'https://plugins.zkga.me/utils/queued-move.js';
 
+const MAX_LEVEL_PLANET = 9;
+
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 85;
@@ -48,7 +50,7 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(lvl => {
+    Array.from(Array(MAX_LEVEL_PLANET+1).keys()).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
       opt.innerText = `Level ${lvl}`;
@@ -75,7 +77,7 @@ class Plugin {
     levelAsteroid.style.width = '100%';
     levelAsteroid.style.marginTop = '10px';
     levelAsteroid.style.marginBottom = '10px';
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(lvl => {
+    Array.from(Array(MAX_LEVEL_PLANET+1).keys()).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
       opt.innerText = `Level ${lvl}`;
@@ -200,7 +202,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
 
   // we ignore 50 silvers or less
   if( silverBudget < 50 ) {
-    continue;
+    return 0;
   }
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter(p => p.owner === df.getAccount()) //get player planets
@@ -212,7 +214,6 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
 
   let i = 0;
   const energyBudget = Math.floor((maxDistributeEnergyPercent / 100) * from.energy);
-  const silverBudget = Math.floor(from.silver);
 
   let energySpent = 0;
   let silverSpent = 0;
