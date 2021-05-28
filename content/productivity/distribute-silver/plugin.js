@@ -48,7 +48,7 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    [0, 1, 2, 3, 4, 5, 6, 7].forEach(lvl => {
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
       opt.innerText = `Level ${lvl}`;
@@ -75,7 +75,7 @@ class Plugin {
     levelAsteroid.style.width = '100%';
     levelAsteroid.style.marginTop = '10px';
     levelAsteroid.style.marginBottom = '10px';
-    [0, 1, 2, 3, 4, 5, 6, 7].forEach(lvl => {
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
       opt.innerText = `Level ${lvl}`;
@@ -196,7 +196,12 @@ function toPlanetOrSpaceRift(planet, toSpaceRift) {
 
 function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpaceRift) {
   const from = df.getPlanetWithId(fromId);
+  const silverBudget = Math.floor(from.silver);
 
+  // we ignore 50 silvers or less
+  if( silverBudget < 50 ) {
+    continue;
+  }
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter(p => p.owner === df.getAccount()) //get player planets
     .filter(p => toPlanetOrSpaceRift(p, toSpaceRift)) // filer planet or space rift 
@@ -220,15 +225,10 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
     // Remember its a tuple of candidates and their distance
     const candidate = candidates_[i++][0];
 
-    // Rejected if has more than 5 unconfirmed pending arrivals
+    // Rejected if has more than 5 pending arrivals. Transactions are reverted when more arrives. You can't increase it
     const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === candidate.locationId)
-    if (unconfirmed.length > 4) {
-      continue;
-    }
-
-    // Rejected if has more than 5 pending arrivals
     const arrivals = getArrivalsForPlanet(candidate.locationId);
-    if (arrivals.length > 4) {
+    if (unconfirmed.length + arrivals.length> 4) {
       continue;
     }
 
