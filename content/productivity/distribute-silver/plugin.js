@@ -6,6 +6,7 @@ class Plugin {
   constructor() {
     this.maxEnergyPercent = 85;
     this.minPlanetLevel = 3;
+    this.maxAsteroidLevel = 2;
   }
   render(container) {
     container.style.width = '200px';
@@ -63,6 +64,36 @@ class Plugin {
       }
     }
 
+    // asteroid level
+
+    let levelAsteroidLabel = document.createElement('label');
+    levelAsteroidLabel.innerText = 'Max. Lvl asteroid from:';
+    levelAsteroidLabel.style.display = 'block';
+
+    let levelAsteroid = document.createElement('select');
+    levelAsteroid.style.background = 'rgb(8,8,8)';
+    levelAsteroid.style.width = '100%';
+    levelAsteroid.style.marginTop = '10px';
+    levelAsteroid.style.marginBottom = '10px';
+    [0, 1, 2, 3, 4, 5, 6, 7].forEach(lvl => {
+      let opt = document.createElement('option');
+      opt.value = `${lvl}`;
+      opt.innerText = `Level ${lvl}`;
+      levelAsteroid.appendChild(opt);
+    });
+    levelAsteroid.value = `${this.minPlanetLevel}`;
+
+    levelAsteroid.onchange = (evt) => {
+      try {
+        this.maxAsteroidLevel = parseInt(evt.target.value);
+      } catch (e) {
+        console.error('could not parse planet level', e);
+      }
+    }
+
+
+    // distribute
+
     let button = document.createElement('button');
     button.style.width = '100%';
     button.style.marginBottom = '10px';
@@ -70,7 +101,6 @@ class Plugin {
     button.onclick = () => {
       let planet = ui.getSelectedPlanet();
       if (planet) {
-        // TODO: Min planet level?
         distributeSilver(
           planet.locationId,
           this.maxEnergyPercent,
@@ -84,16 +114,55 @@ class Plugin {
     let asteroidButton = document.createElement('button');
     asteroidButton.style.width = '100%';
     asteroidButton.style.marginBottom = '10px';
-    asteroidButton.innerHTML = 'Distribute asteroids'
+    asteroidButton.innerHTML = 'All to planets'
     asteroidButton.onclick = () => {
       message.innerText = 'Please wait...';
 
       let moves = 0;
       for (let planet of df.getMyPlanets()) {
-        if (isAsteroid(planet)) {
+        if (isAsteroid(planet) && planet.planetLevel <= this.maxAsteroidLevel) {
           setTimeout(() => {
-            moves += distributeSilver(planet.locationId, this.maxEnergyPercent, this.minPlanetLevel)
+            moves += distributeSilver(planet.locationId, this.maxEnergyPercent, this.minPlanetLevel, false);
             message.innerText = `Sending to ${moves} planets.`;
+          }, 0);
+        }
+      }
+    }
+
+    let toSpaceRiftButton = document.createElement('button');
+    toSpaceRiftButton.style.width = '100%';
+    toSpaceRiftButton.style.marginBottom = '10px';
+    toSpaceRiftButton.innerHTML = 'All to space rift';
+    toSpaceRiftButton.onclick = () => {
+      message.innerText = 'Please wait...';
+
+      let moves = 0;
+      for (let planet of df.getMyPlanets()) {
+        if (isAsteroid(planet) && planet.planetLevel <= this.maxAsteroidLevel) {
+          setTimeout(() => {
+            moves += distributeSilver(planet.locationId, this.maxEnergyPercent, this.minPlanetLevel, true);
+            message.innerText = `Sending to ${moves} space rift.`;
+          }, 0);
+        }
+      }
+    }
+
+    let withdrawtButton = document.createElement('button');
+    withdrawtButton.style.width = '100%';
+    withdrawtButton.style.marginBottom = '10px';
+    withdrawtButton.innerHTML = 'Withdraw from space rift';
+    withdrawtButton.onclick = () => {
+      message.innerText = 'Please wait...';
+
+      let moves = 0;
+      let silver =0;
+      let tmp; 
+      for (let planet of df.getMyPlanets()) {
+        if (isSpaceRift(planet)) {
+          setTimeout(() => {
+            silver+= withdrawSilver(planet.locationId);
+            moves+= 1;  
+            message.innerText = `Withdrawing ${silver} from ${moves} space rifts.`;
           }, 0);
         }
       }
@@ -104,20 +173,34 @@ class Plugin {
     container.appendChild(percent);
     container.appendChild(levelLabel);
     container.appendChild(level);
+    container.appendChild(levelAsteroidLabel);
+    container.appendChild(levelAsteroid);
     container.appendChild(button);
     container.appendChild(asteroidButton);
+    container.appendChild(toSpaceRiftButton);
+    container.appendChild(withdrawtButton);
     container.appendChild(message);
   }
 }
 
+function withdrawSilver(fromId) {
+    const from = df.getPlanetWithId(fromId);
+    const silver =  Math.floor(from.silver);
+    df.withdrawSilver(fromId, silver);
+    return silver;
+}
 
-function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel) {
+function toPlanetOrSpaceRift(planet, toSpaceRift) {
+        return toSpaceRift ? isSpaceRift(planet) : isPlanet(planet);
+}
+
+function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpaceRift) {
   const from = df.getPlanetWithId(fromId);
 
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
-    .filter(p => p.owner === df.getAccount())
-    .filter(p => !isAsteroid(p))
-    .filter(p => p.planetLevel >= minPLevel)
+    .filter(p => p.owner === df.getAccount()) //get player planets
+    .filter(p => toPlanetOrSpaceRift(p, toSpaceRift)) // filer planet or space rift 
+    .filter(p => p.planetLevel >= minPLevel) // filer level
     .map(to => [to, distance(from, to)])
     .sort((a, b) => a[1] - b[1]);
 
@@ -137,15 +220,15 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel) {
     // Remember its a tuple of candidates and their distance
     const candidate = candidates_[i++][0];
 
-    // Rejected if has unconfirmed pending arrivals
+    // Rejected if has more than 5 unconfirmed pending arrivals
     const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === candidate.locationId)
-    if (unconfirmed.length !== 0) {
+    if (unconfirmed.length > 4) {
       continue;
     }
 
-    // Rejected if has pending arrivals
+    // Rejected if has more than 5 pending arrivals
     const arrivals = getArrivalsForPlanet(candidate.locationId);
-    if (arrivals.length !== 0) {
+    if (arrivals.length > 4) {
       continue;
     }
 
@@ -174,8 +257,16 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel) {
 }
 
 function isAsteroid(planet) {
-  return planet.planetResource === 1;
+  return planet.planetType === 1;
 }
+
+function isPlanet(planet) {
+    return planet.planetType === 0;
+  }
+
+function isSpaceRift(planet) {
+    return planet.planetType === 3;
+  }
 
 //returns tuples of [planet,distance]
 function distance(from, to) {
