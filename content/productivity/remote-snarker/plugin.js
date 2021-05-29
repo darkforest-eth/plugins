@@ -124,6 +124,7 @@ async function snark(actionId, oldX, oldY, newX, newY) {
       distMax
     );
 <<<<<<< HEAD
+<<<<<<< HEAD
     const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
     df.snarkHelper.moveSnarkCache.set(cacheKey, callArgs);
     return df.contractsAPI.move(
@@ -133,13 +134,21 @@ async function snark(actionId, oldX, oldY, newX, newY) {
       txIntent.silver,
 =======
     const cacheKey = `${x1}-${y1}-${x2}-${y2}-${r}-${distMax}`;
+=======
+    const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
+>>>>>>> 6aad0ba... fixes to use the contractsAPI
     df.snarkHelper.moveSnarkCache.set(cacheKey, callArgs);
-    return this.contractsAPI.move(
+    return df.contractsAPI.move(
       actionId,
       callArgs,
+<<<<<<< HEAD
       (txIntent.forces * CONTRACT_PRECISION).toString(),
       (txIntent.silver * CONTRACT_PRECISION).toString(),
 >>>>>>> ddef505... snarker plugin clean-up
+=======
+      txIntent.forces,
+      txIntent.silver,
+>>>>>>> 6aad0ba... fixes to use the contractsAPI
       txIntent.artifact
     );
   } catch (err) {
@@ -195,10 +204,14 @@ function move(from, to, forces, silver, artifactMoved) {
 
   if (artifactMoved) {
 <<<<<<< HEAD
+<<<<<<< HEAD
     const artifact = df.entityStore.getArtifactById(artifactMoved);
 =======
     const artifact = this.entityStore.getArtifactById(artifactMoved);
 >>>>>>> ddef505... snarker plugin clean-up
+=======
+    const artifact = df.entityStore.getArtifactById(artifactMoved);
+>>>>>>> 6aad0ba... fixes to use the contractsAPI
     if (!artifact) {
       throw new Error("couldn't find this artifact");
     }
@@ -214,15 +227,21 @@ function move(from, to, forces, silver, artifactMoved) {
   df.handleTxIntent(txIntent);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 6aad0ba... fixes to use the contractsAPI
   const xDiff = newX - oldX;
   const yDiff = newY - oldY;
 
   const distMax = Math.ceil(Math.sqrt(xDiff ** 2 + yDiff ** 2));
 
   const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
+<<<<<<< HEAD
 =======
   const cacheKey = `${x1}-${y1}-${x2}-${y2}-${r}-${distMax}`;
 >>>>>>> ddef505... snarker plugin clean-up
+=======
+>>>>>>> 6aad0ba... fixes to use the contractsAPI
   const cachedResult = df.snarkHelper.moveSnarkCache.get(cacheKey);
   if (cachedResult) {
     return df.contractsAPI.move(
@@ -233,6 +252,7 @@ function move(from, to, forces, silver, artifactMoved) {
       artifactMoved
     );
 <<<<<<< HEAD
+<<<<<<< HEAD
   } else {
     moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
   }
@@ -241,6 +261,11 @@ function move(from, to, forces, silver, artifactMoved) {
 
   moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
 >>>>>>> ddef505... snarker plugin clean-up
+=======
+  } else {
+    moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
+  }
+>>>>>>> 6aad0ba... fixes to use the contractsAPI
 }
 
 function updateConcurrency() {
@@ -375,6 +400,9 @@ class Plugin {
     df._move = df.move;
     df.snarkHelper.setSnarkCacheSize(100);
     df.move = move;
+    poolManager.addSnarker(
+      new Snarker("https://snarker-7kxm4rmmsq-uc.a.run.app/move", 1)
+    );
   }
 
   addSnarker = (url, concurrency) => {
