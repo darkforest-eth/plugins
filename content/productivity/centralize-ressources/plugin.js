@@ -57,18 +57,6 @@ class Plugin {
             };
         });
 
-        let minLevelReceivingPlanetLabel = document.createElement('label');
-        minLevelReceivingPlanetLabel.innerText = 'Max. Lvl planet from:';
-        minLevelReceivingPlanetLabel.style.display = 'block';
-
-        let minLevelReceivingPlanetSelect = createSelect(Array.from(Array(MAX_LEVEL_PLANET + 1).keys()), this.minReceivingPlanetLevel, (evt) => {
-            try {
-                this.minReceivingPlanetLevel = parseInt(evt.target.value);
-            } catch (e) {
-                console.error('could not parse planet level', e);
-            };
-        });
-
         // receive
         let receiveToSelectedButton = document.createElement('button');
         receiveToSelectedButton.style.width = '100%';
@@ -93,8 +81,6 @@ class Plugin {
         container.appendChild(minLevelPlanetSelect);
         container.appendChild(maxLevelPlanetLabel);
         container.appendChild(maxLevelPlanetSelect);
-        //container.appendChild(minLevelReceivingPlanetLabel);
-        //container.appendChild(minLevelReceivingPlanetSelect);
 
         container.appendChild(receiveToSelectedButton);
         container.appendChild(message);
@@ -139,7 +125,6 @@ function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPle
         .map(to => [to, distance(from, to)])
         .sort((a, b) => a[1] - b[1]);
     
-        console.log("candidates: ", candidates_.length);
         let i = 0;
         const maxEnergy = Math.floor(from.energyCap -from.energy);
         const maxSilver = Math.floor(from.silverCap -from.silver);
@@ -155,7 +140,6 @@ function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPle
             // Rejected if has more than 5 pending arrivals. Transactions are reverted when more arrives. You can't increase it
             const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === from.locationId)
             const arrivals = getArrivalsForPlanet(from.locationId);
-            //console.log("unconfirmed.length + arrivals.length: ", unconfirmed.length + arrivals.length)
             if (unconfirmed.length + arrivals.length > 4) {
                 continue;
             }
