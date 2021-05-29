@@ -10,6 +10,7 @@ class Plugin {
         this.minPlanetLevel = 3;
         this.maxPlanetLevel = 4;
         this.minReceivingPlanetLevel = 5;
+        this.onlySilver = false;
     }
     render(container) {
         container.style.width = '200px';
@@ -32,11 +33,12 @@ class Plugin {
         }
         let message = document.createElement('div');
 
+        // min level planet
         let minLevelPlanetLabel = document.createElement('label');
         minLevelPlanetLabel.innerText = 'Min. Lvl planet from:';
         minLevelPlanetLabel.style.display = 'block';
 
-        let minLevelPlanetSelect = createSelect(Array.from(Array(MAX_LEVEL_PLANET + 1).keys()), this.minPlanetLevel, (evt) => {
+        let minLevelPlanetSelect = createSelect(Array.from(Array(MAX_LEVEL_PLANET + 1).keys()), this.minPlanetLevel, "Level", (evt) => {
             try {
                 this.minPlanetLevel = parseInt(evt.target.value);
             } catch (e) {
@@ -49,9 +51,18 @@ class Plugin {
         maxLevelPlanetLabel.innerText = 'Max. Lvl planet from:';
         maxLevelPlanetLabel.style.display = 'block';
 
-        let maxLevelPlanetSelect = createSelect(Array.from(Array(MAX_LEVEL_PLANET + 1).keys()), this.maxPlanetLevel, (evt) => {
+        let maxLevelPlanetSelect = createSelect(Array.from(Array(MAX_LEVEL_PLANET + 1).keys()), this.maxPlanetLevel, "Level", (evt) => {
             try {
                 this.maxPlanetLevel = parseInt(evt.target.value);
+            } catch (e) {
+                console.error('could not parse planet level', e);
+            };
+        });
+
+        // onlySilver
+        let onlySilverSelect = createSelect([true, false], this.onlySilver, "onlySilver", (evt) => {
+            try {
+                this.onlySilver = evt.target.value == "true";
             } catch (e) {
                 console.error('could not parse planet level', e);
             };
@@ -66,7 +77,7 @@ class Plugin {
             let selected = ui.getSelectedPlanet();
             if (selected) {
                 setTimeout(() => {
-                    let res = receiveRessources(selected.locationId, this.maxEnergyPercent, this.minPlanetLevel, this.maxPlanetLevel);
+                    let res = receiveRessources(selected.locationId, this.maxEnergyPercent, this.minPlanetLevel, this.maxPlanetLevel, this.onlySilver);
                     message.innerText = `Receving ${res.energyReceived} and ${res.silverReceived} from ${res.moves} planets.`;
                 }, 0);
             } else {
@@ -81,6 +92,7 @@ class Plugin {
         container.appendChild(minLevelPlanetSelect);
         container.appendChild(maxLevelPlanetLabel);
         container.appendChild(maxLevelPlanetSelect);
+        container.appendChild(onlySilverSelect);
 
         container.appendChild(receiveToSelectedButton);
         container.appendChild(message);
@@ -99,7 +111,7 @@ function createRange(value) {
     return range;
 }
 
-function createSelect(values, value, onChange) {
+function createSelect(values, value, innertext, onChange) {
     let select = document.createElement('select');
     select.style.background = 'rgb(8,8,8)';
     select.style.width = '100%';
@@ -108,7 +120,7 @@ function createSelect(values, value, onChange) {
     values.forEach(lvl => {
         let opt = document.createElement('option');
         opt.value = `${lvl}`;
-        opt.innerText = `Level ${lvl}`;
+        opt.innerText = `${innertext} ${lvl}`;
         select.appendChild(opt);
     });
     select.value = value;
@@ -116,12 +128,12 @@ function createSelect(values, value, onChange) {
     return select;
 }       
 
-function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPlevel) {
+function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPlevel, onlySilver) {
     const from = df.getPlanetWithId(fromId);
 
     const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
         .filter(p => p.owner === df.getAccount()) //get player planets
-        .filter(p => p.planetLevel >= minPLevel && p.planetLevel <= maxPlevel) // filer level
+        .filter(p => p.planetLevel >= minPLevel && p.planetLevel <= maxPlevel) // filter level
         .map(to => [to, distance(from, to)])
         .sort((a, b) => a[1] - b[1]);
     
@@ -146,17 +158,19 @@ function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPle
     
             const energyBudget = Math.floor((maxDistributeEnergyPercent / 100) * candidate.energy);
            
-            // needs to be a whole number for the contract
-            const receivedEnergyForMove = Math.ceil(df.getEnergyArrivingForMove(candidate.locationId, fromId, energyBudget));
+            const maxReceivedEnergyForMove = Math.ceil(df.getEnergyArrivingForMove(candidate.locationId, fromId, energyBudget));
+            // only send enough energy to cap planet
+            const receivedEnergyForMove = Math.ceil(maxEnergy - energyReceived - maxReceivedEnergyForMove >= 0? maxReceivedEnergyForMove: maxEnergy - energyReceived);
+            // only send enough silver to cap planet
             const receivedSilverForMove = Math.ceil(maxSilver - silverReceived - candidate.silver >= 0 ? candidate.silver : maxSilver - silverReceived);
-            if (receivedEnergyForMove < maxEnergy/100) {
+            // if below 1% max energy reject or if there is no silver when onlySilver is on
+            if (receivedEnergyForMove < maxEnergy/100 && ( onlySilver && receivedSilverForMove == 0 )) {
                 continue;
             }
     
             move(candidate.locationId, fromId, energyBudget, receivedSilverForMove);
             energyReceived += receivedEnergyForMove;
             silverReceived += receivedSilverForMove;
-            //silverSpent += silverNeeded;
             moves += 1;
         }
     
