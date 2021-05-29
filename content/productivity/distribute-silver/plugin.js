@@ -188,6 +188,9 @@ class Plugin {
 function withdrawSilver(fromId) {
     const from = df.getPlanetWithId(fromId);
     const silver =  Math.floor(from.silver);
+    if (silver === 0) {
+      return 0;
+    } 
     df.withdrawSilver(fromId, silver);
     return silver;
 }
