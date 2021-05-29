@@ -124,13 +124,13 @@ async function snark(actionId, oldX, oldY, newX, newY) {
       df.worldRadius,
       distMax
     );
-    const cacheKey = `${x1}-${y1}-${x2}-${y2}-${r}-${distMax}`;
+    const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
     df.snarkHelper.moveSnarkCache.set(cacheKey, callArgs);
-    return this.contractsAPI.move(
+    return df.contractsAPI.move(
       actionId,
       callArgs,
-      (txIntent.forces * CONTRACT_PRECISION).toString(),
-      (txIntent.silver * CONTRACT_PRECISION).toString(),
+      txIntent.forces,
+      txIntent.silver,
       txIntent.artifact
     );
   } catch (err) {
@@ -143,6 +143,7 @@ async function snark(actionId, oldX, oldY, newX, newY) {
 function move(from, to, forces, silver, artifactMoved) {
   const oldLocation = df.entityStore.getLocationOfPlanet(from);
   const newLocation = df.entityStore.getLocationOfPlanet(to);
+  const fromPlanet = df.entityStore.getPlanetWithId(from);
   if (!oldLocation) {
     console.error("tried to move from planet that does not exist");
     return;
@@ -152,6 +153,9 @@ function move(from, to, forces, silver, artifactMoved) {
     return;
   }
 
+  if (fromPlanet.energy < forces) {
+    return;
+  }
   const oldX = oldLocation.coords.x;
   const oldY = oldLocation.coords.y;
   const newX = newLocation.coords.x;
@@ -181,7 +185,7 @@ function move(from, to, forces, silver, artifactMoved) {
   };
 
   if (artifactMoved) {
-    const artifact = this.entityStore.getArtifactById(artifactMoved);
+    const artifact = df.entityStore.getArtifactById(artifactMoved);
     if (!artifact) {
       throw new Error("couldn't find this artifact");
     }
@@ -196,7 +200,12 @@ function move(from, to, forces, silver, artifactMoved) {
 
   df.handleTxIntent(txIntent);
 
-  const cacheKey = `${x1}-${y1}-${x2}-${y2}-${r}-${distMax}`;
+  const xDiff = newX - oldX;
+  const yDiff = newY - oldY;
+
+  const distMax = Math.ceil(Math.sqrt(xDiff ** 2 + yDiff ** 2));
+
+  const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
   const cachedResult = df.snarkHelper.moveSnarkCache.get(cacheKey);
   if (cachedResult) {
     return df.contractsAPI.move(
@@ -206,9 +215,9 @@ function move(from, to, forces, silver, artifactMoved) {
       silverMoved,
       artifactMoved
     );
+  } else {
+    moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
   }
-
-  moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
 }
 
 function updateConcurrency() {
@@ -341,7 +350,11 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
 class Plugin {
   constructor() {
     df._move = df.move;
+    df.snarkHelper.setSnarkCacheSize(100);
     df.move = move;
+    poolManager.addSnarker(
+      new Snarker("https://snarker-7kxm4rmmsq-uc.a.run.app/move", 1)
+    );
   }
 
   addSnarker = (url, concurrency) => {
