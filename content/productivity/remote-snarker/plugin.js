@@ -1,10 +1,10 @@
 import PromiseQueue from "https://cdn.skypack.dev/p-queue";
-import { CONTRACT_PRECISION } from "https://cdn.skypack.dev/@darkforest_eth/constants";
 
 import {
   html,
   render,
   useState,
+
   useLayoutEffect,
 } from "https://unpkg.com/htm/preact/standalone.module.js";
 
@@ -104,6 +104,7 @@ function getRandomActionId() {
   }
   return ret;
 }
+
 
 // Split from GameManager.move() to using our queue
 async function snark(actionId, oldX, oldY, newX, newY) {
@@ -352,9 +353,6 @@ class Plugin {
     df._move = df.move;
     df.snarkHelper.setSnarkCacheSize(100);
     df.move = move;
-    poolManager.addSnarker(
-      new Snarker("https://snarker-7kxm4rmmsq-uc.a.run.app/move", 1)
-    );
   }
 
   addSnarker = (url, concurrency) => {
