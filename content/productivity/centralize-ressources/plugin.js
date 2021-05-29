@@ -164,7 +164,7 @@ function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPle
             // only send enough silver to cap planet
             const receivedSilverForMove = Math.ceil(maxSilver - silverReceived - candidate.silver >= 0 ? candidate.silver : maxSilver - silverReceived);
             // if below 1% max energy reject or if there is no silver when onlySilver is on
-            if (receivedEnergyForMove < maxEnergy/100 && ( onlySilver && receivedSilverForMove == 0 )) {
+            if (receivedEnergyForMove < maxEnergy/100 || ( onlySilver && receivedSilverForMove == 0 )) {
                 continue;
             }
     
