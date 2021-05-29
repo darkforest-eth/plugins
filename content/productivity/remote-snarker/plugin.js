@@ -4,7 +4,6 @@ import {
   html,
   render,
   useState,
-
   useLayoutEffect,
 } from "https://unpkg.com/htm/preact/standalone.module.js";
 
@@ -12,6 +11,11 @@ function shortenFloat(num) {
   return Number.parseFloat(num).toFixed(2);
 }
 
+function isActivated(artifact) {
+  if (artifact === undefined) {
+    return false;
+  }
+}
 class Snarker {
   url;
   concurrency;
@@ -104,7 +108,6 @@ function getRandomActionId() {
   }
   return ret;
 }
-
 
 // Split from GameManager.move() to using our queue
 async function snark(actionId, oldX, oldY, newX, newY) {
