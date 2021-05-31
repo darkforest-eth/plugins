@@ -1,19 +1,20 @@
 import $ from 'https://cdn.skypack.dev/pin/jquery@v3.5.1-GJsJJ2VEWnBDZuot9fRf/min/jquery.js';
 
+
+
 class PerformanceOptimizerState {
   constructor() {
     this.pluginWindow = null;
-  
+
     this.rendering = "unlimited";
     this.renderingFps = 10;
     this.renderingPercentage = 50;
-    
-    this.caching = false;
-    this.cache = {};
+
     this.cacheCount = 0;
+    this.cacheLimit = 20; // SnarkArgsHelper.DEFAULT_SNARK_CACHE_SIZE = 20
 
     this.destroyed = false;
-    
+
     const requestIDMap = {};
     let nextRequestID = 0;
 
@@ -67,29 +68,18 @@ class PerformanceOptimizerState {
       window._cancelAnimationFrame(requestIDMap[requestID]);
       delete requestIDMap[requestID];
     };
-    
-    df.snarkHelper._getMoveArgs = df.snarkHelper.getMoveArgs;
-    df.snarkHelper.getMoveArgs = async (x1, y1, x2, y2, r, distMax) => {
-      if (!this.caching) {
-        return await df.snarkHelper._getMoveArgs(x1, y1, x2, y2, r, distMax);
-      }
-      const key = JSON.stringify([x1, y1, x2, y2]);
-      const cached = this.cache[key];
-      if (cached !== undefined) return cached;
-      const result = await df.snarkHelper._getMoveArgs(x1, y1, x2, y2, r, distMax);
-      this.cache[key] = result;
-      this.cacheCount++;
-      if (this.pluginWindow !== null) this.pluginWindow.cacheCountUpdate();
-      return result;
-    };
+
+    // SNARK cache limit size adjustment
+    df.snarkHelper.setSnarkCacheSize(this.cacheLimit)
+
   }
-  
+
   destroy() {
     this.destroyed = true;
     this.pluginWindow = null;
     window.cancelAnimationFrame = window._cancelAnimationFrame;
-    window.requestAnimationFrame= window._requestAnimationFrame;
-    df.snarkHelper.getMoveArgs = df.snarkHelper._getMoveArgs;
+    window.requestAnimationFrame = window._requestAnimationFrame;
+    df.snarkHelper.setSnarkCacheSize(20)
     console.log("original functions restored.");
     delete df.performanceOptimizerState;
   }
@@ -103,8 +93,8 @@ class PerformanceOptimizer {
     state.pluginWindow = this;
   }
 
-  cacheCountUpdate() {
-    $('#cacheCount').text(`Cache: ${state.cacheCount} proof(s) `);
+  clearSnarkCache() {
+    df.snarkHelper.moveSnarkCache.clear()
   }
 
   async render(div) {
@@ -133,24 +123,24 @@ class PerformanceOptimizer {
       .append($('<br>'))
       .append($('<p>Cache zk-SNARK Proofs</p>'))
       .append($('<div />')
-        .append($(`<input type="checkbox" id="cachingBox" checked=${state.caching} />`))
-        .append($('<span> enable caching</span>'))
+        .append($('<span> max. SNARK CACHE SIZE: </span>'))
+        .append($(`<input type="range" min="0" max="1000" value="${state.cacheLimit}" class="slider" id="cacheLimitSize">`))
+        .append($(`<span id="cacheLimitSizeSpan"> ${state.cacheLimit} </span>`))
       )
       .append($('<div />')
-        .append($(`<span id="cacheCount">Cache: ${state.cacheCount} proof(s) </span>`))
         .append($(`<span class="${$("span[class^='Btn']:contains(save)").attr('class')}" id="cacheClearBtn">Clear</span>`))
       );
     $(`input:radio[name=rendering][value=${state.rendering}]`).prop("checked", true);
     $('#cachingBox').prop("checked", state.caching);
-    $('input:radio[name=rendering]').change(function() {state.rendering = this.value});
-    const [fpsSpan, percentageSpan] = [$("#fpsSpan"), $("#percentageSpan")];
-    $('#fpsRange').change(function() {state.renderingFps = parseInt(this.value)}).on("input", function() { fpsSpan.text(` ${this.value} FPS`) });
-    $('#percentageRange').change(function() {state.renderingPercentage = parseInt(this.value)}).on("input", function() { percentageSpan.text(` ${this.value}%`) });
-    
-    $('#cachingBox').change(function() {state.caching = this.checked})
-    $('#cacheClearBtn').click(() => {state.cache = {}; state.cacheCount = 0; this.cacheCountUpdate()})
+    $('input:radio[name=rendering]').change(function () { state.rendering = this.value });
+    const [fpsSpan, percentageSpan, cacheLimitSizeSpan] = [$("#fpsSpan"), $("#percentageSpan") , $("#cacheLimitSizeSpan")];
+    $('#fpsRange').change(function () { state.renderingFps = parseInt(this.value) }).on("input", function () { fpsSpan.text(` ${this.value} FPS`) });
+    $('#percentageRange').change(function () { state.renderingPercentage = parseInt(this.value) }).on("input", function () { percentageSpan.text(` ${this.value}%`) });
+
+    $('#cacheLimitSize').change(function () { state.cacheLimit = parseInt(this.value) }).on("input", function () { cacheLimitSizeSpan.text(` ${this.value}`) });
+    $('#cacheClearBtn').click(() => { this.clearSnarkCache(); })
   }
-  
+
   destroy() {
     state.pluginWindow = null;
   }
