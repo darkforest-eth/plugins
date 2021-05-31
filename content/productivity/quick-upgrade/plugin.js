@@ -166,6 +166,8 @@ function App() {
   return html`
     <div>
       <${UpgradeSelectedPlanet} planet=${selectedPlanet} />
+      <br />
+      <hr />
       <${UpgradeAllPlanets} />
     </div>
   `;
@@ -192,4 +194,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
