@@ -33,7 +33,7 @@ export let canPlanetUpgrade = (planet) => {
   if (!planet) {
     return false;
   }
-  return df.entityStore.planetCanUpgrade(planet)
+  return df.entityStore.constructor.planetCanUpgrade(planet)
 };
 // Old name
 export let canUpgrade = canPlanetUpgrade;
