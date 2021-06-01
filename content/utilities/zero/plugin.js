@@ -8,7 +8,11 @@ function runZero(source, destination, silver) {
   destination = df.getPlanetWithId(destination.locationId);
   console.log(source, destination, silver);
   if ( silver === "max" ) {
-    silver = source.silver;
+    if ( (destination.silverCap - destination.silver) < source.silver ) {
+      silver = destination.silverCap - destination.silver;
+    } else {
+      silver = source.silver;
+    }
   }
   if ( silver > source.silver ) {
     df.terminal.current.println("Not enough silver to perform operation");
