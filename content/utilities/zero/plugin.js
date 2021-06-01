@@ -11,12 +11,25 @@ function runZero(source, destination, silver) {
     silver = source.silver;
   }
   console.log(source, destination, silver);
+  let max = source.energy;
   let energy = df.getEnergyNeededForMove(source.locationId, destination.locationId, 0);
-  if ( !energy > 0.5 ) {
+  let dist = df.getDist(source.locationId, destination.locationId);
+  let landing = df.getEnergyArrivingForMove(source.locationId, destination.locationId, dist, energy);
+  while (landing < 2) {
+    if (energy > max) { // prevent infinite loop
+      df.terminal.current.println("Not enough energy to perform operation.");
+      return; // do nothing else
+    }
     energy = energy + 1;
+    console.log("energy", energy);
+    landing = df.getEnergyArrivingForMove(source.locationId, destination.locationId, dist, Math.ceil(energy));
+    console.log("landing", landing);
   }
-  energy = Math.ceil(energy);
-  df.move(source.locationId, destination.locationId, energy, silver);
+  if (energy > max) {
+    df.terminal.current.println("Not enough energy to perform operation.");
+    return; // do nothing else
+  }
+  df.move(source.locationId, destination.locationId, Math.ceil(energy), silver);
 }
 
 function planetShort(planet) {
