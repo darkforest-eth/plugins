@@ -10,6 +10,10 @@ function runZero(source, destination, silver) {
   if ( silver === "max" ) {
     silver = source.silver;
   }
+  if ( silver > source.silver ) {
+    df.terminal.current.println("Not enough silver to perform operation");
+    return;
+  }
   console.log(source, destination, silver);
   let max = source.energy;
   let energy = df.getEnergyNeededForMove(source.locationId, destination.locationId, 0);
