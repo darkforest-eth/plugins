@@ -11,7 +11,11 @@ function runZero(source, destination, silver) {
     silver = source.silver;
   }
   console.log(source, destination, silver);
-  let energy = Math.ceil(df.getEnergyNeededForMove(source.locationId, destination.locationId, 0));
+  let energy = df.getEnergyNeededForMove(source.locationId, destination.locationId, 0);
+  if ( !energy > 0.5 ) {
+    energy = energy + 1;
+  }
+  energy = Math.ceil(energy);
   df.move(source.locationId, destination.locationId, energy, silver);
 }
 
@@ -61,7 +65,7 @@ class Plugin {
 
   async render(container) {
 	this.container = container;
-	container.style.width = "200px";
+	container.style.width = "215px";
 	this.root = render(html`<${App} />`, container);
   }
 
