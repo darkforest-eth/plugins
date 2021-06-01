@@ -14,6 +14,7 @@ function runZero(source, destination, silver) {
       silver = source.silver;
     }
   }
+  silver = Math.floor(silver);
   if ( silver > source.silver ) {
     df.terminal.current.println("Not enough silver to perform operation");
     return;
