@@ -340,7 +340,7 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
         <input
           type="number"
           name="thread"
-          style=${{ ...input, width: "32px" }}
+          style=${{ ...input, width: "50px" }}
           value=${concurrency}
           onInput=${onChangeConcurrency}
           min="1"
