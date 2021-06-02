@@ -74,9 +74,7 @@ function myArtifactsToDeposit() {
 
 class ProspectFind {
   constructor(planetId) {
-    console.log(planetId);
     this.planet = df.getPlanetWithId(planetId);
-    console.log(this.planet);
   }
   
   both() {
@@ -94,9 +92,7 @@ class ProspectFind {
   }
 
   checkProspectedThenFind() {
-    console.log(this.planet);
     this.planet = df.getPlanetWithId(this.planet.locationId);
-    console.log(this.planet);
     if (this.planet.prospectedBlockNumber === undefined) {
       return;
     } else {
