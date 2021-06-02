@@ -308,7 +308,7 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
   };
 
   const add = () => {
-    let _pool = addSnarker(nextUrl, concurrency);
+    let _pool = addSnarker(nextUrl, concurrency*1); //this was somehow returning a string after manual input
     setPool(_pool);
     setNextUrl("");
   };
