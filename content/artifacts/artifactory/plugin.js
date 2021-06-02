@@ -72,13 +72,57 @@ function myArtifactsToDeposit() {
     .sort((a1, a2) => parseInt(a1.id, 16) - parseInt(a2.id, 16));
 }
 
+class ProspectFind {
+  constructor(planetId) {
+    console.log(planetId);
+    this.planet = df.getPlanetWithId(planetId);
+    console.log(this.planet);
+  }
+  
+  both() {
+    this.prospect();
+    this.interval = setInterval(this.checkProspectedThenFind.bind(this), 10000);
+    console.log("interval", this.interval);
+  }
+
+  prospect() {
+    try {
+      df.prospectPlanet(this.planet.locationId);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  checkProspectedThenFind() {
+    console.log(this.planet);
+    this.planet = df.getPlanetWithId(this.planet.locationId);
+    console.log(this.planet);
+    if (this.planet.prospectedBlockNumber === undefined) {
+      return;
+    } else {
+      clearInterval(this.interval);
+      this.find();
+      return true;
+	}
+  }
+
+  find() {
+    try {
+      df.findArtifact(this.planet.locationId);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+}
+
 function findArtifacts() {
   Array.from(df.getMyPlanets())
     .filter(canHaveArtifact)
     .filter(canFindArtifact)
     .forEach(planet => {
       try {
-        df.findArtifact(planet.locationId);
+        let pf = new ProspectFind(planet.locationId);
+        pf.both();
       } catch (err) {
         console.log(err);
       }
@@ -108,7 +152,8 @@ function FindButton({ planet }) {
   function findArtifact() {
     try {
       // Why does this f'ing throw?
-      df.findArtifact(planet.locationId);
+      let pf = new ProspectFind(planet.locationId);
+      pf.both();
     } catch (err) {
       console.log(err);
       setFinding(true);
@@ -540,4 +585,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
