@@ -151,7 +151,7 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
             df.getEnergyArrivingForMove(
                 myPlanet.locationId,
                 targetPlanet.locationId,
-		df.getDist(myPlanet.locationId, targetplanet.locationId),
+		df.getDist(myPlanet.locationId, targetPlanet.locationId),
                 sending
             )
         );
