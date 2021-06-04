@@ -308,7 +308,7 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
   };
 
   const add = () => {
-    let _pool = addSnarker(nextUrl, concurrency);
+    let _pool = addSnarker(nextUrl, concurrency*1); //this was somehow returning a string after manual input
     setPool(_pool);
     setNextUrl("");
   };
@@ -340,7 +340,7 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
         <input
           type="number"
           name="thread"
-          style=${{ ...input, width: "32px" }}
+          style=${{ ...input, width: "50px" }}
           value=${concurrency}
           onInput=${onChangeConcurrency}
           min="1"
