@@ -169,6 +169,12 @@ async function snark(actionId, oldX, oldY, newX, newY) {
   }
 }
 
+function isActivated(artifact) {
+  if (artifact === undefined) {
+    return false;
+  }
+}
+
 // Kinda like GameManager.move() but without localstorage and using our queue
 export function move(from, to, forces, silver, artifactMoved) {
   const oldLocation = df.entityStore.getLocationOfPlanet(from);
