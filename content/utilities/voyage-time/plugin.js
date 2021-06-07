@@ -22,9 +22,9 @@ class Plugin {
         let minutes = Math.floor(time % oneHour / 60);
         let seconds = Math.ceil(time % oneHour % oneMinute);
         if (hours >= 1) {
-          this.estimatedTime.innerText = `${hours} hrs, ${minutes} mins, ${seconds} secs`;
+          this.estimatedTime.innerText = `${hours} hrs, ${minutes} mins, ${seconds} secs = ${time}`;
         } else if (minutes >= 1) {
-          this.estimatedTime.innerText = `${minutes} mins, ${seconds} secs`;
+          this.estimatedTime.innerText = `${minutes} mins, ${seconds} secs = ${time}`;
         } else {
           this.estimatedTime.innerText = `${seconds} secs`;
         }
