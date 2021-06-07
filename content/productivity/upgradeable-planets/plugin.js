@@ -2,7 +2,7 @@
 const {
   coords,
   getSilver,
-  canUpgrade,
+  canPlanetUpgrade,
   getSilverNeeded,
 } = await import('https://plugins.zkga.me/utils/utils.js');
 
@@ -27,7 +27,7 @@ class Plugin {
 
   allPlanetsWithUpgrade() {
     return Array.from(df.getMyPlanets())
-      .filter(canUpgrade)
+      .filter(canPlanetUpgrade)
       .sort((p1, p2) => parseInt(p2.planetLevel, 10) - parseInt(p1.planetLevel, 10));
   }
 
@@ -117,4 +117,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;

@@ -12,4 +12,4 @@ class Plugin {
   destroy() { }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
