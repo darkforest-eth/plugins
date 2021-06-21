@@ -1,11 +1,14 @@
 let oneMinute = 60;
 let oneHour = 60 * oneMinute;
 
-class Plugin {
+class VoyageTime {
   constructor() {
     this.estimatedTime = document.createElement('div');
     this.estimatedTime.innerText = '?????';
     this.estimatedTime.style.textAlign = 'center';
+    this.estimatedTimeSeconds = document.createElement('div');
+    this.estimatedTimeSeconds.innerText = '';
+    this.estimatedTimeSeconds.style.textAlign = 'center';
   }
 
   calcVoyageTime = () => {
@@ -28,11 +31,14 @@ class Plugin {
         } else {
           this.estimatedTime.innerText = `${seconds} secs`;
         }
+        this.estimatedTimeSeconds.innerText = `${time} secs`;
       } else {
         this.estimatedTime.innerText = '?????';
+        this.estimatedTimeSeconds.innerText = ``;
       }
     } else {
       this.estimatedTime.innerText = '?????';
+      this.estimatedTimeSeconds.innerText = ``;
     }
   }
 
@@ -48,11 +54,14 @@ class Plugin {
 
     container.appendChild(label);
     container.appendChild(this.estimatedTime);
+    container.appendChild(this.estimatedTimeSeconds);
   }
 
   destroy() {
     window.removeEventListener('mousemove', this.calcVoyageTime);
+    delete this.estimatedTime
+    delete this.estimatedTimeSeconds
   }
 }
 
-export default Plugin;
+export default VoyageTime;
