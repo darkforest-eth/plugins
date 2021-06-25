@@ -1,3 +1,7 @@
+// # Map Export
+// Additional map export (and import?) utilities:
+// * Select start/end coordinates to filter the export by.
+
 let viewport = ui.getViewport();
 
 class Plugin {
@@ -195,4 +199,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;

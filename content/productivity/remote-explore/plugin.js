@@ -1,25 +1,23 @@
-const {
-  MinerManager,
-  MinerManagerEvent
-} = await import('https://plugins.zkga.me/game/MinerManager.js');
-const {
-  SpiralPattern
-} = await import('https://plugins.zkga.me/game/SpiralPattern.js');
-const {
-  SwissCheesePattern
-} = await import('https://plugins.zkga.me/game/SwissCheesePattern.js');
-const {
-  RemoteWorker
-} = await import('https://plugins.zkga.me/miner/RemoteWorker.js');
-const {
-  html,
-  render,
-  useState,
-  useEffect,
-  useLayoutEffect
-} = await import('https://unpkg.com/htm/preact/standalone.module.js');
+// RemoteExplorePlugin
+//
+// The remote explore plugin allows us to use headless explorers that we run on
+// servers and RaspberryPi devices.
+//
+// We use [mimc-fast](https://github.com/projectsophon/darkforest-rs/tree/main/mimc-fast) as a
+// webserver that exposes a `/mine` endpoint and connect to it from in-game with
+// this plugin.
+//
+// When running this on https://zkga.me/, you might get an error about blocked
+// insecure content. You probably just want to install a SSL Certificate on your
+// explore server. If you can't, you can [enable mixed
+// content](enable-mixed.md), __but this can be extremely dangerous.__
 
-const NEW_CHUNK = MinerManagerEvent.DiscoveredNewChunk;
+import { html, render, useState, useEffect, useLayoutEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
+import { locationIdFromDecStr } from 'https://cdn.skypack.dev/@darkforest_eth/serde';
+
+const { MinerManager: Miner, SwissCheesePattern, SpiralPattern } = df.getConstructors();
+
+const NEW_CHUNK = 'DiscoveredNewChunk';
 
 function getPattern(coords, patternType, chunkSize) {
   if (patternType === 'swiss') {
@@ -29,8 +27,75 @@ function getPattern(coords, patternType, chunkSize) {
   }
 }
 
-function Target() {
+function workerFactory(url) {
+  class RemoteWorker {
+    url = url;
 
+    async postMessage(msg) {
+      const msgJson = JSON.parse(msg);
+
+      const resp = await fetch(this.url, {
+        method: 'POST',
+        body: JSON.stringify({
+          chunkFootprint: msgJson.chunkFootprint,
+          planetRarity: msgJson.planetRarity,
+          planetHashKey: msgJson.planetHashKey,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const exploredChunk = await resp.json();
+
+      const chunkCenter = {
+        x: exploredChunk.chunkFootprint.bottomLeft.x + exploredChunk.chunkFootprint.sideLength / 2,
+        y: exploredChunk.chunkFootprint.bottomLeft.y + exploredChunk.chunkFootprint.sideLength / 2,
+      };
+
+      exploredChunk.perlin = df.spaceTypePerlin(chunkCenter, false);
+      for (const planetLoc of exploredChunk.planetLocations) {
+        planetLoc.hash = locationIdFromDecStr(planetLoc.hash);
+        planetLoc.perlin = df.spaceTypePerlin(
+          { x: planetLoc.coords.x, y: planetLoc.coords.y },
+          true
+        );
+        planetLoc.biomebase = df.biomebasePerlin(
+          { x: planetLoc.coords.x, y: planetLoc.coords.y },
+          true
+        );
+      }
+
+      this.onmessage({ data: JSON.stringify([exploredChunk, msgJson.jobId]) });
+    }
+
+    onmessage(_a) {
+      console.warn('Unimplemented: onmessage');
+    }
+    terminate() {
+      console.warn('Unimplemented: terminate');
+    }
+    onmessageerror() {
+      console.warn('Unimplemented: onmessageerror');
+    }
+    addEventListener() {
+      console.warn('Unimplemented: addEventListener');
+    }
+    removeEventListener() {
+      console.warn('Unimplemented: removeEventListener');
+    }
+    dispatchEvent(_event) {
+      return false;
+    }
+    onerror() {
+      console.warn('Unimplemented: onerror');
+    }
+  }
+
+  return RemoteWorker;
+}
+
+function Target() {
   const wrapper = {
     width: '1em',
     height: '1em',
@@ -45,19 +110,32 @@ function Target() {
   };
 
   const path = {
-    fill: 'white'
+    fill: 'white',
   };
 
   return html`
     <span style=${wrapper}>
-      <svg style=${svg} version="1.1" xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-        <path style=${path} d="M512 224h-50.462c-13.82-89.12-84.418-159.718-173.538-173.538v-50.462h-64v50.462c-89.12 13.82-159.718 84.418-173.538 173.538h-50.462v64h50.462c13.82 89.12 84.418 159.718 173.538 173.538v50.462h64v-50.462c89.12-13.82 159.718-84.418 173.538-173.538h50.462v-64zM396.411 224h-49.881c-9.642-27.275-31.255-48.889-58.53-58.53v-49.881c53.757 12.245 96.166 54.655 108.411 108.411zM256 288c-17.673 0-32-14.327-32-32s14.327-32 32-32c17.673 0 32 14.327 32 32s-14.327 32-32 32zM224 115.589v49.881c-27.275 9.641-48.889 31.255-58.53 58.53h-49.881c12.245-53.756 54.655-96.166 108.411-108.411zM115.589 288h49.881c9.641 27.275 31.255 48.889 58.53 58.53v49.881c-53.756-12.245-96.166-54.654-108.411-108.411zM288 396.411v-49.881c27.275-9.642 48.889-31.255 58.53-58.53h49.881c-12.245 53.757-54.654 96.166-108.411 108.411z"></path>
+      <svg
+        style=${svg}
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg"
+        width="512"
+        height="512"
+        viewBox="0 0 512 512"
+      >
+        <path
+          style=${path}
+          d="M512 224h-50.462c-13.82-89.12-84.418-159.718-173.538-173.538v-50.462h-64v50.462c-89.12 13.82-159.718 84.418-173.538 173.538h-50.462v64h50.462c13.82 89.12 84.418 159.718 173.538 173.538v50.462h64v-50.462c89.12-13.82 159.718-84.418 173.538-173.538h50.462v-64zM396.411 224h-49.881c-9.642-27.275-31.255-48.889-58.53-58.53v-49.881c53.757 12.245 96.166 54.655 108.411 108.411zM256 288c-17.673 0-32-14.327-32-32s14.327-32 32-32c17.673 0 32 14.327 32 32s-14.327 32-32 32zM224 115.589v49.881c-27.275 9.641-48.889 31.255-58.53 58.53h-49.881c12.245-53.756 54.655-96.166 108.411-108.411zM115.589 288h49.881c9.641 27.275 31.255 48.889 58.53 58.53v49.881c-53.756-12.245-96.166-54.654-108.411-108.411zM288 396.411v-49.881c27.275-9.642 48.889-31.255 58.53-58.53h49.881c-12.245 53.757-54.654 96.166-108.411 108.411z"
+        ></path>
       </svg>
     </span>
   `;
 }
 
-function MinerUI({ miner, onRemove }) {
+function MinerUI({
+  miner,
+  onRemove,
+}) {
   const [hashRate, setHashRate] = useState(0);
 
   // No idea why useEffect doesn't run
@@ -77,12 +155,12 @@ function MinerUI({ miner, onRemove }) {
       } else {
         ui?.removeExtraMinerLocation?.(miner.id);
       }
-    }
+    };
     miner.on(NEW_CHUNK, calcHash);
 
     return () => {
       miner.off(NEW_CHUNK, calcHash);
-    }
+    };
   }, [miner]);
 
   const wrapper = {
@@ -98,35 +176,31 @@ function MinerUI({ miner, onRemove }) {
     justifyContent: 'space-between',
   };
 
-  let remove = () => {
+  const remove = () => {
     onRemove(miner);
-  }
+  };
 
-  let [targeting, setTargeting] = useState(false);
-  let target = () => setTargeting(true);
+  const [targeting, setTargeting] = useState(false);
+  const target = () => setTargeting(true);
 
   useEffect(() => {
-    let hover = () => {
-      let coords = ui.getHoveringOverCoords();
+    const hover = () => {
+      const coords = ui.getHoveringOverCoords();
       if (coords) {
-        ui?.setExtraMinerLocation?.(miner.id, coords)
+        ui?.setExtraMinerLocation?.(miner.id, coords);
       }
     };
-    let click = () => {
+    const click = () => {
       window.removeEventListener('mousemove', hover);
       window.removeEventListener('click', click);
-      let coords = ui.getHoveringOverCoords();
+      const coords = ui.getHoveringOverCoords();
       if (coords) {
-        const pattern = getPattern(
-          coords,
-          miner.patternType,
-          miner.chunkSize
-        );
+        const pattern = getPattern(coords, miner.patternType, miner.chunkSize);
         miner.setMiningPattern(pattern);
       }
       miner.startExplore();
       setTargeting(false);
-    }
+    };
     if (targeting) {
       miner.stopExplore();
       window.addEventListener('mousemove', hover);
@@ -134,10 +208,10 @@ function MinerUI({ miner, onRemove }) {
     }
 
     return () => {
-      window.removeEventListener('mousemove', hover)
-      window.removeEventListener('click', click)
-    }
-  }, [targeting])
+      window.removeEventListener('mousemove', hover);
+      window.removeEventListener('click', click);
+    };
+  }, [targeting, miner]);
 
   return html`
     <div style=${wrapper}>
@@ -150,7 +224,11 @@ function MinerUI({ miner, onRemove }) {
   `;
 }
 
-function App({ initialMiners = [], addMiner, removeMiner }) {
+function App({
+  initialMiners = [],
+  addMiner,
+  removeMiner,
+}) {
   const wrapper = { display: 'flex' };
   const input = {
     flex: '1',
@@ -170,38 +248,38 @@ function App({ initialMiners = [], addMiner, removeMiner }) {
   const [patternType, setPatternType] = useState('spiral');
 
   const onChange = (evt) => {
-    setNextUrl(evt.target.value)
-  }
+    setNextUrl(evt.target.value);
+  };
 
   const add = () => {
-    const miners = addMiner(nextUrl, patternType);
-    setMiners(miners);
-    setNextUrl(null);
-  }
+    if (nextUrl) {
+      const miners = addMiner(nextUrl, patternType);
+      setMiners(miners);
+      setNextUrl(null);
+    }
+  };
 
   const remove = (miner) => {
     const miners = removeMiner(miner);
     setMiners(miners);
-  }
+  };
 
   const changePattern = (evt) => {
     setPatternType(evt.target.value);
-  }
+  };
 
   return html`
     <div>
-      ${miners.map(miner => html`
-        <${MinerUI}
-          key=${miner.url}
-          miner=${miner}
-          onRemove=${remove} />
+      ${miners.map((miner) => html`
+        <${MinerUI} key=${miner.url} miner=${miner} onRemove=${remove} />
       `)}
       <div style=${wrapper}>
         <input
           style=${input}
           value=${nextUrl}
           onChange=${onChange}
-          placeholder="URL for explore server" />
+          placeholder="URL for explore server"
+        />
         <select style=${select} value=${patternType} onChange=${changePattern}>
           <option value="spiral">Spiral</option>
           <option value="swiss">Swiss</option>
@@ -212,40 +290,42 @@ function App({ initialMiners = [], addMiner, removeMiner }) {
   `;
 }
 
-class Plugin {
+class RemoteExplorerPlugin {
+
   constructor() {
     this.miners = [];
     this.id = 0;
 
-    this.addMiner('http://0.0.0.0:8000/mine');
+    this.addMiner('http://0.0.0.0:8000/mine', 'spiral', 256);
   }
 
   addMiner = (url, patternType = 'spiral', chunkSize = 256) => {
     // TODO: Somehow set a default coords
-    const pattern = getPattern({ x: 0, y: 0 }, patternType, chunkSize)
-    const miner = MinerManager.create(
-      df.persistentChunkStore,
+    const pattern = getPattern({ x: 0, y: 0 }, patternType, chunkSize);
+    const miner = Miner.create(
+      df.getChunkStore(),
       pattern,
       df.getWorldRadius(),
       df.planetRarity,
-      RemoteWorker,
+      df.getHashConfig(),
+      false,
+      workerFactory(url)
     );
 
     miner.url = url;
     miner.id = this.id++;
     miner.chunkSize = chunkSize;
     miner.patternType = patternType;
-    miner.workers.forEach(worker => worker.url = url);
 
     miner.startExplore();
 
     this.miners.push(miner);
 
     return this.miners;
-  }
+  };
 
   removeMiner = (miner) => {
-    this.miners = this.miners.filter(m => {
+    this.miners = this.miners.filter((m) => {
       if (m === miner) {
         ui?.removeExtraMinerLocation?.(m.id);
         m.stopExplore();
@@ -257,18 +337,22 @@ class Plugin {
     });
 
     return this.miners;
-  }
+  };
 
   async render(container) {
     container.style.minWidth = '450px';
     container.style.width = 'auto';
 
-    render(html`
-      <${App}
-        initialMiners=${this.miners}
-        addMiner=${this.addMiner}
-        removeMiner=${this.removeMiner} />
-    `, container)
+    render(
+      html`
+        <${App}
+          initialMiners=${this.miners}
+          addMiner=${this.addMiner}
+          removeMiner=${this.removeMiner}
+        />
+      `,
+      container
+    );
   }
 
   destroy() {
@@ -280,4 +364,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default RemoteExplorerPlugin;

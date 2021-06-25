@@ -5,12 +5,21 @@
     {{- partial "custom-message.html" . -}}
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:gap-4 sm:-m-4 -mx-4 -mb-10 -mt-4">
-      {{ range where .Site.Pages "Kind" "page" }}
+
+      {{ range ((((where .Site.Pages "Kind" "page").ByParam "date")).ByParam "version").Reverse   }}
       {{ if ne .Params.Exclude true }}
+      {{ if ne .Params.deprecated true }}
       <a target="_blank" rel="noopener"
         href="https://github.com/{{ .Site.Params.Repo }}/blob/{{ .Site.Params.Branch }}/content/{{ .File.Dir }}plugin.js"
         class="card border-2 border-green-400 sm:mb-4 mb-6 hover:shadow-xl hover:bg-green-400 text-gray-400 hover:text-black transition duration-200 ease-in rounded-lg {{ lower .Section }}">
         <div class="flex flex-col justify-between h-full relative">
+          {{ if eq .Params.version "0.6.0" }}
+            <span
+              class="bg-green-400 text-black px-3 py-1 tracking-widest text-xs absolute left-0 top-0 rounded-br rounded-tl">v{{ .Params.Version }}</span>
+          {{ else }}
+            <span
+              class="bg-red-400 text-black px-3 py-1 tracking-widest text-xs absolute left-0 top-0 rounded-br rounded-tl">v{{ .Params.Version }}</span>
+          {{ end }}
           <span
             class="bg-green-400 text-black px-3 py-1 tracking-widest text-xs absolute right-0 top-0 rounded-bl">{{ title .Section }}</span>
           <h2
@@ -25,6 +34,7 @@
           </p>
         </div>
       </a>
+      {{ end }}
       {{ end }}
       {{ end }}
     </div>

@@ -10,7 +10,9 @@ You should not use any plugins that you haven't written yourself or by someone y
 
 ## Utilities
 
-We provide a series of utilities that plugin authors can use. These are served directly from our website (`https://plugins.zkga.me`) and you can load them in your plugins. Check out what is available in the [javascript directory](javascript/)
+The Dark Forest in game api has two typical interaction points. In the Dark Forest client you'll find the documentation for the [df object](https://github.com/darkforest-eth/client/blob/master/docs/classes/backend_gamelogic_gamemanager.default.md) and the [ui object](https://github.com/darkforest-eth/client/blob/master/docs/classes/backend_gamelogic_gameuimanager.default.md).
+
+We also provide a series of utilities that plugin authors can use. These are served directly from our website (`https://plugins.zkga.me`) and you can load them in your plugins. Check out what is available in the [javascript directory](javascript/)
 
 If we are missing a utility that would be helpful, feel free to open an issue!
 
@@ -30,6 +32,14 @@ After you've created a new plugin directory, update the `index.md`, `plugin.js`,
 
 Feel free to add additional information to your plugin directory, such as we did with `remote-explorer`.
 
+## Contribution Guidelines
+
+- Has to have screenshot, ideally with result of action and or the ui, should to be ~20kb in size unless you really need more
+- Check desctructors cleanup all constructors, delete all new, reset all listeners and timers
+- Comments on top of the script explaining what is is and how to use it
+- Simple clean auditable javascript, expect to go through a little back and forth code review
+- No external scripts being loaded except for from us https://plugins.zkga.me/utils/ or a few REALLY big names from knowns cdns have been allowed so far like: https://unpkg.com/htm/preact/standalone.module.js and https://cdn.skypack.dev/lodash.range
+
 ## Showcase local development
 
-To develop on the showcase page or theme itself, you can use `hugo` by installing as per above, then running `hugo server -D` in this repository.
+To develop on the showcase page or theme itself, you can use `hugo` by installing as per above. You need to checkout the git submodules for the theme with `git submodule update --init --recursive` and then running `hugo server -D` in this repository will start a local webserver you can visit with your browser.

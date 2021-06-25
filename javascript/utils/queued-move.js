@@ -1,4 +1,6 @@
 import PromiseQueue from 'https://cdn.skypack.dev/p-queue';
+import Serde  from 'https://cdn.skypack.dev/@darkforest_eth/serde';
+import { CONTRACT_PRECISION } from 'https://cdn.skypack.dev/@darkforest_eth/constants';
 
 let moveSnarkQueue;
 if (window.moveSnarkQueue === undefined) {
@@ -70,8 +72,6 @@ let MoveArgIdxs = {
   SHIPS_SENT: 5,
   SILVER_SENT: 6,
 }
-let contractPrecision = 1000;
-let CheckedTypeUtils = df.getCheckedTypeUtils();
 
 // Kinda ContractsAPI.move() but without `waitFor` logic
 async function send(actionId, snarkArgs) {
@@ -84,10 +84,16 @@ async function send(actionId, snarkArgs) {
       snarkArgs[ZKArgIdx.PROOF_C],
       [
         ...snarkArgs[ZKArgIdx.DATA],
-        (txIntent.forces * contractPrecision).toString(),
-        (txIntent.silver * contractPrecision).toString(),
+        (txIntent.forces * CONTRACT_PRECISION).toString(),
+        (txIntent.silver * CONTRACT_PRECISION).toString(),
+        "0"
       ],
+
     ];
+    
+      if (txIntent?.artifact) {
+        args[ZKArgIdx.DATA][MoveArgIdxs.ARTIFACT_SENT] = Serde.artifactIdToDecStr(txIntent.artifact);
+      }
 
     const tx = df.contractsAPI.txRequestExecutor.makeRequest(
       'MOVE',
@@ -111,16 +117,17 @@ async function send(actionId, snarkArgs) {
       type: 'MOVE',
       txHash: (await tx.submitted).hash,
       sentAtTimestamp: Math.floor(Date.now() / 1000),
-      from: CheckedTypeUtils.locationIdFromDecStr(
+      from: Serde.locationIdFromDecStr(
         args[ZKArgIdx.DATA][MoveArgIdxs.FROM_ID]
       ),
-      to: CheckedTypeUtils.locationIdFromDecStr(
+      to: Serde.locationIdFromDecStr(
         args[ZKArgIdx.DATA][MoveArgIdxs.TO_ID]
       ),
-      forces: forcesFloat / contractPrecision,
-      silver: silverFloat / contractPrecision,
+      forces: forcesFloat / CONTRACT_PRECISION,
+      silver: silverFloat / CONTRACT_PRECISION,
     };
 
+    if (txIntent?.artifact) unminedMoveTx.artifact = txIntent.artifact;
     onTxSubmit(unminedMoveTx);
 
     try {
@@ -146,7 +153,7 @@ async function snark(actionId, oldX, oldY, newX, newY) {
   const distMax = Math.ceil(Math.sqrt(xDiff ** 2 + yDiff ** 2));
 
   try {
-    let [callArgs] = await df.snarkHelper.getMoveArgs(
+    let callArgs = await df.snarkHelper.getMoveArgs(
       oldX,
       oldY,
       newX,
@@ -162,8 +169,14 @@ async function snark(actionId, oldX, oldY, newX, newY) {
   }
 }
 
+function isActivated(artifact) {
+  if (artifact === undefined) {
+    return false;
+  }
+}
+
 // Kinda like GameManager.move() but without localstorage and using our queue
-export function move(from, to, forces, silver) {
+export function move(from, to, forces, silver, artifactMoved) {
   const oldLocation = df.entityStore.getLocationOfPlanet(from);
   const newLocation = df.entityStore.getLocationOfPlanet(to);
   if (!oldLocation) {
@@ -202,6 +215,20 @@ export function move(from, to, forces, silver) {
     forces: shipsMoved,
     silver: silverMoved,
   };
+
+  if (artifactMoved) {
+    const artifact = df.entityStore.getArtifactById(artifactMoved);
+    if (!artifact) {
+      throw new Error("couldn't find this artifact");
+    }
+    if (isActivated(artifact)) {
+      throw new Error("can't move an activated artifact");
+    }
+    if (!oldPlanet.heldArtifactIds.includes(artifactMoved)) {
+      throw new Error("that artifact isn't on this planet!");
+    }
+    txIntent.artifact = artifactMoved;
+  }
 
   df.handleTxIntent(txIntent);
 

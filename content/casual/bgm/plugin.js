@@ -1,4 +1,7 @@
-// Via https://github.com/ichub
+// # BGM
+// The BGM plugin allows you to add background music to your Dark Forest
+// experience! Via https://github.com/ichub
+
 class Plugin {
   async render(container) {
     container.style.width = '200px';
@@ -9,4 +12,4 @@ class Plugin {
   destroy() { }
 }
 
-plugin.register(new Plugin());
+export default Plugin;

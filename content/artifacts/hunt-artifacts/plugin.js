@@ -1,6 +1,7 @@
-let {
+import {
   move,
-} = await import('https://plugins.zkga.me/utils/queued-move.js');
+} from 'https://plugins.zkga.me/utils/queued-move.js';
+
 
 class Plugin {
   constructor() {
@@ -84,7 +85,7 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
 
 function isAsteroid(planet) {
   return planet.planetResource === 1;
@@ -147,7 +148,7 @@ function captureArtifacts(fromId, maxDistributeEnergyPercent) {
 }
 
 function getArrivalsForPlanet(planetId) {
-  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId);
+  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
 }
 
 //returns tuples of [planet,distance]
