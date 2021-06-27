@@ -1,26 +1,26 @@
-const {
+import {
   html,
   render,
   useState,
   useLayoutEffect,
-} = await import('https://unpkg.com/htm/preact/standalone.module.js');
+} from 'https://unpkg.com/htm/preact/standalone.module.js';
 
-const {
+import {
   eachLimit
-} = await import('https://cdn.skypack.dev/async-es');
+} from 'https://cdn.skypack.dev/async-es';
 
-const {
+import {
   Defense,
   Range,
   Speed,
-} = await import('https://plugins.zkga.me/game/Icons.js');
+} from 'https://plugins.zkga.me/game/Icons.js';
 
-const {
+import {
   UpgradeBranchName,
   SpaceType,
   canStatUpgrade,
   canPlanetUpgrade,
-} = await import('https://plugins.zkga.me/utils/utils.js')
+} from 'https://plugins.zkga.me/utils/utils.js';
 
 function upgrade(planet, branch) {
   if (planet && canPlanetUpgrade(planet) && canStatUpgrade(planet, branch)) {
