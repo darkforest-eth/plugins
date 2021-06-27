@@ -16,6 +16,8 @@ class Plugin {
     this.xyWrapper = document.createElement('div');
     this.xyWrapper.style.marginBottom = '10px';
 
+    let anchor = document.createElement("a");
+
     let msg = document.createElement('div');
     msg.innerText = 'Click on the map to pin selection.';
     this.beginXY = document.createElement('div');
@@ -110,7 +112,40 @@ class Plugin {
       this.status.style.color = 'red';
     }
   }
-
+  
+  onDownload = async () => {
+    let chunks = ui.getExploredChunks();
+    let chunksAsArray = Array.from(chunks);
+    if (this.beginCoords && this.endCoords) {
+      let begin = {
+        x: Math.min(this.beginCoords.x, this.endCoords.x),
+        y: Math.max(this.beginCoords.y, this.endCoords.y),
+      };
+      let end = {
+        x: Math.max(this.beginCoords.x, this.endCoords.x),
+        y: Math.min(this.beginCoords.y, this.endCoords.y),
+      };
+      chunksAsArray = chunksAsArray.filter((chunk) => {
+        return this.intersectsXY(chunk, begin, end);
+      });
+    }
+    try {
+      let map = JSON.stringify(chunksAsArray);
+      var blob = new Blob([map], { type: 'text/plain' }),
+          anchor = document.createElement('a');
+      anchor.download = "hello.txt";
+      anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+      anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+      anchor.click();
+      this.status.innerText = "Map downloaded!";
+      this.status.style.color = "white";
+    } catch (err) {
+      console.error(err);
+      this.status.innerText = "Failed to download map.";
+      this.status.style.color = "red";
+    }
+  };
+  
   onMouseMove = () => {
     let coords = ui.getHoveringOverCoords();
     if (coords) {
@@ -154,19 +189,29 @@ class Plugin {
     wrapper.style.display = 'flex';
     wrapper.style.justifyContent = 'space-between';
 
+    let wrapper2 = document.createElement("div");
+    wrapper2.style.display = "flex";
+    wrapper2.style.justifyContent = "space-between";
+
     let exportButton = document.createElement('button');
-    exportButton.innerText = "Export Map";
+    exportButton.innerText = "Copy Map";
     exportButton.onclick = this.onExport;
 
     let importButton = document.createElement('button');
-    importButton.innerText = "Import Map";
+    importButton.innerText = "Paste Map";
     importButton.onclick = this.onImport;
+    
+    let downloadButton = document.createElement("button");
+    downloadButton.innerText = "Download Map";
+    downloadButton.onclick = this.onDownload;
 
     wrapper.appendChild(exportButton);
     wrapper.appendChild(importButton);
+    wrapper2.appendChild(downloadButton);
 
     container.appendChild(this.xyWrapper);
     container.appendChild(wrapper);
+    container.appendChild(wrapper2);
     container.appendChild(this.status);
   }
 
