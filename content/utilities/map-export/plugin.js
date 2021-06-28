@@ -194,7 +194,7 @@ class Plugin {
     wrapper2.style.justifyContent = "space-between";
 
     let exportButton = document.createElement('button');
-    exportButton.innerText = "Copy Map";
+    exportButton.innerText = "Copy Map to Clipboard";
     exportButton.onclick = this.onExport;
 
     let importButton = document.createElement('button');
