@@ -135,7 +135,7 @@ class Plugin {
           anchor = document.createElement('a');
       anchor.download = "map.json";
       anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
-      anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+      anchor.dataset.downloadurl = ['application/json', anchor.download, anchor.href].join(':');
       anchor.click();
       this.status.innerText = "Map downloaded!";
       this.status.style.color = "white";
