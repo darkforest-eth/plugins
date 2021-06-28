@@ -84,8 +84,8 @@ class Plugin {
       chunkBottom >= end.y
     );
   }
-
-  onExport = async () => {
+  
+  generateMap() {
     let chunks = ui.getExploredChunks();
     let chunksAsArray = Array.from(chunks);
     if (this.beginCoords && this.endCoords) {
@@ -101,8 +101,13 @@ class Plugin {
         return this.intersectsXY(chunk, begin, end);
       });
     }
+  return chunksAsArray;
+  }
+    
+  onExport = async () => {
+    let mapRaw = this.generateMap();
     try {
-      let map = JSON.stringify(chunksAsArray);
+      let map = JSON.stringify(mapRaw);
       await window.navigator.clipboard.writeText(map);
       this.status.innerText = 'Map copied to clipboard!';
       this.status.style.color = 'white'
@@ -114,23 +119,9 @@ class Plugin {
   }
   
   onDownload = async () => {
-    let chunks = ui.getExploredChunks();
-    let chunksAsArray = Array.from(chunks);
-    if (this.beginCoords && this.endCoords) {
-      let begin = {
-        x: Math.min(this.beginCoords.x, this.endCoords.x),
-        y: Math.max(this.beginCoords.y, this.endCoords.y),
-      };
-      let end = {
-        x: Math.max(this.beginCoords.x, this.endCoords.x),
-        y: Math.min(this.beginCoords.y, this.endCoords.y),
-      };
-      chunksAsArray = chunksAsArray.filter((chunk) => {
-        return this.intersectsXY(chunk, begin, end);
-      });
-    }
+    let mapRaw = this.generateMap();
     try {
-      let map = JSON.stringify(chunksAsArray);
+      let map = JSON.stringify(mapRaw);
       var blob = new Blob([map], { type: 'application/json' }),
           anchor = document.createElement('a');
       anchor.download = "map.json";
