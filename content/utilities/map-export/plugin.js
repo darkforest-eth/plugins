@@ -131,7 +131,7 @@ class Plugin {
     }
     try {
       let map = JSON.stringify(chunksAsArray);
-      var blob = new Blob([map], { type: 'text/plain' }),
+      var blob = new Blob([map], { type: 'application/json' }),
           anchor = document.createElement('a');
       anchor.download = "map.json";
       anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
