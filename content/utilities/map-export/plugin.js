@@ -198,7 +198,7 @@ class Plugin {
     exportButton.onclick = this.onExport;
 
     let importButton = document.createElement('button');
-    importButton.innerText = "Paste Map";
+    importButton.innerText = "Load Map from Clipboard";
     importButton.onclick = this.onImport;
     
     let downloadButton = document.createElement("button");
