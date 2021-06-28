@@ -133,7 +133,7 @@ class Plugin {
       let map = JSON.stringify(chunksAsArray);
       var blob = new Blob([map], { type: 'text/plain' }),
           anchor = document.createElement('a');
-      anchor.download = "hello.txt";
+      anchor.download = "map.json";
       anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
       anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
       anchor.click();
