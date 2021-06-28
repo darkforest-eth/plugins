@@ -38,23 +38,14 @@ class Plugin {
     this.xyWrapper.appendChild(this.endXY);
     this.xyWrapper.appendChild(clear);
   }
-  onImport = async () => {
-    let input;
-    try {
-      input = await window.navigator.clipboard.readText();
-    } catch (err) {
-      console.error(err);
-      this.status.innerText = 'Unable to import map. Did you allow clipboard access?';
-      this.status.style.color = 'red';
-      return;
-    }
-
+  
+  async processMap(input) {
     let chunks;
     try {
       chunks = JSON.parse(input);
     } catch (err) {
       console.error(err);
-      this.status.innerText = 'Invalid map data. Check the data in your clipboard.';
+      this.status.innerText = 'Invalid map data. Check the data in your file.';
       this.status.style.color = 'red';
       return;
     }
@@ -68,6 +59,37 @@ class Plugin {
       console.log(err);
       this.status.innerText = 'Encountered an unexpected error.';
       this.status.style.color = 'red';
+    }
+  }
+  
+  onImport = async () => {
+    let input;
+    try {
+      input = await window.navigator.clipboard.readText();
+      this.processMap(input);
+    } catch (err) {
+      console.error(err);
+      this.status.innerText = 'Unable to import map. Did you allow clipboard access?';
+      this.status.style.color = 'red';
+      return;
+    }
+  }
+  
+  onUpload = async () => {
+    let input;
+    try {
+      var file = inputFile.files.item(0);
+      var reader = new FileReader();
+      reader.onload = function() {
+        input = reader.result;
+        this.processMap(input);
+      }.bind(this);
+      reader.readAsText(file);
+    } catch (err) {
+      console.error(err);
+      this.status.innerText = 'Unable to upload map.';
+      this.status.style.color = 'red';
+      return;
     }
   }
 
@@ -195,14 +217,24 @@ class Plugin {
     let downloadButton = document.createElement("button");
     downloadButton.innerText = "Download Map";
     downloadButton.onclick = this.onDownload;
+    
+    let uploadButton = document.createElement("button");
+    uploadButton.innerText = "Upload Map";
+    uploadButton.onclick = this.onUpload;
+
+    let inputFile = document.createElement("input");
+    inputFile.type = "file";
+    inputFile.id = "inputFile";
 
     wrapper.appendChild(exportButton);
     wrapper.appendChild(importButton);
     wrapper2.appendChild(downloadButton);
+    wrapper2.appendChild(uploadButton);
 
     container.appendChild(this.xyWrapper);
     container.appendChild(wrapper);
     container.appendChild(wrapper2);
+    container.appendChild(inputFile);
     container.appendChild(this.status);
   }
 
