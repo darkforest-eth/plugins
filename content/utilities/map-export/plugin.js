@@ -16,8 +16,6 @@ class Plugin {
     this.xyWrapper = document.createElement('div');
     this.xyWrapper.style.marginBottom = '10px';
 
-    let anchor = document.createElement("a");
-
     let msg = document.createElement('div');
     msg.innerText = 'Click on the map to pin selection.';
     this.beginXY = document.createElement('div');
@@ -38,7 +36,7 @@ class Plugin {
     this.xyWrapper.appendChild(this.endXY);
     this.xyWrapper.appendChild(clear);
   }
-  
+
   async processMap(input) {
     let chunks;
     try {
@@ -61,7 +59,7 @@ class Plugin {
       this.status.style.color = 'red';
     }
   }
-  
+
   onImport = async () => {
     let input;
     try {
@@ -74,21 +72,26 @@ class Plugin {
     }
     this.processMap(input);
   }
-  
+
   onUpload = async () => {
-    try {
-      var file = inputFile.files.item(0);
-      var reader = new FileReader();
-      reader.onload = () => {
-        this.processMap(reader.result);
-      };
-      reader.readAsText(file);
-    } catch (err) {
-      console.error(err);
-      this.status.innerText = 'Unable to upload map.';
-      this.status.style.color = 'red';
-      return;
+    let inputFile = document.createElement('input');
+    inputFile.type = 'file';
+    inputFile.onchange = () => {
+      try {
+        var file = inputFile.files.item(0);
+        var reader = new FileReader();
+        reader.onload = () => {
+          this.processMap(reader.result);
+        };
+        reader.readAsText(file);
+      } catch (err) {
+        console.error(err);
+        this.status.innerText = 'Unable to upload map.';
+        this.status.style.color = 'red';
+        return;
+      }
     }
+    inputFile.click();
   }
 
   intersectsXY(chunk, begin, end) {
@@ -104,7 +107,7 @@ class Plugin {
       chunkBottom >= end.y
     );
   }
-  
+
   generateMap() {
     let chunks = ui.getExploredChunks();
     let chunksAsArray = Array.from(chunks);
@@ -123,7 +126,7 @@ class Plugin {
     }
     return chunksAsArray;
   }
-    
+
   onExport = async () => {
     let mapRaw = this.generateMap();
     try {
@@ -137,26 +140,26 @@ class Plugin {
       this.status.style.color = 'red';
     }
   }
-  
+
   onDownload = async () => {
     let mapRaw = this.generateMap();
     try {
       let map = JSON.stringify(mapRaw);
       var blob = new Blob([map], { type: 'application/json' }),
           anchor = document.createElement('a');
-      anchor.download = "map.json";
+      anchor.download = 'map.json';
       anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
       anchor.dataset.downloadurl = ['application/json', anchor.download, anchor.href].join(':');
       anchor.click();
-      this.status.innerText = "Map downloaded!";
-      this.status.style.color = "white";
+      this.status.innerText = 'Saving map!';
+      this.status.style.color = 'white';
     } catch (err) {
       console.error(err);
-      this.status.innerText = "Failed to download map.";
-      this.status.style.color = "red";
+      this.status.innerText = 'Failed to download map.';
+      this.status.style.color = 'red';
     }
   };
-  
+
   onMouseMove = () => {
     let coords = ui.getHoveringOverCoords();
     if (coords) {
@@ -191,7 +194,7 @@ class Plugin {
     container.parentElement.style.minHeight = 'unset';
     container.style.minHeight = 'unset';
 
-    container.style.width = '280px';
+    container.style.width = '400px';
 
     window.addEventListener('mousemove', this.onMouseMove);
     window.addEventListener('click', this.onClick);
@@ -199,30 +202,27 @@ class Plugin {
     let wrapper = document.createElement('div');
     wrapper.style.display = 'flex';
     wrapper.style.justifyContent = 'space-between';
+    wrapper.style.marginBottom = '10px';
 
-    let wrapper2 = document.createElement("div");
-    wrapper2.style.display = "flex";
-    wrapper2.style.justifyContent = "space-between";
+    let wrapper2 = document.createElement('div');
+    wrapper2.style.display = 'flex';
+    wrapper2.style.justifyContent = 'space-between';
 
     let exportButton = document.createElement('button');
-    exportButton.innerText = "Copy Map to Clipboard";
+    exportButton.innerText = 'Copy Map to Clipboard';
     exportButton.onclick = this.onExport;
 
     let importButton = document.createElement('button');
-    importButton.innerText = "Load Map from Clipboard";
+    importButton.innerText = 'Load Map from Clipboard';
     importButton.onclick = this.onImport;
-    
-    let downloadButton = document.createElement("button");
-    downloadButton.innerText = "Download Map";
-    downloadButton.onclick = this.onDownload;
-    
-    let uploadButton = document.createElement("button");
-    uploadButton.innerText = "Upload Map";
-    uploadButton.onclick = this.onUpload;
 
-    let inputFile = document.createElement("input");
-    inputFile.type = "file";
-    inputFile.id = "inputFile";
+    let downloadButton = document.createElement('button');
+    downloadButton.innerText = 'Download Map as File';
+    downloadButton.onclick = this.onDownload;
+
+    let uploadButton = document.createElement('button');
+    uploadButton.innerText = 'Upload Map from File';
+    uploadButton.onclick = this.onUpload;
 
     wrapper.appendChild(exportButton);
     wrapper.appendChild(importButton);
@@ -232,7 +232,6 @@ class Plugin {
     container.appendChild(this.xyWrapper);
     container.appendChild(wrapper);
     container.appendChild(wrapper2);
-    container.appendChild(inputFile);
     container.appendChild(this.status);
   }
 
