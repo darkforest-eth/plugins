@@ -66,24 +66,22 @@ class Plugin {
     let input;
     try {
       input = await window.navigator.clipboard.readText();
-      this.processMap(input);
     } catch (err) {
       console.error(err);
       this.status.innerText = 'Unable to import map. Did you allow clipboard access?';
       this.status.style.color = 'red';
       return;
     }
+    this.processMap(input);
   }
   
   onUpload = async () => {
-    let input;
     try {
       var file = inputFile.files.item(0);
       var reader = new FileReader();
-      reader.onload = function() {
-        input = reader.result;
-        this.processMap(input);
-      }.bind(this);
+      reader.onload = () => {
+        this.processMap(reader.result);
+      };
       reader.readAsText(file);
     } catch (err) {
       console.error(err);
@@ -123,7 +121,7 @@ class Plugin {
         return this.intersectsXY(chunk, begin, end);
       });
     }
-  return chunksAsArray;
+    return chunksAsArray;
   }
     
   onExport = async () => {
