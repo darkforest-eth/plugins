@@ -7,14 +7,14 @@
 // * Deposit artifacts on your planets
 // * Find untaken planets with artifacts and jump to them
 
-const {
+import {
   html,
   render,
   useState,
   useLayoutEffect,
-} = await import('https://unpkg.com/htm/preact/standalone.module.js');
+} from 'https://unpkg.com/htm/preact/standalone.module.js';
 
-const {
+import {
   BiomeNames,
   energy,
   coords,
@@ -25,15 +25,15 @@ const {
   hasArtifact,
   canHaveArtifact,
   canFindArtifact,
-} = await import('https://plugins.zkga.me/utils/utils.js');
+} from 'https://plugins.zkga.me/utils/utils.js';
 
-const {
+import {
   Energy,
   EnergyGrowth,
   Defense,
   Range,
   Speed,
-} = await import('https://plugins.zkga.me/game/Icons.js');
+} from 'https://plugins.zkga.me/game/Icons.js';
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
@@ -540,4 +540,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
