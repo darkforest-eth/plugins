@@ -79,7 +79,7 @@ function findArtifacts() {
             try {
                 if (isFindable(planet, currentBlockNumber)) {
                     df.findArtifact(planet.locationId);
-                } else if (isProspectable(planet) && enoughEnergyToProspect(planet)) {
+                } else if (isProspectable(planet) && enoughEnergyToProspect(planet) && !planet.unconfirmedProspectPlanet) {
                     df.prospectPlanet(planet.locationId);
                 }
             } catch (err) {
@@ -168,7 +168,9 @@ function ProspectButton({planet}) {
 
     function prospectPleant() {
         try {
-            df.prospectPlanet(planet.locationId);
+            if (!planet.unconfirmedProspectPlanet) {
+                df.prospectPlanet(planet.locationId);
+            }
         } catch (err) {
             console.log(err);
             setProspect(true);

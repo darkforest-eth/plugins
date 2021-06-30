@@ -40,7 +40,7 @@ function isFindable(planet, currentBlockNumber) {
 }
 
 function isProspectable(planet) {
-    return df.isPlanetMineable(planet) && planet.prospectedBlockNumber === undefined;
+    return df.isPlanetMineable(planet) && planet.prospectedBlockNumber === undefined && !planet.unconfirmedProspectPlanet;
 }
 
 function enoughEnergyToProspect(p) {
@@ -103,10 +103,10 @@ class ArtifactsFinder {
         }
         this.finding = !this.finding;
         if (this.finding) {
-            this.findArtifacts();
-            this.timerId = setInterval(this.findArtifacts, AUTO_INTERVAL);
-            this.findArtifactsButton.innerText = " Cancel Finding ";
             this.logs.appendChild(createDom("div", "Start Finding"));
+            this.findArtifacts();
+            this.timerId = setInterval(this.findArtifacts.bind(this), AUTO_INTERVAL);
+            this.findArtifactsButton.innerText = " Cancel Finding ";
         } else {
             this.findArtifactsButton.innerText = ' Start Find ';
             this.logs.appendChild(createDom("div", "Cancel Find"))
