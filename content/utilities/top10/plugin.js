@@ -11,7 +11,7 @@ class Plugin {
     container.style.width = "280px";
     let label = document.createElement('div');
         
-table=[];
+let table=[];
 players=df.getAllPlayers().sort((p1,p2)=>{if (p1.withdrawnSilver + p1.totalArtifactPoints > p2.withdrawnSilver + p2.totalArtifactPoints) { return -1; } else { return 1 }})
 .slice(0,10)
 .forEach(function(item,index,array){
