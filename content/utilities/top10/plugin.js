@@ -1,5 +1,4 @@
 // top 10 pulled from ingame data - @0x_Bear
-console.log(df, ui);
 
 class Plugin {
   constructor() {}
