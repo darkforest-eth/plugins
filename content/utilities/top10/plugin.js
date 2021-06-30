@@ -12,7 +12,7 @@ class Plugin {
     let label = document.createElement('div');
         
 let table=[];
-players=df.getAllPlayers().sort((p1,p2)=>{if (p1.withdrawnSilver + p1.totalArtifactPoints > p2.withdrawnSilver + p2.totalArtifactPoints) { return -1; } else { return 1 }})
+let players=df.getAllPlayers().sort((p1,p2)=>{if (p1.withdrawnSilver + p1.totalArtifactPoints > p2.withdrawnSilver + p2.totalArtifactPoints) { return -1; } else { return 1 }})
 .slice(0,10)
 .forEach(function(item,index,array){
   if (item.twitter == undefined) { name = item.address.substr(0,5); } else { name = item.twitter }
