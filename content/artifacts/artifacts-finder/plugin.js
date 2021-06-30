@@ -1,5 +1,5 @@
 // Artifacts Finder
-// This plugin can help auto prospect and find artifacts.
+// This plugin offers a button to auto prospect and find artifacts every 10 minutes. To stop simply close the plugin
 // Simple is Power!
 
 // Author: SnowTiger
