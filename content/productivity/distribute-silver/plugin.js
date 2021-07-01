@@ -1,7 +1,3 @@
-import {
-  move
-} from 'https://plugins.zkga.me/utils/queued-move.js';
-
 const MAX_LEVEL_PLANET = 9;
 
 class Plugin {
