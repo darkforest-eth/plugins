@@ -1,4 +1,5 @@
 const minPlayerPlanetCount = 2;
+const updateTimeInSeconds = 60;
 
 function formatNumberForDisplay(num, decimalCount=1) {
 	num = parseInt(num);
@@ -35,6 +36,13 @@ async function downloadTwitterNames() {
 		.then(response => response.json())
 }
 
+// is not sorted - maybe there is a way to download a sorted array
+// leaderboard["0.6.2-production"].scoresByPlayer;
+// async function downloadLeaderboard() {
+//	return fetch('https://api.zkga.me/leaderboard')
+//		.then(response => response.json())
+//}
+
 // return example: 'hsl(285,100%,70%)'
 function getPlayerColor(ethAddress) {
 	return df.getProcgenUtils().getPlayerColor(ethAddress);
@@ -63,16 +71,20 @@ function Plugin() {
 	var o = {};
 	o.players = {};
 	o.playerList = [];
+	o.allPlayers;
 	o.div;
 	o.div_playerList;
 	o.updateInterv = null;
 	o.firstRender = true;
 	o.twitterNames = null;
+	o.leaderboard = [];
 
 	o.init = function() {
-		o.updateInterv = setInterval(o.update, 1000*10);
-		o.update();
-		downloadTwitterNames().then(twitter => { o.twitterNames = twitter });
+		downloadTwitterNames().then(twitter => {
+			o.twitterNames = twitter;
+			o.update();
+		});
+		o.updateInterv = setInterval(o.update, 1000*updateTimeInSeconds);
 	}
 
 	o.render = function(div) {
@@ -95,26 +107,42 @@ function Plugin() {
 	}
 
 	o.update = function() {
+		o.allPlayers = df.getAllPlayers();
+		o.leaderboard = [...o.allPlayers];
+		o.updateLeaderboard();
 		o.getPlayerInfo();
 		o.drawPlayerInfo();
 	}
 
+	o.updateLeaderboard = function() {
+		o.leaderboard.sort((p1,p2) => {
+			return getPlayerScore(p2) - getPlayerScore(p1);
+		});
+	}
+
+	o.getLeaderboardRank = function(ethAddress) {
+		for (var i=0; i<o.leaderboard.length; ++i) {
+			if (ethAddress === o.leaderboard[i].address)
+				return i;
+		}
+		return -1;
+	}
+
 	o.getPlayerInfo = function() {
-		if (o.playerList.length > 0) return;
-		const planets = df.getAllOwnedPlanets();
-		const allPlayers = df.getAllPlayers();
+		o.players = {};
 		for (var hash in o.players) {
 			o.players[hash].reset();
 		}
 		function createNewPlayer(hash) {
 			o.players[hash] = CreatePlayersObject();
 			o.players[hash].hash = planet.owner;
-			for (var p of allPlayers) {
+			for (var p of o.allPlayers) {
 				if (p.address !== hash) continue;
 				o.players[hash].dfObject = p;
 				break;
 			}
 		}
+		const planets = df.getAllOwnedPlanets();
 		for (var planet of planets) {
 			if (!o.players[planet.owner])
 				createNewPlayer(planet.owner);
@@ -140,7 +168,7 @@ function Plugin() {
 		table.width = "700px";
 		{
 			const tr = document.createElement('tr');
-			const groups = [ "hash", "name", "planets", "energy", "energyCap", "energyAvail", "silver", "score" ];
+			const groups = [ "hash", "name", "planets", "energy", "energyCap", "energyAvail", "silver", "score", "rank" ];
 			for (var group of groups) {
 				var th = document.createElement('th');
 				th.innerText = group;
@@ -174,6 +202,7 @@ function Plugin() {
 			addAsTd(tr, parseInt(player.energyAvailablePercent*100)+"%");
 			addAsTd(tr, formatNumberForDisplay(player.silver));
 			addAsTd(tr, formatNumberForDisplay(getPlayerScore(player.dfObject)));
+			addAsTd(tr, o.getLeaderboardRank(player.hash));
 			table.appendChild(tr);
 		}
 		o.div_playerList.appendChild(table);
