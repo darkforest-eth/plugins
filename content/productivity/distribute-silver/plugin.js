@@ -251,7 +251,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
       continue;
     }
 
-    move(fromId, candidate.locationId, energyNeeded, silverNeeded);
+    df.move(fromId, candidate.locationId, energyNeeded, silverNeeded);
     energySpent += energyNeeded;
     silverSpent += silverNeeded;
     moves += 1;
