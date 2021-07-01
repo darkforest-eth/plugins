@@ -18,13 +18,6 @@ function CreatePlayersObject() {
 	o.silver = 0;
 	o.energyCap = 0;
 	o.energyAvailablePercent = 0;
-	o.reset = function() {
-		o.planets = [];
-		o.energy = 0;
-		o.silver = 0;
-		o.energyCap = 0;
-		o.energyAvailablePercent = 0;
-	}
 	o.addPlanet = function(planet) {
 		o.planets.push(planet);
 	}
@@ -108,13 +101,13 @@ function Plugin() {
 
 	o.update = function() {
 		o.allPlayers = df.getAllPlayers();
-		o.leaderboard = [...o.allPlayers];
 		o.updateLeaderboard();
 		o.getPlayerInfo();
 		o.drawPlayerInfo();
 	}
 
 	o.updateLeaderboard = function() {
+		o.leaderboard = [...o.allPlayers];
 		o.leaderboard.sort((p1,p2) => {
 			return getPlayerScore(p2) - getPlayerScore(p1);
 		});
@@ -130,9 +123,6 @@ function Plugin() {
 
 	o.getPlayerInfo = function() {
 		o.players = {};
-		for (var hash in o.players) {
-			o.players[hash].reset();
-		}
 		function createNewPlayer(hash) {
 			o.players[hash] = CreatePlayersObject();
 			o.players[hash].hash = planet.owner;
