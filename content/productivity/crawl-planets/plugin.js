@@ -12,6 +12,8 @@ const players = [
   "0x0000000000000000000000000000000000000000",
 ];
 
+let stop = false;
+
 const typeNames = Object.keys(planetTypes);
 
 class Plugin {
@@ -129,7 +131,11 @@ class Plugin {
       message.innerText = 'Please wait...';
 
       let moves = 0;
+      stop = false;
       for (let planet of df.getMyPlanets()) {
+        if (stop){
+          break;
+        }
         setTimeout(() => {
           moves += capturePlanets(
             planet.locationId,
@@ -141,6 +147,15 @@ class Plugin {
         }, 0);
       }
     }
+    
+    let stopButton = document.createElement('button');
+    stopButton.style.width = '100%';
+    stopButton.style.marginBottom = '10px'
+    stopButton.innerHTML = 'Crawl stop';
+    stopButton.onclick = () => {
+       message.innerText = 'Stop Now....';
+       stop = true;
+    }    
 
     container.appendChild(stepperLabel);
     container.appendChild(stepper);
@@ -151,6 +166,7 @@ class Plugin {
     container.appendChild(planetType);
     container.appendChild(button);
     container.appendChild(globalButton);
+    container.appendChild(stopButton);
     container.appendChild(message);
   }
 }
