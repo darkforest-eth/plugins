@@ -1,7 +1,3 @@
-import {
-    move
-} from 'https://plugins.zkga.me/utils/queued-move.js';
-
 const MAX_LEVEL_PLANET = 9;
 
 class Plugin {
@@ -168,7 +164,7 @@ function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPle
                 continue;
             }
     
-            move(candidate.locationId, fromId, energyBudget, receivedSilverForMove);
+            df.move(candidate.locationId, fromId, energyBudget, receivedSilverForMove);
             energyReceived += receivedEnergyForMove;
             silverReceived += receivedSilverForMove;
             moves += 1;
