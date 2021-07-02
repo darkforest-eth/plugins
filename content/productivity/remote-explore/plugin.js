@@ -198,6 +198,7 @@ function MinerUI({
         const pattern = getPattern(coords, miner.patternType, miner.chunkSize);
         miner.setMiningPattern(pattern);
       }
+      miner.setRadius(df.getWorldRadius());
       miner.startExplore();
       setTargeting(false);
     };
