@@ -1,8 +1,3 @@
-import {
-  move,
-} from 'https://plugins.zkga.me/utils/queued-move.js';
-
-
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 50;
@@ -139,7 +134,7 @@ function captureArtifacts(fromId, maxDistributeEnergyPercent) {
       continue;
     }
 
-    move(fromId, candidate.locationId, energyNeeded, 0);
+    df.move(fromId, candidate.locationId, energyNeeded, 0);
     energySpent += energyNeeded;
     moves += 1;
   }
