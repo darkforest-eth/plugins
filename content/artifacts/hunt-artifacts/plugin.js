@@ -93,7 +93,7 @@ function captureArtifacts(fromId, maxDistributeEnergyPercent) {
   // Rejected if has pending outbound moves
   const unconfirmed = df.getUnconfirmedMoves().filter(move => move.from === fromId)
   if (unconfirmed.length !== 0) {
-    return;
+    return 0;
   }
 
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
