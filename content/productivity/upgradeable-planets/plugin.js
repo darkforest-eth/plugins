@@ -1,10 +1,10 @@
 // Remixed from https://gist.github.com/blurpesec/ddd8c7a670a2f8f9f3a28b02c1ff0897
-const {
+import {
   coords,
   getSilver,
-  canUpgrade,
+  canPlanetUpgrade,
   getSilverNeeded,
-} = await import('https://plugins.zkga.me/utils/utils.js');
+} from 'https://plugins.zkga.me/utils/utils.js';
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
@@ -27,7 +27,7 @@ class Plugin {
 
   allPlanetsWithUpgrade() {
     return Array.from(df.getMyPlanets())
-      .filter(canUpgrade)
+      .filter(canPlanetUpgrade)
       .sort((p1, p2) => parseInt(p2.planetLevel, 10) - parseInt(p1.planetLevel, 10));
   }
 
@@ -117,4 +117,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;

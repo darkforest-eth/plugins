@@ -1,15 +1,21 @@
-const { default: PromiseQueue } = await import(
-  "https://cdn.skypack.dev/p-queue"
-);
+import PromiseQueue from "https://cdn.skypack.dev/p-queue";
 
-const { html, render, useState, useEffect, useLayoutEffect } = await import(
-  "https://unpkg.com/htm/preact/standalone.module.js"
-);
+import {
+  html,
+  render,
+  useState,
+  useLayoutEffect,
+} from "https://unpkg.com/htm/preact/standalone.module.js";
 
 function shortenFloat(num) {
   return Number.parseFloat(num).toFixed(2);
 }
 
+function isActivated(artifact) {
+  if (artifact === undefined) {
+    return false;
+  }
+}
 class Snarker {
   url;
   concurrency;
@@ -68,17 +74,6 @@ class SnarkerPool {
     return snarker[0];
   }
 }
-let zkcache;
-if (window.zkcache === undefined) {
-  zkcache = {};
-  window.zkcache = zkcache;
-} else {
-  zkcache = window.zkcache;
-}
-
-function getKeyFromMoveArgs(x1, y1, x2, y2) {
-  return JSON.stringify([x1, y1, x2, y2]);
-}
 
 let poolManager = new SnarkerPool();
 window.poolManager = poolManager;
@@ -103,41 +98,6 @@ if (window.moveSnarkQueue === undefined) {
   moveSnarkQueue.concurrency = 1;
 }
 
-let contractQueue;
-if (window.contractQueue === undefined) {
-  // Timeout a TX after 2 minutes
-  contractQueue = new PromiseQueue({ concurrency: 1, timeout: 120000 });
-  contractQueue.on("add", () => {
-    console.log(
-      "Adding to task to the Contract Queue. Size:",
-      contractQueue.size
-    );
-  });
-  contractQueue.on("next", () => {
-    console.log(
-      "Processed task from Contract Queue. Remaining size:",
-      contractQueue.size
-    );
-  });
-  window.contractQueue = contractQueue;
-} else {
-  contractQueue = window.contractQueue;
-}
-
-// Taken from game logic but removed Terminal and Notifications
-function onTxConfirmed(unminedTx, success) {
-  if (success) {
-    df.contractsAPI.emit("TxConfirmed", unminedTx);
-  } else {
-    df.contractsAPI.emit("TxReverted", unminedTx);
-  }
-}
-
-// Taken from game logic but removed Terminal and Notifications
-function onTxSubmit(unminedTx) {
-  df.contractsAPI.emit("TxSubmitted", unminedTx);
-}
-
 // Taken from game logic
 function getRandomActionId() {
   const hex = "0123456789abcdef";
@@ -147,88 +107,6 @@ function getRandomActionId() {
     ret += hex[Math.floor(hex.length * Math.random())];
   }
   return ret;
-}
-
-// Taken from game
-let ZKArgIdx = {
-  PROOF_A: 0,
-  PROOF_B: 1,
-  PROOF_C: 2,
-  DATA: 3,
-};
-let MoveArgIdxs = {
-  FROM_ID: 0,
-  TO_ID: 1,
-  TO_PERLIN: 2,
-  TO_RADIUS: 3,
-  DIST_MAX: 4,
-  SHIPS_SENT: 5,
-  SILVER_SENT: 6,
-};
-let contractPrecision = 1000;
-let CheckedTypeUtils = df.getCheckedTypeUtils();
-
-// Kinda ContractsAPI.move() but without `waitFor` logic
-async function send(actionId, snarkArgs) {
-  let txIntent = df.entityStore.unconfirmedMoves[actionId];
-
-  try {
-    const args = [
-      snarkArgs[ZKArgIdx.PROOF_A],
-      snarkArgs[ZKArgIdx.PROOF_B],
-      snarkArgs[ZKArgIdx.PROOF_C],
-      [
-        ...snarkArgs[ZKArgIdx.DATA],
-        (txIntent.forces * contractPrecision).toString(),
-        (txIntent.silver * contractPrecision).toString(),
-      ],
-    ];
-
-    const tx = df.contractsAPI.txRequestExecutor.makeRequest(
-      "MOVE",
-      actionId,
-      df.contractsAPI.coreContract,
-      args,
-      {
-        gasPrice: 1000000000,
-        gasLimit: 2000000,
-      },
-      undefined // no snark logs
-    );
-
-    const forcesFloat = parseFloat(args[ZKArgIdx.DATA][MoveArgIdxs.SHIPS_SENT]);
-    const silverFloat = parseFloat(
-      args[ZKArgIdx.DATA][MoveArgIdxs.SILVER_SENT]
-    );
-
-    const unminedMoveTx = {
-      actionId,
-      type: "MOVE",
-      txHash: (await tx.submitted).hash,
-      sentAtTimestamp: Math.floor(Date.now() / 1000),
-      from: CheckedTypeUtils.locationIdFromDecStr(
-        args[ZKArgIdx.DATA][MoveArgIdxs.FROM_ID]
-      ),
-      to: CheckedTypeUtils.locationIdFromDecStr(
-        args[ZKArgIdx.DATA][MoveArgIdxs.TO_ID]
-      ),
-      forces: forcesFloat / contractPrecision,
-      silver: silverFloat / contractPrecision,
-    };
-
-    onTxSubmit(unminedMoveTx);
-
-    try {
-      let receipt = await tx.confirmed;
-      onTxConfirmed(unminedMoveTx, receipt.status === 1);
-    } catch (err) {
-      console.log(err);
-      onTxConfirmed(unminedMoveTx, false);
-    }
-  } catch (err) {
-    console.log(err);
-    df.onTxIntentFail(txIntent, err);
-  }
 }
 
 // Split from GameManager.move() to using our queue
@@ -242,7 +120,7 @@ async function snark(actionId, oldX, oldY, newX, newY) {
   const distMax = Math.ceil(Math.sqrt(xDiff ** 2 + yDiff ** 2));
 
   try {
-    let [callArgs] = await snarker.execute(
+    let callArgs = await snarker.execute(
       oldX,
       oldY,
       newX,
@@ -250,9 +128,15 @@ async function snark(actionId, oldX, oldY, newX, newY) {
       df.worldRadius,
       distMax
     );
-    let key = getKeyFromMoveArgs(oldX, oldY, newX, newY);
-    zkcache[key] = callArgs;
-    contractQueue.add(() => send(actionId, callArgs));
+    const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
+    df.snarkHelper.moveSnarkCache.set(cacheKey, callArgs);
+    return df.contractsAPI.move(
+      actionId,
+      callArgs,
+      txIntent.forces,
+      txIntent.silver,
+      txIntent.artifact
+    );
   } catch (err) {
     console.log(err);
     df.onTxIntentFail(txIntent, err);
@@ -260,9 +144,10 @@ async function snark(actionId, oldX, oldY, newX, newY) {
 }
 
 // Kinda like GameManager.move() but without localstorage and using our queue
-function move(from, to, forces, silver) {
+function move(from, to, forces, silver, artifactMoved) {
   const oldLocation = df.entityStore.getLocationOfPlanet(from);
   const newLocation = df.entityStore.getLocationOfPlanet(to);
+  const fromPlanet = df.entityStore.getPlanetWithId(from);
   if (!oldLocation) {
     console.error("tried to move from planet that does not exist");
     return;
@@ -272,6 +157,9 @@ function move(from, to, forces, silver) {
     return;
   }
 
+  if (fromPlanet.energy < forces) {
+    return;
+  }
   const oldX = oldLocation.coords.x;
   const oldY = oldLocation.coords.y;
   const newX = newLocation.coords.x;
@@ -300,21 +188,45 @@ function move(from, to, forces, silver) {
     silver: silverMoved,
   };
 
+  if (artifactMoved) {
+    const artifact = df.entityStore.getArtifactById(artifactMoved);
+    if (!artifact) {
+      throw new Error("couldn't find this artifact");
+    }
+    if (isActivated(artifact)) {
+      throw new Error("can't move an activated artifact");
+    }
+    if (!oldPlanet.heldArtifactIds.includes(artifactMoved)) {
+      throw new Error("that artifact isn't on this planet!");
+    }
+    txIntent.artifact = artifactMoved;
+  }
+
   df.handleTxIntent(txIntent);
 
-  const key = getKeyFromMoveArgs(oldX, oldY, newX, newY);
-  const cached = zkcache[key];
-  if (cached !== undefined) {
-    contractQueue.add(() => send(actionId, cached));
+  const xDiff = newX - oldX;
+  const yDiff = newY - oldY;
+
+  const distMax = Math.ceil(Math.sqrt(xDiff ** 2 + yDiff ** 2));
+
+  const cacheKey = `${oldX}-${oldY}-${newX}-${newY}-${df.worldRadius}-${distMax}`;
+  const cachedResult = df.snarkHelper.moveSnarkCache.get(cacheKey);
+  if (cachedResult) {
+    return df.contractsAPI.move(
+      actionId,
+      cachedResult,
+      shipsMoved,
+      silverMoved,
+      artifactMoved
+    );
+  } else {
+    moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
   }
-  moveSnarkQueue.add(() => snark(actionId, oldX, oldY, newX, newY));
 }
 
 function updateConcurrency() {
-  let num = (df.snarkHelper.snarkProverQueue.taskQueue.concurrency = poolManager.pool.reduce(
-    (acc, s) => s.concurrency + acc,
-    0
-  ));
+  let num = (df.snarkHelper.snarkProverQueue.taskQueue.concurrency =
+    poolManager.pool.reduce((acc, s) => s.concurrency + acc, 0));
   moveSnarkQueue.concurrency = num;
 }
 
@@ -396,7 +308,7 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
   };
 
   const add = () => {
-    let _pool = addSnarker(nextUrl, concurrency);
+    let _pool = addSnarker(nextUrl, concurrency*1); //this was somehow returning a string after manual input
     setPool(_pool);
     setNextUrl("");
   };
@@ -428,7 +340,7 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
         <input
           type="number"
           name="thread"
-          style=${{ ...input, width: "32px" }}
+          style=${{ ...input, width: "50px" }}
           value=${concurrency}
           onInput=${onChangeConcurrency}
           min="1"
@@ -442,8 +354,8 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
 class Plugin {
   constructor() {
     df._move = df.move;
+    df.snarkHelper.setSnarkCacheSize(100);
     df.move = move;
-    poolManager.addSnarker(new Snarker("https://snarker.onrender.com/move", 1));
   }
 
   addSnarker = (url, concurrency) => {
@@ -479,4 +391,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;

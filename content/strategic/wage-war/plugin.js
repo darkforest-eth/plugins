@@ -1,4 +1,4 @@
-const { html, render, useState, useEffect } = await import('https://unpkg.com/htm/preact/standalone.module.js');
+import { html, render, useState, useEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
 /* start-region:config */
 // Test mode toggle. Test mode stops transactions from being created, so dev can check target priority is correct
@@ -147,7 +147,7 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
             )
         );
 
-        // If attack (respecting defense maintenance mandatory limit), does not surpase the attack relevance 
+        // If attack (respecting defense maintenance mandatory limit), does not surpase the attack relevance
         // threshold (including target planet defense) for the targetPlanet, don't include the attack.
         if (targetEffectiveDefense * ATTACK_RELEVANCE_THRESHOLD <= energyArrivingGivenThreshold) {
             attack.push({
@@ -163,9 +163,9 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
     })
     // leave at most the top 6 attacks.
     const cutAttack = attack.sort((a,b) => b.arriving - a.arriving).slice(0, MAX_ATTACKERS)
-    
+
     // reduce number of attacks needed further to limit attacking resources to only what is necessary.
-    const attackTotal = cutAttack.reduce((acc, item, idx) => 
+    const attackTotal = cutAttack.reduce((acc, item, idx) =>
         idx === 0 || acc.totalArriving < Math.floor(ATTACK_MAX_LANDING_THRESHOLD * targetEffectiveDefense)
             ? ({
                 totalArriving: acc.totalArriving + item.arriving,
@@ -232,9 +232,9 @@ const MyWarringParticipants = ({ myRelevantEntities, centerPlanet, myScheduledAt
         return html`
                         <tr onClick=${() => centerPlanet({ x: myPlanet.location.coords.x, y: myPlanet.location.coords.y })}>
                             <th>${`${myPlanet.planetLevel} (${myPlanet.upgradeState.reduce((acc, cur) => cur + acc, 0)})`}</th>
-                            <th>${truncate(myPlanet.locationId)}</th> 
-                            <th>${formatNumber(myPlanet.warringPotential || 0)}</th> 
-                            <th>${formatNumber(myPlanet.feedingPotential || 0)}</th> 
+                            <th>${truncate(myPlanet.locationId)}</th>
+                            <th>${formatNumber(myPlanet.warringPotential || 0)}</th>
+                            <th>${formatNumber(myPlanet.feedingPotential || 0)}</th>
                             <th>${formatNumber(myPlanet.effectiveDefense)}</th>
                             <th>${formatNumber(myPlanet.warringScore)}</th>
                             <th>${myPlanetStatus[myPlanet.locationId] || "Waiting"}</th>
@@ -351,7 +351,7 @@ const TargetPriorities = ({ targetRelevantEntities = [], centerPlanet, toggleFee
             <label>
                 Ignore Asteroid Belts?
             </label>
-            <input style=${{ marginLeft: "5px" }} type="checkbox" value=${!ignoreAsteroidBelts} onChange=${toggleIgnoreAsteroidBelts} /> 
+            <input style=${{ marginLeft: "5px" }} type="checkbox" value=${!ignoreAsteroidBelts} onChange=${toggleIgnoreAsteroidBelts} />
             <table>
                 <thead>
                     <tr>
@@ -372,9 +372,9 @@ const TargetPriorities = ({ targetRelevantEntities = [], centerPlanet, toggleFee
                         <tr onClick=${() => centerPlanet({ x: target.location.coords.x, y: target.location.coords.y })}>
                             <th>${formatNumber(target.overallScore)}</th>
                             <th>${`${target.planetLevel} (${target.upgradeState.reduce((acc, cur) => cur + acc, 0)})`}</th>
-                            <th>${truncate(target.locationId)}</th> 
-                            <th>${formatNumber(target.warringPotential || 0)}</th> 
-                            <th>${formatNumber(target.feedingPotential || 0)}</th> 
+                            <th>${truncate(target.locationId)}</th>
+                            <th>${formatNumber(target.warringPotential || 0)}</th>
+                            <th>${formatNumber(target.feedingPotential || 0)}</th>
                             <th>${formatNumber(target.effectiveDefense)}</th>
                             <th>${formatNumber(target.feederScore)}</th>
                             <th>${formatNumber(target.warringScore)}</th>
@@ -574,7 +574,7 @@ class Plugin {
             ...entity,
             effectiveDefense: calcEffectiveDefense(entity.defense, entity.energyCap),
             warringScore: (entity.warringPotential / calcEffectiveDefense(entity.defense, entity.energyCap)) * (entity.isAsteroidField ? ASTEROID_SCORE_MODIFIER : 1),
-            
+
         }))
 
         // Returns all relevant target entities (warring & feeding) for the war against me.
@@ -583,7 +583,7 @@ class Plugin {
             isAsteroidField: planet.planetResource === 1,
             feedingPotential: calcAllFeedingPotential(df)(planet)(this.targetPlanets),
             warringPotential: calcAllWarringPotential(df)(planet)(Array.from(this.myPlanetsAll))
-        })).filter(({ warringPotential, feedingPotential, isAsteroidField }) => 
+        })).filter(({ warringPotential, feedingPotential, isAsteroidField }) =>
             !(this.ignoreAsteroidBelts && isAsteroidField) && (warringPotential !== 0 || feedingPotential !== 0)
         ).map((entity) => ({
             ...entity,
@@ -603,7 +603,7 @@ class Plugin {
                 const inScheduled = (this.myScheduledAttacks || []).reduce((allAttacks, attack) => [ ...allAttacks, ...attack ], [])
                 const inProgressAttack = (this.attacksInProgress || []).reduce((allAttacks, atk) => [ ...allAttacks, ...atk.scheduledAttack ], [])
                 // Filter all attacking entities that aren't currently attacking or scheduled to attack.
-                const attackersAvailable = myRelevantEntities.filter((relevantAttacker) => 
+                const attackersAvailable = myRelevantEntities.filter((relevantAttacker) =>
                     !attackersInUse[relevantAttacker.locationId]
                     && (relevantAttacker.energy / relevantAttacker.energyCap) > ATTACK_MIN_ENERGY_PERCENTAGE // Check energy present is greater than default maintenance
                     && !inScheduled.find(attack =>
@@ -669,4 +669,4 @@ class Plugin {
 }
 /* end-region:components */
 
-plugin.register(new Plugin());
+export default Plugin;

@@ -120,50 +120,50 @@ class Plugin {
               width: 100px;
               border-radius: 1px;
           }
-  
+
           .tc-plugin input[type="color"] {
               background: none;
               height: 25px;
               vertical-align: middle;
           }
-  
+
           .tc-plugin input[type="text"] {
               padding: 0px 5px;
               line-height: 125%;
           }
-  
+
           .tc-plugin td {
               padding: 2px 5px;
               font-size: 14px
           }
-  
+
           .tc-plugin td:nth-child(2) {
               text-align: right
           }
-  
+
           .tc-plugin table {
               width: 300px;
               margin-bottom: 10px
           }
-  
+
           .tc-plugin .reset {
               float: right;
           }
-  
+
           .tc-plugin hr {
               margin: 10px 0 !important;
               border-top: 1px dashed gray;
           }
-  
+
           .tc-plugin #effects {
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
           }
-  
+
           .tc-plugin .item {
               display: inline-block;
           }
-  
+
           .tc-plugin #reset {
               float: right;
           }
@@ -188,4 +188,4 @@ class Plugin {
 /**
 * And don't forget to register it!
 */
-plugin.register(new Plugin());
+export default Plugin;

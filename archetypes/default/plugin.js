@@ -25,4 +25,4 @@ class Plugin {
 /**
  * And don't forget to register it!
  */
-plugin.register(new Plugin());
+export default Plugin;

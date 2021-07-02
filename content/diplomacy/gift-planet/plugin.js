@@ -159,4 +159,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;
