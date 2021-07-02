@@ -27,6 +27,10 @@ function getPattern(coords, patternType, chunkSize) {
   }
 }
 
+function worldRadius() {
+  return df.getWorldRadius()
+}
+
 function workerFactory(url) {
   class RemoteWorker {
     url = url;
@@ -198,6 +202,7 @@ function MinerUI({
         const pattern = getPattern(coords, miner.patternType, miner.chunkSize);
         miner.setMiningPattern(pattern);
       }
+      miner.setRadius(worldRadius());
       miner.startExplore();
       setTargeting(false);
     };
@@ -305,7 +310,7 @@ class RemoteExplorerPlugin {
     const miner = Miner.create(
       df.getChunkStore(),
       pattern,
-      df.getWorldRadius(),
+      worldRadius(),
       df.planetRarity,
       df.getHashConfig(),
       false,
