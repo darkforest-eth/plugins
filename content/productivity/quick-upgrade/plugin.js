@@ -209,7 +209,7 @@ function App() {
           return undefined;
         }
 
-        if (planet.planetType === PlanetType.PLANET) {
+        if (planet.planetType === PlanetType.PLANET && planet.planetLevel > 0) {
           return planet;
         } else {
           return undefined;
