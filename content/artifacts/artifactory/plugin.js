@@ -245,7 +245,7 @@ function Unfound({ selected }) {
   let [lastLocationId, setLastLocationId] = useState(null);
 
   let planets = myPlanetsWithFindable()
-    .filter(planet => !planet.hasTriedFindingArtifact && (planet.prospectedBlockNumber === undefined || planet.hasOwnProperty('unconfirmedFindArtifact')));
+  .filter(planet => !planet.hasTriedFindingArtifact && (planet.prospectedBlockNumber === undefined || !prospectExpired(currentBlockNumber, planet.prospectedBlockNumber)))
 
   let planetsChildren = planets.map(planet => {
     let planetEntry = {
