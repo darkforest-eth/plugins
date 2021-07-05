@@ -1,4 +1,6 @@
 /**
+ * Plugin Name
+ * Describe your plugin here
  * Remember, you have access these globals:
  * 1. df - Just like the df object in your console.
  * 2. ui - For interacting with the game's user interface.
