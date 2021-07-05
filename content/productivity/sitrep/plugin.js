@@ -1,3 +1,10 @@
+// Sitrep
+// See how many other players are active in your map. See incoming attacks. See
+// attacks before you see the red circles. Go to Assess tab to see how an
+// ongoing battle will play out. Make plans to send reinforcement.
+
+
+
 // rendering adopted from artifactory and from repeat-attacks
 import { html, render, useState, useLayoutEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
 

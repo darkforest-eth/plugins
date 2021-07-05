@@ -1,3 +1,6 @@
+// Gift Empire
+// Give your entire empire away.
+
 let hasArtifact = (planet) => planet.heldArtifactId != null;
 let canHaveArtifact = (planet) => {
   return df.isPlanetMineable(planet) && !planet.hasTriedFindingArtifact

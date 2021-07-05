@@ -1,3 +1,10 @@
+// Wage War
+// This plugin is used to grab statistics about a user-specified empire. Once
+// information is grabbed, the plugin ranks the target empire's planets by their
+// ability to attack you and by their ability to reinforce themselves. If you so
+// choose, you can wage an automated war on them, using your planets to attack
+// their with timed attacks in order of highest-value. 
+
 import { html, render, useState, useEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
 /* start-region:config */
@@ -162,7 +169,7 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
         }
     })
     // leave at most the top 6 attacks.
-    const cutAttack = attack.sort((a,b) => b.arriving - a.arriving).slice(0, MAX_ATTACKERS)
+    const cutAttack = attack.sort((a, b) => b.arriving - a.arriving).slice(0, MAX_ATTACKERS)
 
     // reduce number of attacks needed further to limit attacking resources to only what is necessary.
     const attackTotal = cutAttack.reduce((acc, item, idx) =>
@@ -174,7 +181,7 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
                     item
                 ]
             }) : acc
-    , { totalArriving: 0, attacks: [] })
+        , { totalArriving: 0, attacks: [] })
     const fullAssault = attackTotal.attacks
     // determines energy landing on the target
     const attackLanding = fullAssault.reduce((acc, cur) => acc + cur.arriving, 0)
@@ -207,10 +214,10 @@ const MyWarringParticipants = ({ myRelevantEntities, centerPlanet, myScheduledAt
         paddingLeft: "3px"
     }
     const myPlanetStatus = {}
-    myScheduledAttacks.reduce((allAttacks, attack) => [ ...allAttacks, ...attack ], []).forEach(scheduledAttack => {
+    myScheduledAttacks.reduce((allAttacks, attack) => [...allAttacks, ...attack], []).forEach(scheduledAttack => {
         myPlanetStatus[scheduledAttack.myAttacker.locationId] = "Scheduled";
     })
-    attacksInProgress.reduce((allAttacks, attack) => [ ...allAttacks, ...attack.scheduledAttack ], []).forEach(inProgressAttack => {
+    attacksInProgress.reduce((allAttacks, attack) => [...allAttacks, ...attack.scheduledAttack], []).forEach(inProgressAttack => {
         myPlanetStatus[inProgressAttack.myAttacker.locationId] = "Attacking";
     })
     return html`
@@ -335,10 +342,10 @@ const TargetPriorities = ({ targetRelevantEntities = [], centerPlanet, toggleFee
         paddingLeft: "3px"
     }
     const targetStatus = {}
-    myScheduledAttacks.reduce((allAttacks, attack) => [ ...allAttacks, ...attack ], []).forEach(scheduledAttack => {
+    myScheduledAttacks.reduce((allAttacks, attack) => [...allAttacks, ...attack], []).forEach(scheduledAttack => {
         targetStatus[scheduledAttack.targetDefender.locationId] = "Scheduled";
     })
-    attacksInProgress.reduce((allAttacks, attack) => [ ...allAttacks, ...attack.scheduledAttack ], []).forEach(inProgressAttack => {
+    attacksInProgress.reduce((allAttacks, attack) => [...allAttacks, ...attack.scheduledAttack], []).forEach(inProgressAttack => {
         targetStatus[inProgressAttack.targetDefender.locationId] = "Attacking";
     })
     return html`
@@ -600,8 +607,8 @@ class Plugin {
         if (this.wageWar && targetRelevantEntities.length > 0) {
             const attackersInUse = {}
             scheduledAttacks = targetRelevantEntities.map((targetPlanet) => {
-                const inScheduled = (this.myScheduledAttacks || []).reduce((allAttacks, attack) => [ ...allAttacks, ...attack ], [])
-                const inProgressAttack = (this.attacksInProgress || []).reduce((allAttacks, atk) => [ ...allAttacks, ...atk.scheduledAttack ], [])
+                const inScheduled = (this.myScheduledAttacks || []).reduce((allAttacks, attack) => [...allAttacks, ...attack], [])
+                const inProgressAttack = (this.attacksInProgress || []).reduce((allAttacks, atk) => [...allAttacks, ...atk.scheduledAttack], [])
                 // Filter all attacking entities that aren't currently attacking or scheduled to attack.
                 const attackersAvailable = myRelevantEntities.filter((relevantAttacker) =>
                     !attackersInUse[relevantAttacker.locationId]
@@ -616,9 +623,9 @@ class Plugin {
                     attackersInUse[singleAttack.myAttacker.locationId] = true
                 });
                 return overallPlanetAttacks;
-            }, []).filter(attacks => attacks.length !== 0 )
+            }, []).filter(attacks => attacks.length !== 0)
             // Add new scheduled attacks to the state
-            this.myScheduledAttacks = [ ...this.myScheduledAttacks, ...scheduledAttacks ];
+            this.myScheduledAttacks = [...this.myScheduledAttacks, ...scheduledAttacks];
         }
         render(html`
             <${WageWarApp}

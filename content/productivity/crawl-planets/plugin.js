@@ -1,3 +1,6 @@
+// Crawl Planets
+// Capture unowned planets around you!
+
 const planetTypes = {
   'Planet': 0,
   'Asteroid': 1,

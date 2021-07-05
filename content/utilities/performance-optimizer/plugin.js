@@ -1,6 +1,9 @@
+// Performance Optimizer
+// Aims to improve performance under heavy load:
+// * Reduce render load by limiting percentage of total compute power to spend on rendering. Implemented by overwriting `window.requestAnimationFrame`. Could be more sophisiticated in the future if render managers get exposed.
+// * Clear zk-SNARK proofs cache / Set max. limit of zk-SNARK proofs. Default is 20. Every move between the same two planets after the first one is sped up significantly.
+
 import $ from 'https://cdn.skypack.dev/pin/jquery@v3.5.1-GJsJJ2VEWnBDZuot9fRf/min/jquery.js';
-
-
 
 class PerformanceOptimizerState {
   constructor() {
@@ -133,7 +136,7 @@ class PerformanceOptimizer {
     $(`input:radio[name=rendering][value=${state.rendering}]`).prop("checked", true);
     $('#cachingBox').prop("checked", state.caching);
     $('input:radio[name=rendering]').change(function () { state.rendering = this.value });
-    const [fpsSpan, percentageSpan, cacheLimitSizeSpan] = [$("#fpsSpan"), $("#percentageSpan") , $("#cacheLimitSizeSpan")];
+    const [fpsSpan, percentageSpan, cacheLimitSizeSpan] = [$("#fpsSpan"), $("#percentageSpan"), $("#cacheLimitSizeSpan")];
     $('#fpsRange').change(function () { state.renderingFps = parseInt(this.value) }).on("input", function () { fpsSpan.text(` ${this.value} FPS`) });
     $('#percentageRange').change(function () { state.renderingPercentage = parseInt(this.value) }).on("input", function () { percentageSpan.text(` ${this.value}%`) });
 

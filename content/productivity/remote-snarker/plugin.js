@@ -1,3 +1,13 @@
+// Remote Snarker
+// Similar to the remote explore plugin, the remote snarker plugin allows
+// players to run snark proof generation on another computer. We use
+// [snarking-server](https://github.com/bind/df-snarker) as a webserver that
+// exposes a `/move` endpoint and connect to it from in-game with this plugin.
+// When running this on https://zkga.me/, you might get an error about blocked
+// insecure content. You probably just want to install a SSL Certificate on your
+// explore server. If you can't, you can [enable mixed
+// content](enable-mixed.md), __but this can be extremely dangerous.__
+
 import PromiseQueue from "https://cdn.skypack.dev/p-queue";
 
 import {
@@ -60,7 +70,7 @@ class Snarker {
 
 class SnarkerPool {
   pool = [];
-  constructor() {}
+  constructor() { }
   addSnarker(snarker) {
     this.pool.push(snarker);
     return this.pool;
@@ -308,7 +318,7 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
   };
 
   const add = () => {
-    let _pool = addSnarker(nextUrl, concurrency*1); //this was somehow returning a string after manual input
+    let _pool = addSnarker(nextUrl, concurrency * 1); //this was somehow returning a string after manual input
     setPool(_pool);
     setNextUrl("");
   };
@@ -320,14 +330,14 @@ function App({ initialPool = [], addSnarker, removeSnarker }) {
   return html`
     <div>
       ${pool.map(
-        (snarker) => html`
+    (snarker) => html`
           <${SnarkerUI}
             key=${snarker.url}
             snarker=${snarker}
             onRemove=${remove}
           />
         `
-      )}
+  )}
       <div style=${wrapper}>
         <input
           style=${{ ...input, flexGrow: "1" }}

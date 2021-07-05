@@ -1,4 +1,5 @@
 /**
+ * Silver Spacetime
  * This plugin has a bunch of overlap with Distribute Silver
  * but I wanted to add automatic sending, the problem was that it
  * caused a bunch of network congestion in 0.6 Round 1.
@@ -275,7 +276,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent) {
         return p.planetLevel === from.planetLevel
       }
 
-       // Allow lvl 5 to send to lvl 4, etc
+      // Allow lvl 5 to send to lvl 4, etc
       return p.planetLevel >= from.planetLevel - 1
     })
     .map(to => [to, distance(from, to)])

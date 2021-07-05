@@ -1,4 +1,5 @@
-/* globals plugin */
+// theme-changer
+// Customize background color, font, text color, and apply filters!
 
 function applyMain() {
   applyStylesToAll(

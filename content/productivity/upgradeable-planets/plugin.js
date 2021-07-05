@@ -1,3 +1,6 @@
+// Upgradeable Planets
+// Quick view of planets ready for upgrade.
+
 // Remixed from https://gist.github.com/blurpesec/ddd8c7a670a2f8f9f3a28b02c1ff0897
 import {
   coords,
