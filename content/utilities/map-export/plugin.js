@@ -147,7 +147,7 @@ class Plugin {
       let map = JSON.stringify(mapRaw);
       var blob = new Blob([map], { type: 'application/json' }),
           anchor = document.createElement('a');
-      anchor.download = 'map.json';
+      anchor.download = df.getContractAddress().substring(0,6) + '_map.json';
       anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
       anchor.dataset.downloadurl = ['application/json', anchor.download, anchor.href].join(':');
       anchor.click();
