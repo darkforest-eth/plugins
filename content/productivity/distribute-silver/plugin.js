@@ -1,4 +1,5 @@
 // Distribute Silver
+//
 // Distribute your silver!
 
 const MAX_LEVEL_PLANET = 9;

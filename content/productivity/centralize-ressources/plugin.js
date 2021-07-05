@@ -1,4 +1,5 @@
 // Centralize Resources
+//
 // Retrieve energy and silver from nearby planets
 
 const MAX_LEVEL_PLANET = 9;

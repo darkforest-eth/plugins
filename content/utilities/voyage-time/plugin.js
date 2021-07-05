@@ -1,4 +1,5 @@
 // Voyage Time
+//
 // View estimated time for a voyage.
 
 let oneMinute = 60;

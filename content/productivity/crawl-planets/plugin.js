@@ -1,4 +1,5 @@
 // Crawl Planets
+//
 // Capture unowned planets around you!
 
 const planetTypes = {
