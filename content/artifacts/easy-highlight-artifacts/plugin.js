@@ -1,12 +1,11 @@
 import {
   html,
   render,
-  useState,
   useCallback,
-  // @ts-ignore
+  useState,
 } from "https://unpkg.com/htm/preact/standalone.module.js";
 
-const PLANET_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7].map((level) => ({
+const PLANET_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((level) => ({
   value: level,
   text: level.toString(),
 }));
@@ -20,7 +19,7 @@ const PLANET_TYPES = [
   { value: 1, text: "Asteroid Field" },
   { value: 2, text: "Foundry" },
   { value: 3, text: "Spacetime Rip" },
-  { value: 4, text: "" },
+  { value: 4, text: "Quasar" },
 ];
 
 const ARTIFACT_TYPES = [
@@ -214,7 +213,7 @@ function createButton({ loading, onClick }) {
 let eligiblePlanets = [];
 
 function App({}) {
-  const [selectedLevels, setSelectedLevels] = useState([0, 7]);
+  const [selectedLevels, setSelectedLevels] = useState([0, 9]);
   const [selectedPlanetType, setSelectedPlanetType] = useState(-1);
   const [selectedArtifactType, setSelectedArtifactType] = useState(-1);
   const [selectedArtifactRarity, setSelectedArtifactRarity] = useState(-1);
@@ -323,7 +322,7 @@ function App({}) {
       <input
         type="checkbox"
         title="planets must hold artifacts"
-        onChange=${setMustHoldArtifacts}
+        onChange=${() => setMustHoldArtifacts(!mustHoldArtifacts)}
         defaultChecked=${mustHoldArtifacts}
       />
     </div>
@@ -342,7 +341,13 @@ function App({}) {
   `;
 
   const planetUnionFilters = html`
-    <div style=${{ ...flexRow, justifyContent: "space-between", marginTop: "10px" }}>
+    <div
+      style=${{
+        ...flexRow,
+        justifyContent: "space-between",
+        marginTop: "10px",
+      }}
+    >
       ${planetTypeFilter} ${mustHoldArtifactsFilter} ${ownerFilter}
     </div>
   `;
@@ -355,7 +360,6 @@ function App({}) {
         selectedValue=${selectedArtifactType}
         onSelect=${(v) => {
           setSelectedArtifactType(v);
-          console.log("level mm", selectedLevels);
         }}
       />
     </div>
@@ -391,6 +395,9 @@ function App({}) {
 
 //@ts-ignore
 class Plugin {
+  constructor() {
+    this.container = null;
+  }
   draw(ctx) {
     // @ts-ignore
     const viewport = ui.getViewport();
@@ -401,25 +408,53 @@ class Plugin {
     for (let planet of eligiblePlanets) {
       if (!planet.location) continue;
       let { x, y } = planet.location.coords;
-      ctx.beginPath();
-      ctx.arc(
-        viewport.worldToCanvasX(x),
-        viewport.worldToCanvasY(y),
-        viewport.worldToCanvasDist(
-          ui.getRadiusOfPlanetLevel(planet.planetLevel)
-        ),
-        0,
-        2 * Math.PI
-      );
-      ctx.fill();
-      ctx.stroke();
-      ctx.closePath();
+
+      // enlarge the highlight icon when planet level is small
+      if (planet.planetLevel <= 2) {
+        ctx.lineWidth =
+          viewport.worldToCanvasDist(ui.getRadiusOfPlanetLevel(3)) -
+          viewport.worldToCanvasDist(
+            ui.getRadiusOfPlanetLevel(planet.planetLevel)
+          );
+        ctx.beginPath();
+        ctx.arc(
+          viewport.worldToCanvasX(x),
+          viewport.worldToCanvasY(y),
+          viewport.worldToCanvasDist(
+            ui.getRadiusOfPlanetLevel(3)
+          ),
+          0,
+          2 * Math.PI
+        );
+        // ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+      } else {
+        ctx.beginPath();
+        ctx.arc(
+          viewport.worldToCanvasX(x),
+          viewport.worldToCanvasY(y),
+          viewport.worldToCanvasDist(
+            ui.getRadiusOfPlanetLevel(planet.planetLevel)
+          ),
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+        // ctx.stroke();
+        ctx.closePath();
+      }
     }
     ctx.restore();
   }
 
   async render(container) {
+    this.container = container;
     render(html`<${App} />`, container);
+  }
+
+  destroy() {
+    render(null, this.container);
   }
 }
 
