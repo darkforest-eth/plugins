@@ -1,3 +1,7 @@
+// Distribute Silver
+//
+// Distribute your silver!
+
 const MAX_LEVEL_PLANET = 9;
 
 class Plugin {
@@ -46,7 +50,7 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    Array.from(Array(MAX_LEVEL_PLANET+1).keys()).forEach(lvl => {
+    Array.from(Array(MAX_LEVEL_PLANET + 1).keys()).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
       opt.innerText = `Level ${lvl}`;
@@ -73,7 +77,7 @@ class Plugin {
     levelAsteroid.style.width = '100%';
     levelAsteroid.style.marginTop = '10px';
     levelAsteroid.style.marginBottom = '10px';
-    Array.from(Array(MAX_LEVEL_PLANET+1).keys()).forEach(lvl => {
+    Array.from(Array(MAX_LEVEL_PLANET + 1).keys()).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
       opt.innerText = `Level ${lvl}`;
@@ -153,13 +157,13 @@ class Plugin {
       message.innerText = 'Please wait...';
 
       let moves = 0;
-      let silver =0;
-      let tmp; 
+      let silver = 0;
+      let tmp;
       for (let planet of df.getMyPlanets()) {
         if (isSpaceRift(planet)) {
           setTimeout(() => {
-            silver+= withdrawSilver(planet.locationId);
-            moves+= 1;  
+            silver += withdrawSilver(planet.locationId);
+            moves += 1;
             message.innerText = `Withdrawing ${silver} from ${moves} space rifts.`;
           }, 0);
         }
@@ -182,17 +186,17 @@ class Plugin {
 }
 
 function withdrawSilver(fromId) {
-    const from = df.getPlanetWithId(fromId);
-    const silver =  Math.floor(from.silver);
-    if (silver === 0) {
-      return 0;
-    } 
-    df.withdrawSilver(fromId, silver);
-    return silver;
+  const from = df.getPlanetWithId(fromId);
+  const silver = Math.floor(from.silver);
+  if (silver === 0) {
+    return 0;
+  }
+  df.withdrawSilver(fromId, silver);
+  return silver;
 }
 
 function toPlanetOrSpaceRift(planet, toSpaceRift) {
-        return toSpaceRift ? isSpaceRift(planet) : isPlanet(planet);
+  return toSpaceRift ? isSpaceRift(planet) : isPlanet(planet);
 }
 
 function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpaceRift) {
@@ -200,7 +204,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
   const silverBudget = Math.floor(from.silver);
 
   // we ignore 50 silvers or less
-  if( silverBudget < 50 ) {
+  if (silverBudget < 50) {
     return 0;
   }
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
@@ -228,7 +232,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
     // Rejected if has more than 5 pending arrivals. Transactions are reverted when more arrives. You can't increase it
     const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === candidate.locationId)
     const arrivals = getArrivalsForPlanet(candidate.locationId);
-    if (unconfirmed.length + arrivals.length> 4) {
+    if (unconfirmed.length + arrivals.length > 4) {
       continue;
     }
 
@@ -261,12 +265,12 @@ function isAsteroid(planet) {
 }
 
 function isPlanet(planet) {
-    return planet.planetType === 0;
-  }
+  return planet.planetType === 0;
+}
 
 function isSpaceRift(planet) {
-    return planet.planetType === 3;
-  }
+  return planet.planetType === 3;
+}
 
 //returns tuples of [planet,distance]
 function distance(from, to) {

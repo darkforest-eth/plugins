@@ -1,4 +1,5 @@
-// # Artifactory
+// Artifactory
+// 
 // The artifactory plugin is your one-stop-shop for things related to artifacts.
 // * Find artifacts on your planets
 // * See when artifacts unlock
