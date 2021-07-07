@@ -1,3 +1,5 @@
+// Hunt Artifacts
+
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 50;

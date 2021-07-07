@@ -1,4 +1,5 @@
 // Artifacts Finder
+//
 // This plugin offers a button to auto prospect artifacts every 5 minutes and find after prospect finish.
 // To stop simply close the plugin
 // Simple is Power!
@@ -111,9 +112,9 @@ class ArtifactsFinder {
       }
     }
     Array.from(prospectingPlanets)
-        .forEach(planet => {
-          this.pendingPlanets.push(planet);
-        })
+      .forEach(planet => {
+        this.pendingPlanets.push(planet);
+      })
   }
 
   prospectArtifacts() {

@@ -28,7 +28,7 @@ Adding a new plugin directory can be done in 2 ways:
 
 2. Copy an already existing plugin directory and rename it to the name of your plugin.
 
-After you've created a new plugin directory, update the `index.md`, `plugin.js`, `screenshot.png` files to fit your plugin. You can also add additional information to the `README.md` that might help other users or developers with your plugin.
+After you've created a new plugin directory, update the `index.md`, `plugin.js`, `screenshot.png` files to fit your plugin. Make sure to add additional information to the comments of the `plugin.js` that might help other users or developers with your plugin.
 
 Feel free to add additional information to your plugin directory, such as we did with `remote-explorer`.
 

@@ -1,3 +1,5 @@
+// Highlight Artifacts
+
 let viewport = ui.getViewport();
 
 class Plugin {
