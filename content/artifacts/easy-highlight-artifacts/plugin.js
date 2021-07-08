@@ -5,7 +5,9 @@ import {
   useState,
 } from "https://unpkg.com/htm/preact/standalone.module.js";
 
-const PLANET_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((level) => ({
+const PIRATES = "0x0000000000000000000000000000000000000000";
+
+const PLANET_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((level) => ({
   value: level,
   text: level.toString(),
 }));
@@ -20,6 +22,20 @@ const PLANET_TYPES = [
   { value: 2, text: "Foundry" },
   { value: 3, text: "Spacetime Rip" },
   { value: 4, text: "Quasar" },
+];
+
+const OwnerType = {
+  ANYONE: 0,
+  UNCLAIMED: 1,
+  CLAIMED_BY_MYSELF: 2,
+  CLAIMED_BY_OTHERS: 3,
+}
+
+const OWNER_TYPES_MAPPING = [
+  { value: OwnerType.ANYONE, text: "Anyone" },
+  { value: OwnerType.UNCLAIMED, text: "Unclaimed" },
+  { value: OwnerType.CLAIMED_BY_OTHERS, text: "Claimed by others" },
+  { value: OwnerType.CLAIMED_BY_MYSELF, text: "Claimed by myself" },
 ];
 
 const ARTIFACT_TYPES = [
@@ -95,7 +111,7 @@ const ARTIFACT_RARITIES = [
 function CreateSelectFilter({ items, selectedValue, onSelect }) {
   const selectStyle = {
     background: "rgb(8,8,8)",
-    width: "120px",
+    width: "140px",
     padding: "3px 5px",
     border: "1px solid white",
     borderRadius: "3px",
@@ -178,14 +194,14 @@ function createDivider() {
   return html`<div style=${dividerStyle}></div> `;
 }
 
-function createButton({ loading, onClick }) {
+function createButton({ loading, onClick, ctaText }) {
   const buttonStyle = {
     // margin: "10px 0",
     background: "rgb(8,8,8)",
-    width: "180px",
+    width: "80px",
     padding: "3px 5px",
     border: "1px solid white",
-    borderRadius: "6px",
+    borderRadius: "8px",
     textAlign: "center",
   };
 
@@ -205,7 +221,7 @@ function createButton({ loading, onClick }) {
     onMouseEnter=${() => setHover(true)}
     onMouseLeave=${() => setHover(false)}
   >
-    Start Highlight
+    ${ctaText}
   </button>`;
 }
 
@@ -213,12 +229,13 @@ function createButton({ loading, onClick }) {
 let eligiblePlanets = [];
 
 function App({}) {
-  const [selectedLevels, setSelectedLevels] = useState([0, 9]);
+  const [selectedLevels, setSelectedLevels] = useState([1, 9]);
   const [selectedPlanetType, setSelectedPlanetType] = useState(-1);
   const [selectedArtifactType, setSelectedArtifactType] = useState(-1);
   const [selectedArtifactRarity, setSelectedArtifactRarity] = useState(-1);
-  const [mustHoldArtifacts, setMustHoldArtifacts] = useState(true);
-  const [isOwner, setIsOwner] = useState(true);
+  const [selectedOwnerType, setSelectedOwnerType] = useState(
+    OwnerType.CLAIMED_BY_MYSELF
+  );
 
   // @ts-ignore
   const usePlanetArtifacts = useCallback((planet) => {
@@ -227,6 +244,22 @@ function App({}) {
       : [];
     return artifacts.filter((a) => !!a);
   });
+
+  const getOwnerType = useCallback((planet) => {
+    if (!planet) return OwnerType.ANYONE;
+    let ownerType;
+    switch (planet.owner) {
+      case df.account:
+        ownerType = OwnerType.CLAIMED_BY_MYSELF;
+        break;
+      case PIRATES:
+        ownerType = OwnerType.UNCLAIMED;
+        break;
+      default:
+        ownerType = OwnerType.CLAIMED_BY_OTHERS;
+    }
+    return ownerType;
+  }, []);
 
   const getEligiblePlanets = useCallback(() => {
     let planets = [];
@@ -241,7 +274,12 @@ function App({}) {
         continue;
       }
 
-      if (isOwner && planet.owner !== df.getAccount()) {
+      // check owner type
+      const ownerType = getOwnerType(planet);
+      if (
+        selectedOwnerType != OwnerType.ANYONE &&
+        ownerType !== selectedOwnerType
+      ) {
         continue;
       }
 
@@ -252,6 +290,12 @@ function App({}) {
       ) {
         continue;
       }
+
+      // if artifact type or rarity selected, then we require a planet contain a artifact satisfying
+      // requirements
+      const mustHoldArtifacts =
+        selectedArtifactRarity !== ARTIFACT_ANY_RARITY ||
+        selectedArtifactType !== ARTIFACT_ANY_TYPE;
 
       if (!mustHoldArtifacts) {
         planets.push(planet);
@@ -268,7 +312,7 @@ function App({}) {
         if (selectedArtifactRarity !== ARTIFACT_ANY_RARITY) {
           // @ts-ignore
           artifacts = artifacts.filter(
-            (artifact) => artifact.rarity === selectedArtifactRarity
+            (artifact) => artifact.rarity >= selectedArtifactRarity
           );
         }
         if (artifacts.length > 0) {
@@ -280,10 +324,24 @@ function App({}) {
   }, [
     selectedLevels,
     selectedPlanetType,
+    selectedOwnerType,
     selectedArtifactType,
     selectedArtifactRarity,
-    isOwner,
-    mustHoldArtifacts,
+  ]);
+
+  const resetEligiblePlanets = useCallback(() => {
+    eligiblePlanets = [];
+    setSelectedLevels([1, 9]);
+    setSelectedPlanetType(PLANET_ANY_TYPE);
+    setSelectedArtifactRarity(ARTIFACT_ANY_RARITY);
+    setSelectedArtifactType(ARTIFACT_ANY_TYPE);
+    setSelectedOwnerType(OwnerType.CLAIMED_BY_MYSELF);
+  }, [
+    setSelectedLevels,
+    setSelectedPlanetType,
+    setSelectedArtifactRarity,
+    setSelectedArtifactType,
+    setSelectedOwnerType,
   ]);
 
   const flexRow = {
@@ -316,26 +374,13 @@ function App({}) {
     />
   </div>`;
 
-  const mustHoldArtifactsFilter = html`
+  const ownerTypeFilter = html`
     <div>
-      <div style=${{ marginBottom: "3px" }}>Artifacts</div>
-      <input
-        type="checkbox"
-        title="planets must hold artifacts"
-        onChange=${() => setMustHoldArtifacts(!mustHoldArtifacts)}
-        defaultChecked=${mustHoldArtifacts}
-      />
-    </div>
-  `;
-
-  const ownerFilter = html`
-    <div>
-      <div style=${{ marginBottom: "3px" }}>Owner</div>
-      <input
-        type="checkbox"
-        title="planet is claimed by you"
-        onChange=${() => setIsOwner(!isOwner)}
-        defaultChecked=${isOwner}
+      <div style=${{ marginBottom: "3px" }}>Owner Type</div>
+      <${CreateSelectFilter}
+        items=${OWNER_TYPES_MAPPING}
+        selectedValue=${selectedOwnerType}
+        onSelect=${setSelectedOwnerType}
       />
     </div>
   `;
@@ -348,29 +393,34 @@ function App({}) {
         marginTop: "10px",
       }}
     >
-      ${planetTypeFilter} ${mustHoldArtifactsFilter} ${ownerFilter}
+      ${planetTypeFilter} ${ownerTypeFilter}
     </div>
   `;
 
-  const artifactFilters = html`<div style=${{ ...flexRow, marginTop: "10px" }}>
+  const artifactTypeFilter = html`<div>
+    <div style=${{ marginBottom: "3px" }}>Artifacts Type</div>
+    <${CreateSelectFilter}
+      items=${ARTIFACT_TYPES}
+      selectedValue=${selectedArtifactType}
+      onSelect=${setSelectedArtifactType}
+    />
+  </div>`;
+
+  const artifactRarityFilter = html`
     <div>
-      <div style=${{ marginBottom: "3px" }}>Artifacts Type</div>
-      <${CreateSelectFilter}
-        items=${ARTIFACT_TYPES}
-        selectedValue=${selectedArtifactType}
-        onSelect=${(v) => {
-          setSelectedArtifactType(v);
-        }}
-      />
-    </div>
-    <div style=${{ marginLeft: "75px" }}>
-      <div style=${{ marginBottom: "3px" }}>Artifacts Rarity</div>
+      <div style=${{ marginBottom: "3px" }}>Min Rarity</div>
       <${CreateSelectFilter}
         items=${ARTIFACT_RARITIES}
         selectedValue=${selectedArtifactRarity}
         onSelect=${setSelectedArtifactRarity}
       />
     </div>
+  `;
+
+  const artifactFilters = html`<div
+    style=${{ ...flexRow, justifyContent: "space-between", marginTop: "10px" }}
+  >
+    ${artifactTypeFilter} ${artifactRarityFilter}
   </div>`;
 
   const [loading, setLoading] = useState(false);
@@ -384,12 +434,27 @@ function App({}) {
   const submitButton = html`<${createButton}
     loading=${loading}
     onClick=${highlightPlanet}
+    ctaText=${"Submit"}
+  />`;
+
+  const resetButton = html`<${createButton}
+    onClick=${resetEligiblePlanets}
+    ctaText=${"Reset"}
   />`;
 
   return html`
     ${planetLevelFilter} ${planetUnionFilters} ${artifactFilters}
     <${createDivider} />
-    ${submitButton}
+    <div
+      style=${{
+        ...flexRow,
+        justifyContent: "space-around",
+        width: "100%",
+        marginTop: "10px",
+      }}
+    >
+      ${submitButton} ${resetButton}
+    </div>
   `;
 }
 
@@ -398,6 +463,7 @@ class Plugin {
   constructor() {
     this.container = null;
   }
+
   draw(ctx) {
     // @ts-ignore
     const viewport = ui.getViewport();
@@ -409,47 +475,43 @@ class Plugin {
       if (!planet.location) continue;
       let { x, y } = planet.location.coords;
 
-      // enlarge the highlight icon when planet level is small
-      if (planet.planetLevel <= 2) {
-        ctx.lineWidth =
-          viewport.worldToCanvasDist(ui.getRadiusOfPlanetLevel(3)) -
-          viewport.worldToCanvasDist(
-            ui.getRadiusOfPlanetLevel(planet.planetLevel)
-          );
+      // add red circle when level <= 3
+      if (planet.planetLevel <= 4) {
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "dashed";
         ctx.beginPath();
         ctx.arc(
           viewport.worldToCanvasX(x),
           viewport.worldToCanvasY(y),
-          viewport.worldToCanvasDist(
-            ui.getRadiusOfPlanetLevel(3)
-          ),
+          viewport.worldToCanvasDist(ui.getRadiusOfPlanetLevel(3) * 6),
           0,
           2 * Math.PI
         );
         // ctx.fill();
         ctx.stroke();
         ctx.closePath();
-      } else {
-        ctx.beginPath();
-        ctx.arc(
-          viewport.worldToCanvasX(x),
-          viewport.worldToCanvasY(y),
-          viewport.worldToCanvasDist(
-            ui.getRadiusOfPlanetLevel(planet.planetLevel)
-          ),
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-        // ctx.stroke();
-        ctx.closePath();
       }
+
+      ctx.beginPath();
+      ctx.arc(
+        viewport.worldToCanvasX(x),
+        viewport.worldToCanvasY(y),
+        viewport.worldToCanvasDist(
+          ui.getRadiusOfPlanetLevel(planet.planetLevel)
+        ),
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+      // ctx.stroke();
+      ctx.closePath();
     }
     ctx.restore();
   }
 
   async render(container) {
     this.container = container;
+    // container.style.width = '450px';
     render(html`<${App} />`, container);
   }
 
