@@ -475,7 +475,7 @@ class Plugin {
       if (!planet.location) continue;
       let { x, y } = planet.location.coords;
 
-      // add red circle when level <= 3
+      // add red circle when level <= 4
       if (planet.planetLevel <= 4) {
         ctx.lineWidth = 1.5;
         ctx.strokeStyle = "dashed";
