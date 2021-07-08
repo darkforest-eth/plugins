@@ -1,3 +1,6 @@
+// Gift Planet
+// Easily transfer planets to others.
+
 class Plugin {
   constructor() {
     this.selectedPlanet = null;

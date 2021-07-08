@@ -1,3 +1,5 @@
+// Find Legendary
+
 let { locationIdToDecStr, locationIdFromDecStr } = df.getCheckedTypeUtils();
 
 // Exploit calculator script
