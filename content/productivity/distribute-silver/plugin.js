@@ -2,7 +2,7 @@
 //
 // Distribute your silver!
 
-const MAX_LEVEL_PLANET = 9;
+import { PlanetType, PlanetLevel } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 class Plugin {
   constructor() {
@@ -50,7 +50,7 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    Array.from(Array(MAX_LEVEL_PLANET + 1).keys()).forEach(lvl => {
+    Array.from(Array(PlanetLevel.MAX + 1).keys()).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
       opt.innerText = `Level ${lvl}`;
@@ -77,7 +77,7 @@ class Plugin {
     levelAsteroid.style.width = '100%';
     levelAsteroid.style.marginTop = '10px';
     levelAsteroid.style.marginBottom = '10px';
-    Array.from(Array(MAX_LEVEL_PLANET + 1).keys()).forEach(lvl => {
+    Array.from(Array(PlanetLevel.MAX + 1).keys()).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
       opt.innerText = `Level ${lvl}`;
@@ -158,7 +158,6 @@ class Plugin {
 
       let moves = 0;
       let silver = 0;
-      let tmp;
       for (let planet of df.getMyPlanets()) {
         if (isSpaceRift(planet)) {
           setTimeout(() => {
@@ -261,15 +260,15 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
 }
 
 function isAsteroid(planet) {
-  return planet.planetType === 1;
+  return planet.planetType === PlanetType.SILVER_MINE;
 }
 
 function isPlanet(planet) {
-  return planet.planetType === 0;
+  return planet.planetType === PlanetType.PLANET;
 }
 
 function isSpaceRift(planet) {
-  return planet.planetType === 3;
+  return planet.planetType === PlanetType.TRADING_POST;
 }
 
 //returns tuples of [planet,distance]

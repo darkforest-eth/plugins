@@ -27,9 +27,7 @@ import {
   getPlanetRank,
 } from 'https://plugins.zkga.me/utils/utils.js';
 
-const PlanetType = {
-  'PLANET': 0,
-};
+import { PlanetType } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 function upgrade(planet, branch) {
   if (planet && canPlanetUpgrade(planet) && canStatUpgrade(planet, branch)) {
