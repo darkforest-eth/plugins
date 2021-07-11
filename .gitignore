@@ -50,6 +50,9 @@ typings/
 # Optional npm cache directory
 .npm
 
+# IDE related
+.idea/
+
 # Optional eslint cache
 .eslintcache
 

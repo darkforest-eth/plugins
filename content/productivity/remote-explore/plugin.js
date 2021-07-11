@@ -1,16 +1,16 @@
-// RemoteExplorePlugin
+// Remote Explore
 //
 // The remote explore plugin allows us to use headless explorers that we run on
 // servers and RaspberryPi devices.
 //
-// We use [mimc-fast](https://github.com/projectsophon/darkforest-rs/tree/main/mimc-fast) as a
-// webserver that exposes a `/mine` endpoint and connect to it from in-game with
-// this plugin.
+// We use https://github.com/projectsophon/darkforest-rs/tree/main/mimc-fast as
+// a webserver that exposes a `/mine` endpoint and connect to it from in-game
+// with this plugin.
 //
 // When running this on https://zkga.me/, you might get an error about blocked
-// insecure content. You probably just want to install a SSL Certificate on your
-// explore server. If you can't, you can [enable mixed
-// content](enable-mixed.md), __but this can be extremely dangerous.__
+// insecure content. You probably should install an SSL Certificate on your
+// explore server. If you can't, you can enable mixed content, __but this can be
+// extremely dangerous.__
 
 import { html, render, useState, useEffect, useLayoutEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
 import { locationIdFromDecStr } from 'https://cdn.skypack.dev/@darkforest_eth/serde';
@@ -25,6 +25,10 @@ function getPattern(coords, patternType, chunkSize) {
   } else {
     return new SpiralPattern(coords, chunkSize);
   }
+}
+
+function worldRadius() {
+  return df.getWorldRadius()
 }
 
 function workerFactory(url) {
@@ -198,6 +202,7 @@ function MinerUI({
         const pattern = getPattern(coords, miner.patternType, miner.chunkSize);
         miner.setMiningPattern(pattern);
       }
+      miner.setRadius(worldRadius());
       miner.startExplore();
       setTargeting(false);
     };
@@ -305,7 +310,7 @@ class RemoteExplorerPlugin {
     const miner = Miner.create(
       df.getChunkStore(),
       pattern,
-      df.getWorldRadius(),
+      worldRadius(),
       df.planetRarity,
       df.getHashConfig(),
       false,

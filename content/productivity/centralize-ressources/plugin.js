@@ -1,6 +1,6 @@
-import {
-    move
-} from 'https://plugins.zkga.me/utils/queued-move.js';
+// Centralize Resources
+//
+// Retrieve energy and silver from nearby planets
 
 const MAX_LEVEL_PLANET = 9;
 
@@ -73,7 +73,7 @@ class Plugin {
         receiveToSelectedButton.style.width = '100%';
         receiveToSelectedButton.style.marginBottom = '10px';
         receiveToSelectedButton.innerHTML = 'Receive from neighboor'
-        receiveToSelectedButton.onclick = () => { 
+        receiveToSelectedButton.onclick = () => {
             let selected = ui.getSelectedPlanet();
             if (selected) {
                 setTimeout(() => {
@@ -126,7 +126,7 @@ function createSelect(values, value, innertext, onChange) {
     select.value = value;
     select.onchange = onChange;
     return select;
-}       
+}
 
 function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPlevel, onlySilver) {
     const from = df.getPlanetWithId(fromId);
@@ -136,46 +136,47 @@ function receiveRessources(fromId, maxDistributeEnergyPercent, minPLevel, maxPle
         .filter(p => p.planetLevel >= minPLevel && p.planetLevel <= maxPlevel) // filter level
         .map(to => [to, distance(from, to)])
         .sort((a, b) => a[1] - b[1]);
-    
-        let i = 0;
-        const maxEnergy = Math.floor(from.energyCap -from.energy);
-        const maxSilver = Math.floor(from.silverCap -from.silver);
 
-        let energyReceived = 0;
-        let silverReceived = 0;
-        let moves = 0;
-        while (maxEnergy - energyReceived > 0 && i < candidates_.length) {
-    
-            // Remember its a tuple of candidates and their distance
-            const candidate = candidates_[i++][0];
-    
-            // Rejected if has more than 5 pending arrivals. Transactions are reverted when more arrives. You can't increase it
-            const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === from.locationId)
-            const arrivals = getArrivalsForPlanet(from.locationId);
-            if (unconfirmed.length + arrivals.length > 4) {
-                continue;
-            }
-    
-            const energyBudget = Math.floor((maxDistributeEnergyPercent / 100) * candidate.energy);
-           
-            const maxReceivedEnergyForMove = Math.ceil(df.getEnergyArrivingForMove(candidate.locationId, fromId, energyBudget));
-            // only send enough energy to cap planet
-            const receivedEnergyForMove = Math.ceil(maxEnergy - energyReceived - maxReceivedEnergyForMove >= 0? maxReceivedEnergyForMove: maxEnergy - energyReceived);
-            // only send enough silver to cap planet
-            const receivedSilverForMove = Math.ceil(maxSilver - silverReceived - candidate.silver >= 0 ? candidate.silver : maxSilver - silverReceived);
-            // if below 1% max energy reject or if there is no silver when onlySilver is on
-            if (receivedEnergyForMove < maxEnergy/100 || ( onlySilver && receivedSilverForMove == 0 )) {
-                continue;
-            }
-    
-            move(candidate.locationId, fromId, energyBudget, receivedSilverForMove);
-            energyReceived += receivedEnergyForMove;
-            silverReceived += receivedSilverForMove;
-            moves += 1;
+    let i = 0;
+    const maxEnergy = Math.floor(from.energyCap - from.energy);
+    const maxSilver = Math.floor(from.silverCap - from.silver);
+
+    let energyReceived = 0;
+    let silverReceived = 0;
+    let moves = 0;
+    while (maxEnergy - energyReceived > 0 && i < candidates_.length) {
+
+        // Remember its a tuple of candidates and their distance
+        const candidate = candidates_[i++][0];
+
+        // Rejected if has more than 5 pending arrivals. Transactions are reverted when more arrives. You can't increase it
+        const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === from.locationId)
+        const arrivals = getArrivalsForPlanet(from.locationId);
+        if (unconfirmed.length + arrivals.length > 4) {
+            continue;
         }
-    
-        return { moves, energyReceived, silverReceived };
-    
+
+        const energyBudget = Math.floor((maxDistributeEnergyPercent / 100) * candidate.energy);
+
+        const dist = df.getDist(from.locationId, candidate.locationId);
+        const maxReceivedEnergyForMove = Math.ceil(df.getEnergyArrivingForMove(candidate.locationId, fromId, dist, energyBudget));
+        // only send enough energy to cap planet
+        const receivedEnergyForMove = Math.ceil(maxEnergy - energyReceived - maxReceivedEnergyForMove >= 0 ? maxReceivedEnergyForMove : maxEnergy - energyReceived);
+        // only send enough silver to cap planet
+        const receivedSilverForMove = Math.ceil(maxSilver - silverReceived - candidate.silver >= 0 ? candidate.silver : maxSilver - silverReceived);
+        // if below 1% max energy reject or if there is no silver when onlySilver is on
+        if (receivedEnergyForMove < maxEnergy / 100 || (onlySilver && receivedSilverForMove == 0)) {
+            continue;
+        }
+
+        df.move(candidate.locationId, fromId, energyBudget, receivedSilverForMove);
+        energyReceived += receivedEnergyForMove;
+        silverReceived += receivedSilverForMove;
+        moves += 1;
+    }
+
+    return { moves, energyReceived, silverReceived };
+
 
 }
 
