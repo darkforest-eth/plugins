@@ -120,7 +120,7 @@ function AttackList() {
   const [actions, setActions] = useState(op.actions);
 
   let actionList = {
-    maxHeight: "70px",
+    maxHeight: "50vh",
     overflowX: "hidden",
     overflowY: "scroll",
   };
