@@ -44,18 +44,14 @@ function formatNumber(num, decimalCount = 1) {
 	return (num / 1000000000000, 2).toFixed(decimalCount) + "t";
 }
 
-async function downloadTwitterNames() {
-	return fetch('https://api.zkga.me/twitter/all-twitters')
+async function downloadLeaderboard() {
+	return fetch('https://api.zkga.me/leaderboard')
 		.then(response => response.json())
 }
 
 // return example: 'hsl(285,100%,70%)'
 function getPlayerColor(ethAddress) {
 	return df.getProcgenUtils().getPlayerColor(ethAddress);
-}
-
-function getPlayerScore(player) {
-	return player.withdrawnSilver + player.totalArtifactPoints;
 }
 
 function Plugin() {
@@ -66,18 +62,13 @@ function Plugin() {
 	o.updateTimerInterv = null;
 	o.updateLeaderboardInterv = null;
 	o.firstRender = true;
-	o.twitterNames = null;
 	o.leaderboard = [];
 
 	o.init = function () {
-		downloadTwitterNames().then(twitter => {
-			o.twitterNames = twitter;
-			o.updateLeaderboard();
-		});
 		o.updateTimerInterv = setInterval(o.updateTimer, 1000);
 		o.updateInterv = setInterval(o.updateLeaderboard, 1000 * updateTimeInSeconds);
-		updateTimer();
-		updateLeaderboard();
+		o.updateTimer();
+		o.updateLeaderboard();
 	}
 
 	o.render = function (container) {
@@ -113,10 +104,11 @@ function Plugin() {
 		o.div_timer.innerText = getStrTimeUntilRoundEnds();
 	}
 
-	o.updateLeaderboard = function () {
-		o.leaderboard = [...df.getAllPlayers()];
+	o.updateLeaderboard = async function () {
+		o.leaderboard = await downloadLeaderboard();
+		o.leaderboard = o.leaderboard.entries;
 		o.leaderboard.sort((p1, p2) => {
-			return getPlayerScore(p2) - getPlayerScore(p1);
+			return p2.score - p1.score;
 		});
 
 		o.div_playerList.innerText = "";
@@ -134,19 +126,18 @@ function Plugin() {
 
 	o.getLeaderboardRank = function (ethAddress) {
 		for (var i = 0; i < o.leaderboard.length; ++i) {
-			if (ethAddress === o.leaderboard[i].address)
+			if (ethAddress === o.leaderboard[i].ethAddress)
 				return i;
 		}
 		return -1;
 	}
 
 	o.addPlayerToBoard = function(table, player, rank) {
-		const twitterName = o.getTwitterName(player.address);
-		let name = twitterName !== "" ? twitterName : player.address.substr(0, 8);
+		let name = player.twitter !== null ? player.twitter : player.ethAddress.substr(0, 8);
 		name = name.substr(0, 13); // name max length
 
 		const tr = document.createElement('tr');
-		tr.style["color"] = getPlayerColor(player.address);
+		tr.style["color"] = getPlayerColor(player.ethAddress);
 
 		function AddTd(tr, text) {
 			var td = document.createElement('td');
@@ -156,14 +147,8 @@ function Plugin() {
 		}
 		AddTd(tr, rank+".");
 		AddTd(tr, name);
-		AddTd(tr, getPlayerScore(player));
+		AddTd(tr, player.score);
 		table.appendChild(tr);
-	}
-
-	o.getTwitterName = function (playerEthAddress) {
-		if (o.twitterNames === null) return "";
-		if (!o.twitterNames[playerEthAddress]) return "";
-		return o.twitterNames[playerEthAddress];
 	}
 
 	return o;
