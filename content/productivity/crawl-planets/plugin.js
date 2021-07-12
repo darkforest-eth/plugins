@@ -6,7 +6,7 @@ const planetTypes = {
   'Planet': 0,
   'Asteroid': 1,
   'Foundry': 2,
-  'Spacetime Rip': 3,
+  'Spacetime_Rip': 3,
   'Quasar': 4,
 };
 
@@ -17,6 +17,8 @@ const players = [
 ];
 
 const typeNames = Object.keys(planetTypes);
+
+const checkTypes = [];
 
 class Plugin {
   constructor() {
@@ -78,35 +80,119 @@ class Plugin {
       }
     }
 
+
     let planetTypeLabel = document.createElement('label');
-    planetTypeLabel.innerText = 'Planet type to capture';
+    planetTypeLabel.innerText = 'Select planetType: ';
     planetTypeLabel.style.display = 'block';
+    planetTypeLabel.style.paddingBottom = "6px";
+    
+    // planet checkbox
+    let planetLabel = document.createElement('label');
+    planetLabel.innerHTML = 'Planet';
+    planetLabel.style.paddingRight = "10px";
 
-    let planetType = document.createElement('select');
-    planetType.style.background = 'rgb(8,8,8)';
-    planetType.style.width = '100%';
-    planetType.style.marginTop = '10px';
-    planetType.style.marginBottom = '10px';
-    Object.entries(planetTypes).forEach(([name, key]) => {
-      let opt = document.createElement('option');
-      opt.value = `${key}`;
-      opt.innerText = `${name}`;
-      planetType.appendChild(opt);
-    });
-    planetType.value = `${this.planetType}`;
-
-    planetType.onchange = (evt) => {
-      try {
-        this.planetType = parseInt(evt.target.value, 10);
-      } catch (e) {
-        console.error('could not parse planet planet type', e);
+    let planetCheck = document.createElement('input');
+    planetCheck.type = "checkbox";
+    planetCheck.value = planetTypes.Planet;
+    planetCheck.style.marginRight = "10px";
+    planetCheck.checked = false;
+    planetCheck.onchange = (evt) => {
+      if (evt.target.checked) {
+        // add to arr
+        checkTypes.push(planetCheck.value);
+      }else{
+        // delete from arr
+        let i = checkTypes.indexOf(planetCheck.value);
+        checkTypes.splice(i,1);
       }
-    }
+    };
+
+    // asteroid checkbox
+    let asteroidLabel = document.createElement('label');
+    asteroidLabel.innerHTML = 'Asteroid';
+    asteroidLabel.style.paddingRight = "10px";
+
+    let asteroidCheck = document.createElement('input');
+    asteroidCheck.type = "checkbox";
+    asteroidCheck.value = planetTypes.Asteroid;
+    asteroidCheck.style.marginRight = "10px";
+    asteroidCheck.checked = false;
+    asteroidCheck.onchange = (evt) => {
+      if (evt.target.checked) {
+        checkTypes.push(asteroidCheck.value);
+      }else{
+        let i = checkTypes.indexOf(asteroidCheck.value);
+        checkTypes.splice(i,1);
+      }
+    };
+
+    // Foundry checkbox
+    let foundryLabel = document.createElement('label');
+    foundryLabel.innerHTML = 'Foundry';
+    foundryLabel.style.paddingRight = "10px";
+
+    let foundryCheck = document.createElement('input');
+    foundryCheck.type = "checkbox";
+    foundryCheck.value = planetTypes.Foundry;
+    foundryCheck.style.marginRight = "10px";
+    foundryCheck.checked = false;
+    foundryCheck.onchange = (evt) => {
+      if (evt.target.checked) {
+        checkTypes.push(foundryCheck.value);
+      }else{
+        let i = checkTypes.indexOf(foundryCheck.value);
+        checkTypes.splice(i,1);
+      }
+      console.log(checkTypes);
+    };
+
+    // Spacetime Rip checkbox
+    let spaceRipLabel = document.createElement('label');
+    spaceRipLabel.innerHTML = 'Spacetime Rip';
+    spaceRipLabel.style.paddingRight = "10px";
+
+    let spaceRipCheck = document.createElement('input');
+    spaceRipCheck.type = "checkbox";
+    spaceRipCheck.value = planetTypes.Spacetime_Rip;
+    spaceRipCheck.style.marginRight = "10px";
+    spaceRipCheck.checked = false;
+    spaceRipCheck.onchange = (evt) => {
+      if (evt.target.checked) {
+        checkTypes.push(spaceRipCheck.value);
+      }else{
+        let i = checkTypes.indexOf(spaceRipCheck.value);
+        checkTypes.splice(i,1);
+      }
+      console.log(checkTypes);
+    };
+
+    // Quasar checkbox
+    let quasarLabel = document.createElement('label');
+    quasarLabel.innerHTML = 'Quasar';
+    quasarLabel.style.paddingRight = "10px";
+
+    let quasarCheck = document.createElement('input');
+    quasarCheck.type = "checkbox";
+    quasarCheck.value = planetTypes.Quasar;
+    quasarCheck.style.marginRight = "10px";
+    quasarCheck.checked = false;
+    quasarCheck.onchange = (evt) => {
+      if (evt.target.checked) {
+        checkTypes.push(quasarCheck.value);
+      }else{
+        let i = checkTypes.indexOf(quasarCheck.value);
+        checkTypes.splice(i,1);
+      }
+      console.log(checkTypes);
+    };
+
+
 
     let message = document.createElement('div');
 
     let button = document.createElement('button');
     button.style.width = '100%';
+    button.style.marginTop = '10px';
     button.style.marginBottom = '10px';
     button.innerHTML = 'Crawl from selected!'
     button.onclick = () => {
@@ -117,32 +203,11 @@ class Plugin {
           planet.locationId,
           this.minPlanetLevel,
           this.maxEnergyPercent,
-          this.planetType,
+          checkTypes,
         );
         message.innerText = `Crawling ${moves} ${typeNames[this.planetType]}s.`;
       } else {
         message.innerText = 'No planet selected.';
-      }
-    }
-
-    let globalButton = document.createElement('button');
-    globalButton.style.width = '100%';
-    globalButton.style.marginBottom = '10px';
-    globalButton.innerHTML = 'Crawl everything!'
-    globalButton.onclick = () => {
-      message.innerText = 'Please wait...';
-
-      let moves = 0;
-      for (let planet of df.getMyPlanets()) {
-        setTimeout(() => {
-          moves += capturePlanets(
-            planet.locationId,
-            this.minPlanetLevel,
-            this.maxEnergyPercent,
-            this.planetType,
-          );
-          message.innerText = `Crawling ${moves} ${typeNames[this.planetType]}s.`;
-        }, 0);
       }
     }
 
@@ -152,9 +217,28 @@ class Plugin {
     container.appendChild(levelLabel);
     container.appendChild(level);
     container.appendChild(planetTypeLabel);
-    container.appendChild(planetType);
+
+    // planet checkbox
+    container.appendChild(planetLabel);
+    container.appendChild(planetCheck);
+
+    // asteroid checkbox
+    container.appendChild(asteroidLabel);
+    container.appendChild(asteroidCheck);
+
+    // foundry checkbox
+    container.appendChild(foundryLabel);
+    container.appendChild(foundryCheck);
+
+    // spacetime checkbox
+    container.appendChild(spaceRipLabel);
+    container.appendChild(spaceRipCheck);
+
+    // quasar checkbox
+    container.appendChild(quasarLabel);
+    container.appendChild(quasarCheck);
+
     container.appendChild(button);
-    container.appendChild(globalButton);
     container.appendChild(message);
   }
 }
@@ -162,7 +246,10 @@ class Plugin {
 export default Plugin;
 
 
-function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent, planetType) {
+function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent, checkTypes) {
+
+  checkTypes = JSON.parse('[' + String(checkTypes) + ']')
+
   const planet = df.getPlanetWithId(fromId);
   const from = df.getPlanetWithId(fromId);
 
@@ -171,13 +258,13 @@ function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent, pla
   if (unconfirmed.length !== 0) {
     return 0;
   }
-
+  
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter(p => (
       p.owner !== df.account &&
       players.includes(p.owner) &&
       p.planetLevel >= minCaptureLevel &&
-      p.planetType === planetType
+      checkTypes.includes(p.planetType)
     ))
     .map(to => {
       return [to, distance(from, to)]
