@@ -3,7 +3,7 @@ import { BigNumber, utils } from 'https://cdn.skypack.dev/ethers';
 const DF_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-2';
 const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfartifactmarket';
 
-const SALES_CONTRACT_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
+const SALES_CONTRACT_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8"; // you can see the contract at https://blockscout.com/poa/xdai/address/0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8
 const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json').then(res=>res.json());
 const SALES = await df.loadContract(SALES_CONTRACT_ADDRESS,SALES_CONTRACT_ABI);
 
@@ -44,6 +44,7 @@ function createElement(params){
 
 
 // fetch subgraph data for token stats and prices
+// 1 problem with this: we can only see ~100 listed tokens and 100 tokens owned by the player
 async function subgraphData(){
 
   // gets from shop subgraph
@@ -107,18 +108,21 @@ async function subgraphData(){
       })
   })
 
+  // turns the strings from the requests into objects then assigns the data from each to a variable 
   const dfDatajson = await dfSubgraphData.json()
-  const dfData = dfDatajson.data
   const storeDatajson  = await storeSubgraphData.json()
+  const dfData = dfDatajson.data
   const storeData = storeDatajson.data
-  const myListedTokenArray = storeData.mytokens.map(e=>e.tokenID)
+  
+  const myListedTokenArray = storeData.mytokens.map(e=>e.tokenID)  // change from array of objects with 1 element(tokenID) to array of tokenID 
   
   dfData.mylistedartifacts = dfData.shopartifacts.filter((token)=>{
       return myListedTokenArray.includes(token.idDec)
   })
+  
   dfData.shopartifacts = dfData.shopartifacts.filter((token)=>{return !(myListedTokenArray.includes(token.idDec))})
   
-  // I need to make sure they are sorted the same way or else this won't work
+  // TODO: I need to make sure they are sorted the same way or else this won't work
   for (let i; i<storeData.othertokens; i++){
       dfData.shopartifacts[i].price = storeData.othertokens[i].price
   }
@@ -144,10 +148,10 @@ function formatMultiplier(mul){
 function myListedRow(artifact){
     
     const onClick = (event)=>{
-      SALES.unlist(BigNumber.from(artifact.idDec)).then(()=>{
+      SALES.unlist(BigNumber.from(artifact.idDec)).then(()=>{  // unlist the token
         event.target.parentNode.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode.parentNode)  // delete the row
         alert("unlisted!")
-      }).catch(e=>console.log(e))
+      }).catch(e=>console.log(e)) // catch error (in case of tx failure or something else)
     }
 
     const row = document.createElement('tr')
@@ -167,15 +171,15 @@ function myListedRow(artifact){
 // Creates one row in the table of the users withdrawn artifacts
 function myRow(artifact){
     
-    let value;
+    let value; //  the price at which the token will be listed at 
     const onClick =(event)=>{
-      SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(()=>{
+      SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(()=>{  // list the token for the price that was input
         event.target.parentNode.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode.parentNode)  // delete the row
         alert("listed!")
-      }).catch(e=>console.log(e))
+      }).catch(e=>console.log(e)) // catch error (in case of tx failure or something else)
     }
     
-    const onChange = (event)=>{
+    const onChange = (event)=>{  // function to handle when the input value gets changed
        value = event.target.value
     }
 
@@ -199,10 +203,10 @@ function myRow(artifact){
 function saleRow(artifact){ 
     
     const onClick = (event)=>{  
-      SALES.buy(BigNumber.from(artifact.idDec),{value: BigNumber.from(artifact.price).add(FEE)}).then(()=>{
+      SALES.buy(BigNumber.from(artifact.idDec),{value: BigNumber.from(artifact.price).add(FEE)}).then(()=>{ // buys the artifact
         event.target.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode) // delete the row
         alert("bought!")
-      }).catch(e=>console.log(e))
+      }).catch(e=>console.log(e)) // catch error (in case of tx failure or something else)
     }
     const row = document.createElement('tr')
     row.appendChild(createElement({type:"td", text:`${artifact.rarity} ${artifact.artifactType}` }))
@@ -222,6 +226,7 @@ function saleRow(artifact){
 
 
 // Creates the table of the users withdrawn artifacts
+// TODO: this should have a fixed size and any columns that do not fit should be viewable by scrolling
 function myTable(data){
 
     const table= document.createElement('table')
@@ -239,7 +244,7 @@ function myTable(data){
           createElement({type:"th", text:"List"}))
     
     
-    if (data !== null){    
+    if (data !== null){     // pretty sure I don't need to do this check
       const footer = table.appendChild(document.createElement('tfoot'))
       footer.appendChild(document.createElement("tr")).appendChild(
         createElement({type:"th", text:"My listings", attributes:[["colspan",7]]}))
@@ -258,6 +263,7 @@ function myTable(data){
 
 
 // Creates the table of the stores listed artifacts
+// TODO: this should have a fixed size and any columns that do not fit should be viewable by scrolling
 function saleTable(data){
   
   const table= document.createElement('table')
@@ -273,7 +279,7 @@ function saleTable(data){
           createElement({type:"th", text:"Speed"})).parentNode.appendChild(
           createElement({type:"th", text:"Defense"})).parentNode.appendChild(
           createElement({type:"th", text:"Buy"}))
-  if (data !== null){
+  if (data !== null){ // pretty sure I don't need to do this check
     const body = table.appendChild(document.createElement('tbody'))
     for (let artifact of data.shopartifacts){
       body.appendChild(saleRow(artifact)) 
@@ -282,25 +288,25 @@ function saleTable(data){
   return table
 }
 
-// special buttons for approving the contract and refreshing refreshing it goes here too
+// special buttons for approving the contract and refreshing
 
 async function specialButtons(container, plugin){
   
   const approve = ()=> {
     TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).catch(e=>console.log(e)) // this will approve the market for all tokens
   }
-  const refresh = async ()=> {
+  const refresh = async ()=> { // re-renders the whole container with the latest subgraph data
     plugin.destroy()
     await plugin.render(container)
     
   }
   const div = document.createElement('div')
-  div.appendChild(createElement({type:"button", text:"approve", eventListeners:[["click",approve]]}))
-  div.appendChild(createElement({type:"button", text:"refresh", eventListeners:[["click",refresh]]}))  
+  div.appendChild(createElement({type:"button", text:"approve", eventListeners:[["click",approve]]})) // approve button
+  div.appendChild(createElement({type:"button", text:"refresh", eventListeners:[["click",refresh]]})) // refresh button
   return div
 }
 
-function styleSheet(){
+function styleSheet(){ // some style beforehand
     const style = document.createElement('style')
     style.innerHTML=`
         table { table-layout: fixed; width: 100% } 
@@ -320,7 +326,7 @@ class Plugin {
     const data=await subgraphData()
     console.log(data)
     this.container=container;
-    this.container.style.width="500px"
+    this.container.style.width="500px" // random number, I don't really know what would be best here
     this.container.appendChild(await specialButtons(container,this))
     this.container.appendChild(styleSheet())
     this.container.appendChild(myTable(data))
