@@ -9,9 +9,7 @@ const leaderboardRange = 5; // 5 people above and below you
 
 // ---------------------------------------------------------------
 
-// https://github.com/darkforest-eth/client/blob/19f2547dce33f3274afa86945e96fbfebc7693f5/src/Frontend/Views/Leaderboard.tsx#L119
-const roundEndTimestamp = '2021-07-07T21:00:00-07:00';
-const roundEndTime = new Date(roundEndTimestamp).getTime();
+const roundEndTime = df.endTimeSeconds*1000;
 
 function formatDuration(durationMs) {
 	if (durationMs < 0) return '';
