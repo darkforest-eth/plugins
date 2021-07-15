@@ -20,14 +20,16 @@ import {
 } from 'https://plugins.zkga.me/game/Icons.js';
 
 import {
-  UpgradeBranchName,
-  SpaceType,
   canStatUpgrade,
   canPlanetUpgrade,
   getPlanetRank,
 } from 'https://plugins.zkga.me/utils/utils.js';
 
-import { PlanetType } from "https://cdn.skypack.dev/@darkforest_eth/types"
+import {
+  PlanetType,
+  UpgradeBranchName,
+  SpaceType
+} from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 function upgrade(planet, branch) {
   if (planet && canPlanetUpgrade(planet) && canStatUpgrade(planet, branch)) {

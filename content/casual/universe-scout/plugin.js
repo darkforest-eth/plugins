@@ -4,29 +4,10 @@
 // space type, and biome of your mouse as you hover (even for unexplored
 // space!).
 
-
-// Fake their enum
-const SpaceType = {
-  0: 'Nebula',
-  1: 'Space',
-  2: 'Deep Space',
-  3: 'Dead Space',
-}
-
-// Fake their enum
-const BiomeNames = [
-  'Unknown',
-  'Ocean',
-  'Forest',
-  'Grassland',
-  'Tundra',
-  'Swamp',
-  'Desert',
-  'Ice',
-  'Wasteland',
-  'Lava',
-  "Corrupted",
-];
+import {
+  SpaceTypeNames,
+  BiomeNames
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
 
 class Plugin {
   constructor() {
@@ -53,7 +34,7 @@ class Plugin {
       // Space perlin stuff
       let spacePerlin = df.spaceTypePerlin(coords, true);
       let sk = df.spaceTypeFromPerlin(spacePerlin);
-      this.spaceType.innerHTML = `Space: ${SpaceType[sk]}`;
+      this.spaceType.innerHTML = `Space: ${SpaceTypeNames[sk]}`;
       // Biome perlin stuff
       let biomePerlin = df.biomebasePerlin(coords, true);
       let fakeLoc = {

@@ -13,12 +13,13 @@
  * and will even try to capture unowned spacetime rips nearby.
  */
 
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants"
 import { PlanetType } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 const players = [
   df.getAccount(),
   // Crawls nearby unowned spacetimes
-  "0x0000000000000000000000000000000000000000",
+  EMPTY_ADDRESS,
 ];
 
 class Plugin {

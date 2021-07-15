@@ -2,12 +2,16 @@
 //
 // Capture unowned planets around you!
 
-import { PlanetType, PlanetTypeNames } from "https://cdn.skypack.dev/@darkforest_eth/types"
-
-const planetLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
+import {
+  PlanetType,
+  PlanetTypeNames,
+  PlanetLevel,
+  PlanetLevelNames,
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
 
 const players = [
-  "0x0000000000000000000000000000000000000000",
+  EMPTY_ADDRESS
 ];
 
 class Plugin {
@@ -54,10 +58,10 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    planetLevels.forEach(lvl => {
+    Object.values(PlanetLevel).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
-      opt.innerText = `Level ${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
       level.appendChild(opt);
     });
     level.value = `${this.minPlanetLevel}`;
@@ -79,14 +83,12 @@ class Plugin {
     planetType.style.width = '100%';
     planetType.style.marginTop = '10px';
     planetType.style.marginBottom = '10px';
-    Object.values(PlanetType)
-      .filter(val => typeof val === 'number') // Needed because TypeScript reverse enum lookup
-      .forEach((ptype) => {
-        let opt = document.createElement('option');
-        opt.value = `${ptype}`;
-        opt.innerText = `${PlanetTypeNames[ptype]}`;
-        planetType.appendChild(opt);
-      });
+    Object.values(PlanetType).forEach((ptype) => {
+      let opt = document.createElement('option');
+      opt.value = `${ptype}`;
+      opt.innerText = `${PlanetTypeNames[ptype]}`;
+      planetType.appendChild(opt);
+    });
     planetType.value = `${this.planetType}`;
 
     planetType.onchange = (evt) => {

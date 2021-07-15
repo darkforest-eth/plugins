@@ -1,28 +1,7 @@
-// Enums
-export let BiomeNames = [
-  'Unknown',
-  'Ocean',
-  'Forest',
-  'Grassland',
-  'Tundra',
-  'Swamp',
-  'Desert',
-  'Ice',
-  'Wasteland',
-  'Lava',
-];
-
-export let UpgradeBranchName = {
-  Defense: 0,
-  Range: 1,
-  Speed: 2,
-};
-
-export let SpaceType = {
-  NEBULA: 0,
-  SPACE: 1,
-  DEEP_SPACE: 2,
-};
+import {
+  SpaceType,
+  UpgradeBranchName
+} from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 // Functions
 export let coords = (planet) => {
@@ -54,8 +33,6 @@ export let canStatUpgrade = (planet, stat) => {
 
   return canUpgrade[stat];
 }
-
-export let isAsteroid = (planet) => planet.planetResource === 1
 
 export let getPlanetRank = (planet) => {
   if (!planet) return 0;

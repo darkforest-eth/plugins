@@ -1,5 +1,7 @@
 // Highlight Artifacts
 
+import { PlanetLevel, PlanetLevelNames } from "https://cdn.skypack.dev/@darkforest_eth/types";
+
 let viewport = ui.getViewport();
 
 class Plugin {
@@ -36,10 +38,10 @@ class Plugin {
     levelSelect.style.width = '100%';
     levelSelect.style.marginTop = '10px';
     levelSelect.style.marginBottom = '10px';
-    [0, 1, 2, 3, 4, 5, 6, 7].forEach(lvl => {
+    Object.values(PlanetLevel).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
-      opt.innerText = `Level ${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
       levelSelect.appendChild(opt);
     });
     levelSelect.value = `${this.levelFilter}`;
@@ -63,18 +65,20 @@ class Plugin {
     ctx.fillStyle = 'red';
     ctx.strokeStyle = 'red';
     for (let planet of this.artifacts) {
-      let { x, y } = planet.location.coords;
-      ctx.beginPath();
-      ctx.arc(
-        viewport.worldToCanvasX(x),
-        viewport.worldToCanvasY(y),
-        viewport.worldToCanvasDist(planet.planetLevel * 20),
-        0,
-        2 * Math.PI,
-      );
-      ctx.fill();
-      ctx.stroke();
-      ctx.closePath();
+      if (planet.location) {
+        let { x, y } = planet.location.coords;
+        ctx.beginPath();
+        ctx.arc(
+          viewport.worldToCanvasX(x),
+          viewport.worldToCanvasY(y),
+          viewport.worldToCanvasDist(planet.planetLevel * 20),
+          0,
+          2 * Math.PI,
+        );
+        ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+      }
     }
     ctx.restore();
   }

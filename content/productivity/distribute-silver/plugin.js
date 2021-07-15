@@ -2,7 +2,11 @@
 //
 // Distribute your silver!
 
-import { PlanetType, PlanetLevel } from "https://cdn.skypack.dev/@darkforest_eth/types"
+import {
+  PlanetType,
+  PlanetLevel,
+  PlanetLevelNames,
+} from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 class Plugin {
   constructor() {
@@ -50,10 +54,10 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    Array.from(Array(PlanetLevel.MAX + 1).keys()).forEach(lvl => {
+    Object.values(PlanetLevel).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
-      opt.innerText = `Level ${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
       level.appendChild(opt);
     });
     level.value = `${this.minPlanetLevel}`;
@@ -77,13 +81,13 @@ class Plugin {
     levelAsteroid.style.width = '100%';
     levelAsteroid.style.marginTop = '10px';
     levelAsteroid.style.marginBottom = '10px';
-    Array.from(Array(PlanetLevel.MAX + 1).keys()).forEach(lvl => {
+    Object.values(PlanetLevel).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
-      opt.innerText = `Level ${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
       levelAsteroid.appendChild(opt);
     });
-    levelAsteroid.value = `${this.minPlanetLevel}`;
+    levelAsteroid.value = `${this.maxAsteroidLevel}`;
 
     levelAsteroid.onchange = (evt) => {
       try {
@@ -208,7 +212,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
   }
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter(p => p.owner === df.getAccount()) //get player planets
-    .filter(p => toPlanetOrSpaceRift(p, toSpaceRift)) // filer planet or space rift 
+    .filter(p => toPlanetOrSpaceRift(p, toSpaceRift)) // filer planet or space rift
     .filter(p => p.planetLevel >= minPLevel) // filer level
     .map(to => [to, distance(from, to)])
     .sort((a, b) => a[1] - b[1]);
