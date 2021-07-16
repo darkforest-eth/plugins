@@ -50,12 +50,6 @@ export let getSilver = (planet) => {
   return Math.floor(planet.silver);
 };
 
-export let emptyAddress = "0x0000000000000000000000000000000000000000";
-
-export let isUnowned = (planet) => planet.owner === emptyAddress;
-
-export let isMine = (planet) => planet.owner === df.account;
-
 export let unlockTimestamp = (planet) => {
   return (planet.artifactLockedTimestamp + (12 * 60 * 60)) * 1000;
 }
