@@ -23,14 +23,14 @@ const typeNames = Object.keys(planetTypes);
 class Plugin {
     constructor() {
         this.planetType = 1;
-        this.minimumEnergyAllowed = false;
+        this.minimumEnergyAllowed = 15;
         this.minPlanetLevelTo = 3;
         this.minPlanetLevelFrom = 0;
         this.maxPlanetLevelFrom = 3;
         this.maxEnergyPercent = 85;
     }
     render(container) {
-        container.style.width = '300px';
+        container.style.width = '400px';
 
         let stepperLabel = document.createElement('label');
         stepperLabel.innerText = 'Max % energy to spend';
@@ -59,28 +59,30 @@ class Plugin {
         }
 
         let minimumEnergyAllowedLabel = document.createElement('label');
-        minimumEnergyAllowedLabel.innerText = 'Allow minimum energy to capture?';
+        minimumEnergyAllowedLabel.innerText = '% energy to fill after capture';
         minimumEnergyAllowedLabel.style.display = 'block';
 
-        let minimumEnergyAllowedSelect = document.createElement('select');
-        minimumEnergyAllowedSelect.style.background = 'rgb(8,8,8)';
-        minimumEnergyAllowedSelect.style.width = '100%';
-        minimumEnergyAllowedSelect.style.marginTop = '10px';
-        minimumEnergyAllowedSelect.style.marginBottom = '10px';
-        states.forEach(state => {
-            let opt = document.createElement('option');
-            opt.value = `${state}`;
-            opt.innerText = `${state}`;
-            minimumEnergyAllowedSelect.appendChild(opt);
-        });
+        let minimumEnergyAllowedSelect = document.createElement('input');
+        minimumEnergyAllowedSelect.type = 'range';
+        minimumEnergyAllowedSelect.min = '0';
+        minimumEnergyAllowedSelect.max = '100';
+        minimumEnergyAllowedSelect.step = '1';
         minimumEnergyAllowedSelect.value = `${this.minimumEnergyAllowed}`;
+        minimumEnergyAllowedSelect.style.width = '80%';
+        minimumEnergyAllowedSelect.style.height = '24px';
+
+        let percentminimumEnergyAllowed = document.createElement('span');
+        percentminimumEnergyAllowed.innerText = `${minimumEnergyAllowedSelect.value}%`;
+        percentminimumEnergyAllowed.style.float = 'right';
 
         minimumEnergyAllowedSelect.onchange = (evt) => {
+            if (parseInt(evt.target.value, 10) === 0) percentminimumEnergyAllowed.innerText = `1 energy`;
+            else
+                percentminimumEnergyAllowed.innerText = `${evt.target.value}%`;
             try {
-                let bool_value = evt.target.value == "true" ? true : false
-                this.minimumEnergyAllowed = bool_value;
+                this.minimumEnergyAllowed = parseInt(evt.target.value, 10);
             } catch (e) {
-                console.error('could not parse minimumEnergyAllowed boolean', e);
+                console.error('could not parse minimum energy allowed percent', e);
             }
         }
 
@@ -236,15 +238,16 @@ class Plugin {
         container.appendChild(percent);
         container.appendChild(minimumEnergyAllowedLabel);
         container.appendChild(minimumEnergyAllowedSelect);
+        container.appendChild(percentminimumEnergyAllowed);
         container.appendChild(levelLabelTo);
         container.appendChild(levelTo);
+        container.appendChild(planetTypeLabel);
+        container.appendChild(planetType);
+        container.appendChild(button);
         container.appendChild(levelLabelFromMin);
         container.appendChild(levelFromMin);
         container.appendChild(levelLabelFromMax);
         container.appendChild(levelFromMax);
-        container.appendChild(planetTypeLabel);
-        container.appendChild(planetType);
-        container.appendChild(button);
         container.appendChild(globalButton);
         container.appendChild(message);
     }
@@ -253,7 +256,7 @@ class Plugin {
 export default Plugin;
 
 
-function capturePlanets(fromId, minCaptureLevel, maxCaptureLevel, maxDistributeEnergyPercent, planetType, minimumEnergyAllowed = false) {
+function capturePlanets(fromId, minCaptureLevel, maxCaptureLevel, maxDistributeEnergyPercent, planetType, minimumEnergyAllowed = 0) {
     const planet = df.getPlanetWithId(fromId);
     const from = df.getPlanetWithId(fromId);
 
@@ -300,10 +303,11 @@ function capturePlanets(fromId, minCaptureLevel, maxCaptureLevel, maxDistributeE
             continue;
         }
 
-        let minEnergyCap = 1;
-        // set minimum above energy to 15% or 1, depending on minimumEnergyAllowed value (Boolean)
-        if (!minimumEnergyAllowed) minEnergyCap = candidate.energyCap * 0.15;
-        const energyArriving = minEnergyCap + (candidate.energy * (candidate.defense / 100));
+        // set minimum above energy to % or 1 (if 0%), depending on minimumEnergyAllowed value
+        if (minimumEnergyAllowed === 0) minimumEnergyAllowed = 1
+        else
+            minimumEnergyAllowed = candidate.energyCap * minimumEnergyAllowed / 100
+        const energyArriving = minimumEnergyAllowed + (candidate.energy * (candidate.defense / 100));
         // needs to be a whole number for the contract
         const energyNeeded = Math.ceil(df.getEnergyNeededForMove(fromId, candidate.locationId, energyArriving));
         if (energyLeft - energyNeeded < 0) {
