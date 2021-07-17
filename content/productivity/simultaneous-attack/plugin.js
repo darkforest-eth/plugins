@@ -71,7 +71,7 @@ var simultaneousAttack = (target, sources) => {
     return attackTimeouts;
 };
 // some useless class idk
-var SimultaneousAttack = class {
+class SimultaneousAttack {
     constructor() {
         this.planetAttackers = [];
         this.moveTimeoutIds = [];
@@ -205,7 +205,5 @@ var SimultaneousAttack = class {
         }
     }
 };
-var SimultaneousAttack_default = SimultaneousAttack;
-export {
-    SimultaneousAttack_default as default
-};
+
+export default SimultaneousAttack;
