@@ -141,7 +141,6 @@ class Plugin {
         }, 0);
       }
     }
-
     container.appendChild(stepperLabel);
     container.appendChild(stepper);
     container.appendChild(percent);
@@ -159,73 +158,73 @@ export default Plugin;
 
 
 function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent, planetType) {
-  const planet = df.getPlanetWithId(fromId);
-  const from = df.getPlanetWithId(fromId);
+    const planet = df.getPlanetWithId(fromId);
+    const from = df.getPlanetWithId(fromId);
 
-  // Rejected if has pending outbound moves
-  const unconfirmed = df.getUnconfirmedMoves().filter(move => move.from === fromId)
-  if (unconfirmed.length !== 0) {
-    return 0;
-  }
-
-  const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
-    .filter(p => (
-      p.owner !== df.account &&
-      players.includes(p.owner) &&
-      p.planetLevel >= minCaptureLevel &&
-      p.planetType === planetType
-    ))
-    .map(to => {
-      return [to, distance(from, to)]
-    })
-    .sort((a, b) => a[1] - b[1]);
-
-  let i = 0;
-  const energyBudget = Math.floor((maxDistributeEnergyPercent / 100) * planet.energy);
-
-  let energySpent = 0;
-  let moves = 0;
-  while (energyBudget - energySpent > 0 && i < candidates_.length) {
-
-    const energyLeft = energyBudget - energySpent;
-
-    // Remember its a tuple of candidates and their distance
-    const candidate = candidates_[i++][0];
-
-    // Rejected if has unconfirmed pending arrivals
-    const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === candidate.locationId)
+    // Rejected if has pending outbound moves
+    const unconfirmed = df.getUnconfirmedMoves().filter(move => move.from === fromId)
     if (unconfirmed.length !== 0) {
-      continue;
+        return 0;
     }
 
-    // Rejected if has pending arrivals
-    const arrivals = getArrivalsForPlanet(candidate.locationId);
-    if (arrivals.length !== 0) {
-      continue;
+    const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
+        .filter(p => (
+            p.owner !== df.account &&
+            players.includes(p.owner) &&
+            p.planetLevel >= minCaptureLevel &&
+            p.planetType === planetType
+        ))
+        .map(to => {
+            return [to, distance(from, to)]
+        })
+        .sort((a, b) => a[1] - b[1]);
+
+    let i = 0;
+    const energyBudget = Math.floor((maxDistributeEnergyPercent / 100) * planet.energy);
+
+    let energySpent = 0;
+    let moves = 0;
+    while (energyBudget - energySpent > 0 && i < candidates_.length) {
+
+        const energyLeft = energyBudget - energySpent;
+
+        // Remember its a tuple of candidates and their distance
+        const candidate = candidates_[i++][0];
+
+        // Rejected if has unconfirmed pending arrivals
+        const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === candidate.locationId)
+        if (unconfirmed.length !== 0) {
+            continue;
+        }
+
+        // Rejected if has pending arrivals
+        const arrivals = getArrivalsForPlanet(candidate.locationId);
+        if (arrivals.length !== 0) {
+            continue;
+        }
+
+        const energyArriving = (candidate.energyCap * 0.15) + (candidate.energy * (candidate.defense / 100));
+        // needs to be a whole number for the contract
+        const energyNeeded = Math.ceil(df.getEnergyNeededForMove(fromId, candidate.locationId, energyArriving));
+        if (energyLeft - energyNeeded < 0) {
+            continue;
+        }
+
+        df.move(fromId, candidate.locationId, energyNeeded, 0);
+        energySpent += energyNeeded;
+        moves += 1;
     }
 
-    const energyArriving = (candidate.energyCap * 0.15) + (candidate.energy * (candidate.defense / 100));
-    // needs to be a whole number for the contract
-    const energyNeeded = Math.ceil(df.getEnergyNeededForMove(fromId, candidate.locationId, energyArriving));
-    if (energyLeft - energyNeeded < 0) {
-      continue;
-    }
-
-    df.move(fromId, candidate.locationId, energyNeeded, 0);
-    energySpent += energyNeeded;
-    moves += 1;
-  }
-
-  return moves;
+    return moves;
 }
 
 function getArrivalsForPlanet(planetId) {
-  return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
+    return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
 }
 
 //returns tuples of [planet,distance]
 function distance(from, to) {
-  let fromloc = from.location;
-  let toloc = to.location;
-  return Math.sqrt((fromloc.coords.x - toloc.coords.x) ** 2 + (fromloc.coords.y - toloc.coords.y) ** 2);
+    let fromloc = from.location;
+    let toloc = to.location;
+    return Math.sqrt((fromloc.coords.x - toloc.coords.x) ** 2 + (fromloc.coords.y - toloc.coords.y) ** 2);
 }
