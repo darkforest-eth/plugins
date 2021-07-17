@@ -16,16 +16,21 @@ const players = [
     "0x0000000000000000000000000000000000000000",
 ];
 
+const states = [true, false];
+
 const typeNames = Object.keys(planetTypes);
 
 class Plugin {
     constructor() {
         this.planetType = 1;
-        this.minPlanetLevel = 3;
+        this.minimumEnergyAllowed = false;
+        this.minPlanetLevelTo = 3;
+        this.minPlanetLevelFrom = 0;
+        this.maxPlanetLevelFrom = 3;
         this.maxEnergyPercent = 85;
     }
     render(container) {
-        container.style.width = '200px';
+        container.style.width = '300px';
 
         let stepperLabel = document.createElement('label');
         stepperLabel.innerText = 'Max % energy to spend';
@@ -53,26 +58,102 @@ class Plugin {
             }
         }
 
-        let levelLabel = document.createElement('label');
-        levelLabel.innerText = 'Min. level to capture';
-        levelLabel.style.display = 'block';
+        let minimumEnergyAllowedLabel = document.createElement('label');
+        minimumEnergyAllowedLabel.innerText = 'Allow minimum energy to capture?';
+        minimumEnergyAllowedLabel.style.display = 'block';
 
-        let level = document.createElement('select');
-        level.style.background = 'rgb(8,8,8)';
-        level.style.width = '100%';
-        level.style.marginTop = '10px';
-        level.style.marginBottom = '10px';
+        let minimumEnergyAllowedSelect = document.createElement('select');
+        minimumEnergyAllowedSelect.style.background = 'rgb(8,8,8)';
+        minimumEnergyAllowedSelect.style.width = '100%';
+        minimumEnergyAllowedSelect.style.marginTop = '10px';
+        minimumEnergyAllowedSelect.style.marginBottom = '10px';
+        states.forEach(state => {
+            let opt = document.createElement('option');
+            opt.value = `${state}`;
+            opt.innerText = `${state}`;
+            minimumEnergyAllowedSelect.appendChild(opt);
+        });
+        minimumEnergyAllowedSelect.value = `${this.minimumEnergyAllowed}`;
+
+        minimumEnergyAllowedSelect.onchange = (evt) => {
+            try {
+                let bool_value = evt.target.value == "true" ? true : false
+                this.minimumEnergyAllowed = bool_value;
+            } catch (e) {
+                console.error('could not parse minimumEnergyAllowed boolean', e);
+            }
+        }
+
+        let levelLabelTo = document.createElement('label');
+        levelLabelTo.innerText = 'Min. level to capture';
+        levelLabelTo.style.display = 'block';
+
+        let levelTo = document.createElement('select');
+        levelTo.style.background = 'rgb(8,8,8)';
+        levelTo.style.width = '100%';
+        levelTo.style.marginTop = '10px';
+        levelTo.style.marginBottom = '10px';
         planetLevels.forEach(lvl => {
             let opt = document.createElement('option');
             opt.value = `${lvl}`;
             opt.innerText = `Level ${lvl}`;
-            level.appendChild(opt);
+            levelTo.appendChild(opt);
         });
-        level.value = `${this.minPlanetLevel}`;
+        levelTo.value = `${this.minPlanetLevelTo}`;
 
-        level.onchange = (evt) => {
+        levelTo.onchange = (evt) => {
             try {
-                this.minPlanetLevel = parseInt(evt.target.value, 10);
+                this.minPlanetLevelTo = parseInt(evt.target.value, 10);
+            } catch (e) {
+                console.error('could not parse planet level', e);
+            }
+        }
+
+        let levelLabelFromMin = document.createElement('label');
+        levelLabelFromMin.innerText = 'Min. level to send energy from';
+        levelLabelFromMin.style.display = 'block';
+
+        let levelFromMin = document.createElement('select');
+        levelFromMin.style.background = 'rgb(8,8,8)';
+        levelFromMin.style.width = '100%';
+        levelFromMin.style.marginTop = '10px';
+        levelFromMin.style.marginBottom = '10px';
+        planetLevels.forEach(lvl => {
+            let opt = document.createElement('option');
+            opt.value = `${lvl}`;
+            opt.innerText = `Level ${lvl}`;
+            levelFromMin.appendChild(opt);
+        });
+        levelFromMin.value = `${this.minPlanetLevelFrom}`;
+
+        levelFromMin.onchange = (evt) => {
+            try {
+                this.minPlanetLevelFrom = parseInt(evt.target.value, 10);
+            } catch (e) {
+                console.error('could not parse planet level', e);
+            }
+        }
+
+        let levelLabelFromMax = document.createElement('label');
+        levelLabelFromMax.innerText = 'Max. level to send energy from';
+        levelLabelFromMax.style.display = 'block';
+
+        let levelFromMax = document.createElement('select');
+        levelFromMax.style.background = 'rgb(8,8,8)';
+        levelFromMax.style.width = '100%';
+        levelFromMax.style.marginTop = '10px';
+        levelFromMax.style.marginBottom = '10px';
+        planetLevels.forEach(lvl => {
+            let opt = document.createElement('option');
+            opt.value = `${lvl}`;
+            opt.innerText = `Level ${lvl}`;
+            levelFromMax.appendChild(opt);
+        });
+        levelFromMax.value = `${this.maxPlanetLevelFrom}`;
+
+        levelFromMax.onchange = (evt) => {
+            try {
+                this.maxPlanetLevelFrom = parseInt(evt.target.value, 10);
             } catch (e) {
                 console.error('could not parse planet level', e);
             }
@@ -115,9 +196,11 @@ class Plugin {
                 message.innerText = 'Please wait...';
                 let moves = capturePlanets(
                     planet.locationId,
-                    this.minPlanetLevel,
+                    this.minPlanetLevelFrom,
+                    this.maxPlanetLevelFrom,
                     this.maxEnergyPercent,
                     this.planetType,
+                    this.minimumEnergyAllowed,
                 );
                 message.innerText = `Crawling ${moves} ${typeNames[this.planetType]}s.`;
             } else {
@@ -137,9 +220,11 @@ class Plugin {
                 setTimeout(() => {
                     moves += capturePlanets(
                         planet.locationId,
-                        this.minPlanetLevel,
+                        this.minPlanetLevelFrom,
+                        this.maxPlanetLevelFrom,
                         this.maxEnergyPercent,
                         this.planetType,
+                        this.minimumEnergyAllowed,
                     );
                     message.innerText = `Crawling ${moves} ${typeNames[this.planetType]}s.`;
                 }, 0);
@@ -149,8 +234,14 @@ class Plugin {
         container.appendChild(stepperLabel);
         container.appendChild(stepper);
         container.appendChild(percent);
-        container.appendChild(levelLabel);
-        container.appendChild(level);
+        container.appendChild(minimumEnergyAllowedLabel);
+        container.appendChild(minimumEnergyAllowedSelect);
+        container.appendChild(levelLabelTo);
+        container.appendChild(levelTo);
+        container.appendChild(levelLabelFromMin);
+        container.appendChild(levelFromMin);
+        container.appendChild(levelLabelFromMax);
+        container.appendChild(levelFromMax);
         container.appendChild(planetTypeLabel);
         container.appendChild(planetType);
         container.appendChild(button);
@@ -162,7 +253,7 @@ class Plugin {
 export default Plugin;
 
 
-function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent, planetType) {
+function capturePlanets(fromId, minCaptureLevel, maxCaptureLevel, maxDistributeEnergyPercent, planetType, minimumEnergyAllowed = false) {
     const planet = df.getPlanetWithId(fromId);
     const from = df.getPlanetWithId(fromId);
 
@@ -177,6 +268,7 @@ function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent, pla
             p.owner !== df.account &&
             players.includes(p.owner) &&
             p.planetLevel >= minCaptureLevel &&
+            p.planetLevel <= maxCaptureLevel &&
             p.planetType === planetType
         ))
         .map(to => {
@@ -208,7 +300,10 @@ function capturePlanets(fromId, minCaptureLevel, maxDistributeEnergyPercent, pla
             continue;
         }
 
-        const energyArriving = (candidate.energyCap * 0.15) + (candidate.energy * (candidate.defense / 100));
+        let minEnergyCap = 1;
+        // set minimum above energy to 15% or 1, depending on minimumEnergyAllowed value (Boolean)
+        if (!minimumEnergyAllowed) minEnergyCap = candidate.energyCap * 0.15;
+        const energyArriving = minEnergyCap + (candidate.energy * (candidate.defense / 100));
         // needs to be a whole number for the contract
         const energyNeeded = Math.ceil(df.getEnergyNeededForMove(fromId, candidate.locationId, energyArriving));
         if (energyLeft - energyNeeded < 0) {
