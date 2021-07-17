@@ -95,7 +95,7 @@ function Plugin() {
 		if (o.updateInterv !== null)
 			clearInterval(o.updateInterv);
 		if (o.updateTimerInterv !== null)
-			clearInterval(o.updateTimer);
+			clearInterval(o.updateTimerInterv);
 	}
 
 	o.updateTimer = function() {
