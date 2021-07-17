@@ -152,6 +152,10 @@ class SimultaneousAttack {
         attackButton.addEventListener("click", () => {
             this.moveTimeoutIds.push(...simultaneousAttack(df.getPlanetWithId(this.planetTarget), this.planetAttackers.map((p) => df.getPlanetWithId(p))));
         });
+
+        // re-calculate every 15 sec
+        this.calculationsInterval = setInterval(() => this.updateDamageCalculations(energyCalculations), 15 * 1000);
+
         // haha wall of text >:D
         container.appendChild(targetPlanetContainer);
         container.appendChild(setPlanetTargetButton);
@@ -200,6 +204,7 @@ class SimultaneousAttack {
     // good for when someone is panicking and wants to stop everything
     // bad for people who want clean screens
     destroy() {
+        window.clearInterval(this.calculationsInterval);
         for (const moveTimeout of this.moveTimeoutIds) {
             window.clearTimeout(moveTimeout);
         }
