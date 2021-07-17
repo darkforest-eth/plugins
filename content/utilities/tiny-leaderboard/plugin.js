@@ -131,7 +131,7 @@ function Plugin() {
 	}
 
 	o.addPlayerToBoard = function(table, player, rank) {
-		let name = player.twitter !== null ? player.twitter : player.ethAddress.substr(0, 8);
+		let name = player.twitter !== null && player.twitter !== undefined ? player.twitter : player.ethAddress.substr(0, 8);
 		name = name.substr(0, 13); // name max length
 
 		const tr = document.createElement('tr');
