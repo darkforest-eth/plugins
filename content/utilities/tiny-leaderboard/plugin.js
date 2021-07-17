@@ -156,7 +156,7 @@ class TinyLeaderboardPlugin {
 	constructor() {
 		this.plugin = Plugin();
 	}
-	async render(container) {
+	render(container) {
 		this.plugin.render(container);
 	}
 	destroy() {
@@ -166,4 +166,3 @@ class TinyLeaderboardPlugin {
 }
 
 export default TinyLeaderboardPlugin;
-
