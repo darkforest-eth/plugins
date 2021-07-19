@@ -2,30 +2,26 @@
 //
 // Capture unowned planets around you!
 
-const planetTypes = {
-  'Planet': 0,
-  'Asteroid': 1,
-  'Foundry': 2,
-  'Spacetime Rip': 3,
-  'Quasar': 4,
-};
-
-const planetLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
+import {
+  PlanetType,
+  PlanetTypeNames,
+  PlanetLevel,
+  PlanetLevelNames,
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
 
 const players = [
-  "0x0000000000000000000000000000000000000000",
+  EMPTY_ADDRESS
 ];
-
-const typeNames = Object.keys(planetTypes);
 
 class Plugin {
   constructor() {
-    this.planetType = 1;
+    this.planetType = PlanetType.SILVER_MINE;
     this.minPlanetLevel = 3;
     this.maxEnergyPercent = 85;
   }
   render(container) {
-    container.style.width = '200px';
+    container.style.width = '220px';
 
     let stepperLabel = document.createElement('label');
     stepperLabel.innerText = 'Max % energy to spend';
@@ -62,10 +58,10 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    planetLevels.forEach(lvl => {
+    Object.values(PlanetLevel).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
-      opt.innerText = `Level ${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
       level.appendChild(opt);
     });
     level.value = `${this.minPlanetLevel}`;
@@ -87,10 +83,10 @@ class Plugin {
     planetType.style.width = '100%';
     planetType.style.marginTop = '10px';
     planetType.style.marginBottom = '10px';
-    Object.entries(planetTypes).forEach(([name, key]) => {
+    Object.values(PlanetType).forEach((ptype) => {
       let opt = document.createElement('option');
-      opt.value = `${key}`;
-      opt.innerText = `${name}`;
+      opt.value = `${ptype}`;
+      opt.innerText = `${PlanetTypeNames[ptype]}`;
       planetType.appendChild(opt);
     });
     planetType.value = `${this.planetType}`;
@@ -119,7 +115,7 @@ class Plugin {
           this.maxEnergyPercent,
           this.planetType,
         );
-        message.innerText = `Crawling ${moves} ${typeNames[this.planetType]}s.`;
+        message.innerText = `Crawling ${moves} ${PlanetTypeNames[this.planetType]}s.`;
       } else {
         message.innerText = 'No planet selected.';
       }
@@ -141,7 +137,7 @@ class Plugin {
             this.maxEnergyPercent,
             this.planetType,
           );
-          message.innerText = `Crawling ${moves} ${typeNames[this.planetType]}s.`;
+          message.innerText = `Crawling ${moves} ${PlanetTypeNames[this.planetType]}s.`;
         }, 0);
       }
     }

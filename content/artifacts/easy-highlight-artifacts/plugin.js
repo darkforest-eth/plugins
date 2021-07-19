@@ -5,9 +5,20 @@ import {
   useState,
 } from "https://unpkg.com/htm/preact/standalone.module.js";
 
-const PIRATES = "0x0000000000000000000000000000000000000000";
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
+import {
+  ArtifactType,
+  ArtifactTypeNames,
+  ArtifactRarity,
+  ArtifactRarityNames,
+  PlanetLevel,
+  PlanetType,
+  PlanetTypeNames
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
 
-const PLANET_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((level) => ({
+const PIRATES = EMPTY_ADDRESS;
+
+const PLANET_LEVELS = Object.values(PlanetLevel).map((level) => ({
   value: level,
   text: level.toString(),
 }));
@@ -17,11 +28,7 @@ const ARTIFACT_ANY_RARITY = -1;
 
 const PLANET_TYPES = [
   { value: PLANET_ANY_TYPE, text: "Any" },
-  { value: 0, text: "Planet" },
-  { value: 1, text: "Asteroid Field" },
-  { value: 2, text: "Foundry" },
-  { value: 3, text: "Spacetime Rip" },
-  { value: 4, text: "Quasar" },
+  ...Object.values(PlanetType).filter((type) => type !== PlanetType.Unknown).map((type) => ({ value: type, text: PlanetTypeNames[type] }))
 ];
 
 const OwnerType = {
@@ -43,42 +50,7 @@ const ARTIFACT_TYPES = [
     value: ARTIFACT_ANY_TYPE,
     text: "Any",
   },
-  {
-    value: 1,
-    text: "Monolith",
-  },
-  {
-    value: 2,
-    text: "Colossus",
-  },
-  {
-    value: 3,
-    text: "Spaceship",
-  },
-  {
-    value: 4,
-    text: "Pyramid",
-  },
-  {
-    value: 5,
-    text: "Wormhole",
-  },
-  {
-    value: 6,
-    text: "PlanetaryShield",
-  },
-  {
-    value: 7,
-    text: "PhotoidCannon",
-  },
-  {
-    value: 8,
-    text: "BloomFilter",
-  },
-  {
-    value: 9,
-    text: "BlackDomain",
-  },
+  ...Object.values(ArtifactType).filter((type) => type !== ArtifactType.Unknown).map((type) => ({ value: type, text: ArtifactTypeNames[type] }))
 ];
 
 const ARTIFACT_RARITIES = [
@@ -86,26 +58,7 @@ const ARTIFACT_RARITIES = [
     value: ARTIFACT_ANY_RARITY,
     text: "Any",
   },
-  {
-    value: 1,
-    text: "Common",
-  },
-  {
-    value: 2,
-    text: "Rare",
-  },
-  {
-    value: 3,
-    text: "Epic",
-  },
-  {
-    value: 4,
-    text: "Legendary",
-  },
-  {
-    value: 5,
-    text: "Mythic",
-  },
+  ...Object.values(ArtifactRarity).filter((rarity) => rarity !== ArtifactRarity.Unknown).map((rarity) => ({ value: rarity, text: ArtifactRarityNames[rarity] }))
 ];
 
 function CreateSelectFilter({ items, selectedValue, onSelect }) {

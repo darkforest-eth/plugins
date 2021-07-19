@@ -7,12 +7,14 @@
 // Author: SnowTiger
 
 import {
-  BiomeNames,
   energy,
   coords,
   canHaveArtifact,
 } from 'https://plugins.zkga.me/utils/utils.js';
 
+import {
+  BiomeNames
+} from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 // prospect artifacts every 5 minutes
 let AUTO_INTERVAL = 1000 * 60 * 5;
