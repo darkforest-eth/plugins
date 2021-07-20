@@ -170,24 +170,22 @@ function Plugin() {
 			const tr = document.createElement('tr');
 			const groups = ["hash", "name", "planets", "energy", "energyCap", "energyAvail", "silver", "score", "rank"];
 			for (var group of groups) {
-				var th = document.createElement('th');
+				let th = document.createElement('th');
 				th.innerText = group;
 
-				(function(th){
-					th.onclick=()=>{
-						o.allPlayers=df.getAllPlayers();
-						o.updateLeaderboard();
-						o.getPlayerInfo();
-						if(th.innerText=='planets') 	o.playerList.sort((a,b)=> b.planets.length-a.planets.length);
-						else if(th.innerText=='energy') o.playerList.sort((a, b) => b.energy - a.energy);
-						else if(th.innerText=='energyCap') o.playerList.sort((a,b)=> b.energyCap-a.energyCap);
-						else if(th.innerText=='energyAvail') o.playerList.sort((a,b)=>b.energyAvailablePercent-a.energyAvailablePercent);
-						else if(th.innerText=='silver') o.playerList.sort((a,b)=>b.silver-a.silver);
-						else if(th.innerText=='score') o.playerList.sort((a,b)=>getPlayerScore(b.dfObject)-getPlayerScore(a.dfObject));
-						else if(th.innerText=='rank') o.playerList.sort((a,b)=>o.getLeaderboardRank(a.hash)-o.getLeaderboardRank(b.hash));
-						o.drawPlayerInfo();
-					}
-				})(th);
+				th.onclick=()=>{
+					o.allPlayers=df.getAllPlayers();
+					o.updateLeaderboard();
+					o.getPlayerInfo();
+					if(th.innerText=='planets') 	o.playerList.sort((a,b)=> b.planets.length-a.planets.length);
+					else if(th.innerText=='energy') o.playerList.sort((a, b) => b.energy - a.energy);
+					else if(th.innerText=='energyCap') o.playerList.sort((a,b)=> b.energyCap-a.energyCap);
+					else if(th.innerText=='energyAvail') o.playerList.sort((a,b)=>b.energyAvailablePercent-a.energyAvailablePercent);
+					else if(th.innerText=='silver') o.playerList.sort((a,b)=>b.silver-a.silver);
+					else if(th.innerText=='score') o.playerList.sort((a,b)=>getPlayerScore(b.dfObject)-getPlayerScore(a.dfObject));
+					else if(th.innerText=='rank') o.playerList.sort((a,b)=>o.getLeaderboardRank(a.hash)-o.getLeaderboardRank(b.hash));
+					o.drawPlayerInfo();
+				}
 
 				tr.appendChild(th);
 			}
