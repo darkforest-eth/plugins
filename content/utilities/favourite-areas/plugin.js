@@ -70,8 +70,12 @@ function App() {
 
   useEffect(() => {
     const areasJson = localStorage.getItem("favourite-areas");
-    const cachedAreas = JSON.parse(areasJson);
-    setAreas(cachedAreas);
+    if (areasJson) {
+      const cachedAreas = JSON.parse(areasJson);
+      setAreas(cachedAreas);
+    } else {
+      setAreas([]);
+    }
   }, []);
 
   const onAreaNameChange = (event) => {
