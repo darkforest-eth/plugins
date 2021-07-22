@@ -1,12 +1,12 @@
 /**
- * MS Map Controller
+ * Custom Hotkeys
  *
- * Simple Plugin to pan & zoom the map with keyboard.
+ * Simple plugin to define custom hotkeys.
  *
  * Paning: Arrows (←, ↑, →, ↓)
  * Zooming: '-' out, '=' in
  *
- * Enable logging by setting `window.__MS_MC_DEBUG` to `true` in conosle.
+ * Enable logging by setting `window.__CH_DEBUG` to `true` in conosle.
  *
  * Author @matthewsimo
  */
@@ -18,9 +18,9 @@ import {
 
 class BasePlugin {
   constructor() {
-    window.__MS_MC_DEBUG = window.__MS_MC_DEBUG || false;
+    window.__CH_DEBUG = window.__CH_DEBUG || false;
 
-    window.__MS_MC_DEBUG && console.log("[MS MC]: init", { df, ui }, this);
+    window.__CH_DEBUG && console.log("[CH]: init", { df, ui }, this);
 
     this.container = null;
 
@@ -48,7 +48,7 @@ class BasePlugin {
     const { x, y } = ui.getViewport().centerWorldCoords;
     let newX = x;
     let newY = y;
-    window.__MS_MC_DEBUG && console.log(`[MS MC]: handleKeyInput: `, e);
+    window.__CH_DEBUG && console.log(`[CH]: handleKeyInput: `, e);
 
     switch (e.key) {
       case "ArrowLeft":
@@ -80,8 +80,8 @@ class BasePlugin {
   };
 
   destroy() {
-    window.__MS_MC_DEBUG &&
-      console.log("[MS MC]:clean up", { df, ui }, this.container);
+    window.__CH_DEBUG &&
+      console.log("[CH]:clean up", { df, ui }, this.container);
     window.removeEventListener("keydown", this.handleKeyInput);
   }
 }
