@@ -88,7 +88,7 @@ const calcWarringPotential = (df) => (predator, defenseThreshold = 0) => (prey) 
     }
     try {
         const sending = predator.energyCap * (parseInt(100 - defenseThreshold) / 100); // @todo: calculate predator energyCap as a factor of full energyCap at max level instead of predator.energyCap.
-        const arriving = Math.floor(df.getEnergyArrivingForMove(predator.locationId, prey.locationId, sending) / (prey.defense / 100)); // @todo: calcualte prey defense as factor of max-level defense possible.
+        const arriving = Math.floor(df.getEnergyArrivingForMove(predator.locationId, prey.locationId, df.getDist(predator.locationId, prey.locationId), sending) / (prey.defense / 100)); // @todo: calcualte prey defense as factor of max-level defense possible.
         return Math.floor(arriving * 100 / prey.energyCap) > ATTACK_RELEVANCE_THRESHOLD * 100
             ? arriving
             : 0
@@ -103,7 +103,7 @@ const calcFeedingPotential = (df) => (krill, defenseThreshold = 0) => (beneficia
     }
     try {
         const sending = krill.energyCap * (parseInt(100 - defenseThreshold) / 100); // @todo: calculate krill feeding potential as a factor of full energyCap at max level instead of krill.energyCap.
-        const arriving = Math.floor(df.getEnergyArrivingForMove(krill.locationId, beneficiary.locationId, sending));
+        const arriving = Math.floor(df.getEnergyArrivingForMove(krill.locationId, beneficiary.locationId, df.getDist(krill.locationId, beneficiary.locationId), sending));
         return Math.floor(arriving * 100 / beneficiary.energyCap) > FEEDER_RELEVANCE_THRESHOLD * 100
             ? arriving
             : 0
@@ -151,6 +151,7 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
             df.getEnergyArrivingForMove(
                 myPlanet.locationId,
                 targetPlanet.locationId,
+		df.getDist(myPlanet.locationId, targetPlanet.locationId),
                 sending
             )
         );
@@ -251,7 +252,6 @@ const MyWarringParticipants = ({ myRelevantEntities, centerPlanet, myScheduledAt
     })}
                 </tbody>
             </table>
-
         </div>
     `
 }
@@ -392,7 +392,6 @@ const TargetPriorities = ({ targetRelevantEntities = [], centerPlanet, toggleFee
     })}
                 </tbody>
             </table>
-
         </div>
     `
 }
