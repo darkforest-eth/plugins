@@ -5,7 +5,6 @@ import {
   html,
   render,
   useState,
-  useEffect,
 } from "https://unpkg.com/htm/preact/standalone.module.js";
 
 // Used to give a rough estimate of zoom level
@@ -68,16 +67,6 @@ function App() {
   const [areaName, setAreaName] = useState(null);
   const [areas, setAreas] = useState([]);
 
-  useEffect(() => {
-    const areasJson = localStorage.getItem("favourite-areas");
-    if (areasJson) {
-      const cachedAreas = JSON.parse(areasJson);
-      setAreas(cachedAreas);
-    } else {
-      setAreas([]);
-    }
-  }, []);
-
   const onAreaNameChange = (event) => {
     setAreaName(event.target.value);
   };
@@ -100,13 +89,11 @@ function App() {
     ];
 
     setAreas(newAreas);
-    localStorage.setItem("favourite-areas", JSON.stringify(newAreas));
   };
 
   const onRemove = (name) => {
     const newAreas = areas.filter((area) => area.name !== name);
     setAreas(newAreas);
-    localStorage.setItem("favourite-areas", JSON.stringify(newAreas));
   };
 
   const onGoTo = (name) => {
