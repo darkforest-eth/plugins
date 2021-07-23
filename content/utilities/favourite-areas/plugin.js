@@ -1,5 +1,5 @@
 // Favourite Areas
-// Save client width, height and coordinates of currently visible area
+// Save client width, height and coordinates of currently visible area and return to that view later with one click. Note: Positions are not saved when browser is restarted or plugin is closed.
 
 import {
   html,
