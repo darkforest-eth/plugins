@@ -1,4 +1,12 @@
-const { html, render, useState, useEffect } = await import('https://unpkg.com/htm/preact/standalone.module.js');
+// Wage War
+//
+// This plugin is used to grab statistics about a user-specified empire. Once
+// information is grabbed, the plugin ranks the target empire's planets by their
+// ability to attack you and by their ability to reinforce themselves. If you so
+// choose, you can wage an automated war on them, using your planets to attack
+// their with timed attacks in order of highest-value. 
+
+import { html, render, useState, useEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
 /* start-region:config */
 // Test mode toggle. Test mode stops transactions from being created, so dev can check target priority is correct
@@ -80,7 +88,7 @@ const calcWarringPotential = (df) => (predator, defenseThreshold = 0) => (prey) 
     }
     try {
         const sending = predator.energyCap * (parseInt(100 - defenseThreshold) / 100); // @todo: calculate predator energyCap as a factor of full energyCap at max level instead of predator.energyCap.
-        const arriving = Math.floor(df.getEnergyArrivingForMove(predator.locationId, prey.locationId, sending) / (prey.defense / 100)); // @todo: calcualte prey defense as factor of max-level defense possible.
+        const arriving = Math.floor(df.getEnergyArrivingForMove(predator.locationId, prey.locationId, df.getDist(predator.locationId, prey.locationId), sending) / (prey.defense / 100)); // @todo: calcualte prey defense as factor of max-level defense possible.
         return Math.floor(arriving * 100 / prey.energyCap) > ATTACK_RELEVANCE_THRESHOLD * 100
             ? arriving
             : 0
@@ -95,7 +103,7 @@ const calcFeedingPotential = (df) => (krill, defenseThreshold = 0) => (beneficia
     }
     try {
         const sending = krill.energyCap * (parseInt(100 - defenseThreshold) / 100); // @todo: calculate krill feeding potential as a factor of full energyCap at max level instead of krill.energyCap.
-        const arriving = Math.floor(df.getEnergyArrivingForMove(krill.locationId, beneficiary.locationId, sending));
+        const arriving = Math.floor(df.getEnergyArrivingForMove(krill.locationId, beneficiary.locationId, df.getDist(krill.locationId, beneficiary.locationId), sending));
         return Math.floor(arriving * 100 / beneficiary.energyCap) > FEEDER_RELEVANCE_THRESHOLD * 100
             ? arriving
             : 0
@@ -143,11 +151,12 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
             df.getEnergyArrivingForMove(
                 myPlanet.locationId,
                 targetPlanet.locationId,
+		df.getDist(myPlanet.locationId, targetPlanet.locationId),
                 sending
             )
         );
 
-        // If attack (respecting defense maintenance mandatory limit), does not surpase the attack relevance 
+        // If attack (respecting defense maintenance mandatory limit), does not surpase the attack relevance
         // threshold (including target planet defense) for the targetPlanet, don't include the attack.
         if (targetEffectiveDefense * ATTACK_RELEVANCE_THRESHOLD <= energyArrivingGivenThreshold) {
             attack.push({
@@ -162,10 +171,10 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
         }
     })
     // leave at most the top 6 attacks.
-    const cutAttack = attack.sort((a,b) => b.arriving - a.arriving).slice(0, MAX_ATTACKERS)
-    
+    const cutAttack = attack.sort((a, b) => b.arriving - a.arriving).slice(0, MAX_ATTACKERS)
+
     // reduce number of attacks needed further to limit attacking resources to only what is necessary.
-    const attackTotal = cutAttack.reduce((acc, item, idx) => 
+    const attackTotal = cutAttack.reduce((acc, item, idx) =>
         idx === 0 || acc.totalArriving < Math.floor(ATTACK_MAX_LANDING_THRESHOLD * targetEffectiveDefense)
             ? ({
                 totalArriving: acc.totalArriving + item.arriving,
@@ -174,7 +183,7 @@ const calculateAttack = (df) => (myPlanetsReadyForAttack, targetPlanet) => {
                     item
                 ]
             }) : acc
-    , { totalArriving: 0, attacks: [] })
+        , { totalArriving: 0, attacks: [] })
     const fullAssault = attackTotal.attacks
     // determines energy landing on the target
     const attackLanding = fullAssault.reduce((acc, cur) => acc + cur.arriving, 0)
@@ -207,10 +216,10 @@ const MyWarringParticipants = ({ myRelevantEntities, centerPlanet, myScheduledAt
         paddingLeft: "3px"
     }
     const myPlanetStatus = {}
-    myScheduledAttacks.reduce((allAttacks, attack) => [ ...allAttacks, ...attack ], []).forEach(scheduledAttack => {
+    myScheduledAttacks.reduce((allAttacks, attack) => [...allAttacks, ...attack], []).forEach(scheduledAttack => {
         myPlanetStatus[scheduledAttack.myAttacker.locationId] = "Scheduled";
     })
-    attacksInProgress.reduce((allAttacks, attack) => [ ...allAttacks, ...attack.scheduledAttack ], []).forEach(inProgressAttack => {
+    attacksInProgress.reduce((allAttacks, attack) => [...allAttacks, ...attack.scheduledAttack], []).forEach(inProgressAttack => {
         myPlanetStatus[inProgressAttack.myAttacker.locationId] = "Attacking";
     })
     return html`
@@ -232,9 +241,9 @@ const MyWarringParticipants = ({ myRelevantEntities, centerPlanet, myScheduledAt
         return html`
                         <tr onClick=${() => centerPlanet({ x: myPlanet.location.coords.x, y: myPlanet.location.coords.y })}>
                             <th>${`${myPlanet.planetLevel} (${myPlanet.upgradeState.reduce((acc, cur) => cur + acc, 0)})`}</th>
-                            <th>${truncate(myPlanet.locationId)}</th> 
-                            <th>${formatNumber(myPlanet.warringPotential || 0)}</th> 
-                            <th>${formatNumber(myPlanet.feedingPotential || 0)}</th> 
+                            <th>${truncate(myPlanet.locationId)}</th>
+                            <th>${formatNumber(myPlanet.warringPotential || 0)}</th>
+                            <th>${formatNumber(myPlanet.feedingPotential || 0)}</th>
                             <th>${formatNumber(myPlanet.effectiveDefense)}</th>
                             <th>${formatNumber(myPlanet.warringScore)}</th>
                             <th>${myPlanetStatus[myPlanet.locationId] || "Waiting"}</th>
@@ -243,7 +252,6 @@ const MyWarringParticipants = ({ myRelevantEntities, centerPlanet, myScheduledAt
     })}
                 </tbody>
             </table>
-
         </div>
     `
 }
@@ -335,10 +343,10 @@ const TargetPriorities = ({ targetRelevantEntities = [], centerPlanet, toggleFee
         paddingLeft: "3px"
     }
     const targetStatus = {}
-    myScheduledAttacks.reduce((allAttacks, attack) => [ ...allAttacks, ...attack ], []).forEach(scheduledAttack => {
+    myScheduledAttacks.reduce((allAttacks, attack) => [...allAttacks, ...attack], []).forEach(scheduledAttack => {
         targetStatus[scheduledAttack.targetDefender.locationId] = "Scheduled";
     })
-    attacksInProgress.reduce((allAttacks, attack) => [ ...allAttacks, ...attack.scheduledAttack ], []).forEach(inProgressAttack => {
+    attacksInProgress.reduce((allAttacks, attack) => [...allAttacks, ...attack.scheduledAttack], []).forEach(inProgressAttack => {
         targetStatus[inProgressAttack.targetDefender.locationId] = "Attacking";
     })
     return html`
@@ -351,7 +359,7 @@ const TargetPriorities = ({ targetRelevantEntities = [], centerPlanet, toggleFee
             <label>
                 Ignore Asteroid Belts?
             </label>
-            <input style=${{ marginLeft: "5px" }} type="checkbox" value=${!ignoreAsteroidBelts} onChange=${toggleIgnoreAsteroidBelts} /> 
+            <input style=${{ marginLeft: "5px" }} type="checkbox" value=${!ignoreAsteroidBelts} onChange=${toggleIgnoreAsteroidBelts} />
             <table>
                 <thead>
                     <tr>
@@ -372,9 +380,9 @@ const TargetPriorities = ({ targetRelevantEntities = [], centerPlanet, toggleFee
                         <tr onClick=${() => centerPlanet({ x: target.location.coords.x, y: target.location.coords.y })}>
                             <th>${formatNumber(target.overallScore)}</th>
                             <th>${`${target.planetLevel} (${target.upgradeState.reduce((acc, cur) => cur + acc, 0)})`}</th>
-                            <th>${truncate(target.locationId)}</th> 
-                            <th>${formatNumber(target.warringPotential || 0)}</th> 
-                            <th>${formatNumber(target.feedingPotential || 0)}</th> 
+                            <th>${truncate(target.locationId)}</th>
+                            <th>${formatNumber(target.warringPotential || 0)}</th>
+                            <th>${formatNumber(target.feedingPotential || 0)}</th>
                             <th>${formatNumber(target.effectiveDefense)}</th>
                             <th>${formatNumber(target.feederScore)}</th>
                             <th>${formatNumber(target.warringScore)}</th>
@@ -384,7 +392,6 @@ const TargetPriorities = ({ targetRelevantEntities = [], centerPlanet, toggleFee
     })}
                 </tbody>
             </table>
-
         </div>
     `
 }
@@ -574,7 +581,7 @@ class Plugin {
             ...entity,
             effectiveDefense: calcEffectiveDefense(entity.defense, entity.energyCap),
             warringScore: (entity.warringPotential / calcEffectiveDefense(entity.defense, entity.energyCap)) * (entity.isAsteroidField ? ASTEROID_SCORE_MODIFIER : 1),
-            
+
         }))
 
         // Returns all relevant target entities (warring & feeding) for the war against me.
@@ -583,7 +590,7 @@ class Plugin {
             isAsteroidField: planet.planetResource === 1,
             feedingPotential: calcAllFeedingPotential(df)(planet)(this.targetPlanets),
             warringPotential: calcAllWarringPotential(df)(planet)(Array.from(this.myPlanetsAll))
-        })).filter(({ warringPotential, feedingPotential, isAsteroidField }) => 
+        })).filter(({ warringPotential, feedingPotential, isAsteroidField }) =>
             !(this.ignoreAsteroidBelts && isAsteroidField) && (warringPotential !== 0 || feedingPotential !== 0)
         ).map((entity) => ({
             ...entity,
@@ -600,10 +607,10 @@ class Plugin {
         if (this.wageWar && targetRelevantEntities.length > 0) {
             const attackersInUse = {}
             scheduledAttacks = targetRelevantEntities.map((targetPlanet) => {
-                const inScheduled = (this.myScheduledAttacks || []).reduce((allAttacks, attack) => [ ...allAttacks, ...attack ], [])
-                const inProgressAttack = (this.attacksInProgress || []).reduce((allAttacks, atk) => [ ...allAttacks, ...atk.scheduledAttack ], [])
+                const inScheduled = (this.myScheduledAttacks || []).reduce((allAttacks, attack) => [...allAttacks, ...attack], [])
+                const inProgressAttack = (this.attacksInProgress || []).reduce((allAttacks, atk) => [...allAttacks, ...atk.scheduledAttack], [])
                 // Filter all attacking entities that aren't currently attacking or scheduled to attack.
-                const attackersAvailable = myRelevantEntities.filter((relevantAttacker) => 
+                const attackersAvailable = myRelevantEntities.filter((relevantAttacker) =>
                     !attackersInUse[relevantAttacker.locationId]
                     && (relevantAttacker.energy / relevantAttacker.energyCap) > ATTACK_MIN_ENERGY_PERCENTAGE // Check energy present is greater than default maintenance
                     && !inScheduled.find(attack =>
@@ -616,9 +623,9 @@ class Plugin {
                     attackersInUse[singleAttack.myAttacker.locationId] = true
                 });
                 return overallPlanetAttacks;
-            }, []).filter(attacks => attacks.length !== 0 )
+            }, []).filter(attacks => attacks.length !== 0)
             // Add new scheduled attacks to the state
-            this.myScheduledAttacks = [ ...this.myScheduledAttacks, ...scheduledAttacks ];
+            this.myScheduledAttacks = [...this.myScheduledAttacks, ...scheduledAttacks];
         }
         render(html`
             <${WageWarApp}
@@ -669,4 +676,4 @@ class Plugin {
 }
 /* end-region:components */
 
-plugin.register(new Plugin());
+export default Plugin;

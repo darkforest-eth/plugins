@@ -1,31 +1,74 @@
-const {
+// Quick Upgrade
+//
+// Upgrade your planets quickly!
+
+import {
   html,
   render,
   useState,
-  useLayoutEffect,
-} = await import('https://unpkg.com/htm/preact/standalone.module.js');
+  useEffect,
+} from 'https://unpkg.com/htm/preact/standalone.module.js';
 
-const {
+import {
   eachLimit
-} = await import('https://cdn.skypack.dev/async-es');
+} from 'https://cdn.skypack.dev/async-es';
 
-const {
+import {
   Defense,
   Range,
   Speed,
-} = await import('https://plugins.zkga.me/game/Icons.js');
+} from 'https://plugins.zkga.me/game/Icons.js';
 
-const {
-  UpgradeBranchName,
-  SpaceType,
+import {
   canStatUpgrade,
   canPlanetUpgrade,
-} = await import('https://plugins.zkga.me/utils/utils.js')
+  getPlanetRank,
+} from 'https://plugins.zkga.me/utils/utils.js';
+
+import {
+  PlanetType,
+  UpgradeBranchName,
+  SpaceType
+} from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 function upgrade(planet, branch) {
   if (planet && canPlanetUpgrade(planet) && canStatUpgrade(planet, branch)) {
     df.upgrade(planet.locationId, branch)
   }
+}
+
+const getPlanetMaxRank = (planet) => {
+  if (!planet) return 0;
+
+  if (planet.spaceType === SpaceType.NEBULA) return 3;
+  else if (planet.spaceType === SpaceType.SPACE) return 4;
+  else return 5;
+};
+
+const dfyellow = '#e8e228';
+const subbertext = '#565656';
+
+function Subber({ children }) {
+  return html`<span style=${{ color: subbertext, padding: '0 5px' }}>${children}</span>`;
+}
+
+function Gold({ children }) {
+  return html`<span style=${{ color: dfyellow, padding: '0 5px' }}>${children}</span>`;
+}
+
+function SilverRequired({ planet }) {
+  const maxRank = getPlanetMaxRank(planet);
+  const silverPerRank = [];
+
+  for (let i = 0; i < maxRank; i++) {
+    silverPerRank[i] = Math.floor((i + 1) * 0.2 * planet.silverCap);
+  }
+
+  return silverPerRank.map((silver, i) => (
+    html`<span key=${i}>
+      ${i === getPlanetRank(planet) ? html`<${Gold}>${silver}<//>` : html`<${Subber}>${silver}<//>`}
+    </span>`
+  ))
 }
 
 function UpgradeButton({ Icon, planet, branch }) {
@@ -113,7 +156,7 @@ function UpgradeSelectedPlanet({ planet }) {
   if (!planet) {
     return html`
       <div style=${wrapper}>
-        No planet selected.
+        No planet selected or cannot upgrade.
       </div>
     `;
   }
@@ -150,22 +193,42 @@ function UpgradeAllPlanets() {
 }
 
 function App() {
-  let [selectedPlanet, setSelectedPlanet] = useState(ui.getSelectedPlanet());
-
-  useLayoutEffect(() => {
-    let onClick = () => {
-      setSelectedPlanet(ui.getSelectedPlanet());
+  let [selectedPlanet, setSelectedPlanet] = useState(() => {
+    const planet = ui.getSelectedPlanet();
+    if (!planet) {
+      return undefined;
     }
-    window.addEventListener('click', onClick);
-
-    return () => {
-      window.removeEventListener('click', onClick);
+    if (planet.planetType === PlanetType.PLANET) {
+      return planet;
+    } else {
+      return undefined;
     }
+  });
+
+  useEffect(() => {
+    const sub = ui.selectedPlanetId$.subscribe(planetId => {
+      setSelectedPlanet(() => {
+        const planet = df.getPlanetWithId(planetId);
+        if (!planet) {
+          return undefined;
+        }
+
+        if (planet.planetType === PlanetType.PLANET && planet.planetLevel > 0) {
+          return planet;
+        } else {
+          return undefined;
+        }
+      })
+    });
+
+    return sub.unsubscribe;
   }, []);
 
   return html`
     <div>
       <${UpgradeSelectedPlanet} planet=${selectedPlanet} />
+      ${selectedPlanet ? html`<br /><span>Silver: ${Math.floor(selectedPlanet.silver)}</span>` : null}
+      ${selectedPlanet ? html`<br /><span>Required:</span><${SilverRequired} planet=${selectedPlanet} />` : null}
       <br />
       <hr />
       <${UpgradeAllPlanets} />
@@ -176,7 +239,6 @@ function App() {
 class Plugin {
   constructor() {
     this.container = null;
-    this.root = null;
   }
 
   render(container) {
@@ -186,11 +248,11 @@ class Plugin {
 
     this.container = container;
 
-    this.root = render(html`<${App} />`, container);
+    render(html`<${App} />`, container);
   }
 
   destroy() {
-    render(null, this.container, this.root);
+    render(null, this.container);
   }
 }
 

@@ -1,4 +1,5 @@
-// # Map Export
+// Map Export
+//
 // Additional map export (and import?) utilities:
 // * Select start/end coordinates to filter the export by.
 
@@ -36,23 +37,14 @@ class Plugin {
     this.xyWrapper.appendChild(this.endXY);
     this.xyWrapper.appendChild(clear);
   }
-  onImport = async () => {
-    let input;
-    try {
-      input = await window.navigator.clipboard.readText();
-    } catch (err) {
-      console.error(err);
-      this.status.innerText = 'Unable to import map. Did you allow clipboard access?';
-      this.status.style.color = 'red';
-      return;
-    }
 
+  async processMap(input) {
     let chunks;
     try {
       chunks = JSON.parse(input);
     } catch (err) {
       console.error(err);
-      this.status.innerText = 'Invalid map data. Check the data in your clipboard.';
+      this.status.innerText = 'Invalid map data. Check the data in your file.';
       this.status.style.color = 'red';
       return;
     }
@@ -69,6 +61,40 @@ class Plugin {
     }
   }
 
+  onImport = async () => {
+    let input;
+    try {
+      input = await window.navigator.clipboard.readText();
+    } catch (err) {
+      console.error(err);
+      this.status.innerText = 'Unable to import map. Did you allow clipboard access?';
+      this.status.style.color = 'red';
+      return;
+    }
+    this.processMap(input);
+  }
+
+  onUpload = async () => {
+    let inputFile = document.createElement('input');
+    inputFile.type = 'file';
+    inputFile.onchange = () => {
+      try {
+        var file = inputFile.files.item(0);
+        var reader = new FileReader();
+        reader.onload = () => {
+          this.processMap(reader.result);
+        };
+        reader.readAsText(file);
+      } catch (err) {
+        console.error(err);
+        this.status.innerText = 'Unable to upload map.';
+        this.status.style.color = 'red';
+        return;
+      }
+    }
+    inputFile.click();
+  }
+
   intersectsXY(chunk, begin, end) {
     const chunkLeft = chunk.chunkFootprint.bottomLeft.x;
     const chunkRight = chunkLeft + chunk.chunkFootprint.sideLength;
@@ -83,7 +109,7 @@ class Plugin {
     );
   }
 
-  onExport = async () => {
+  generateMap() {
     let chunks = ui.getExploredChunks();
     let chunksAsArray = Array.from(chunks);
     if (this.beginCoords && this.endCoords) {
@@ -99,8 +125,13 @@ class Plugin {
         return this.intersectsXY(chunk, begin, end);
       });
     }
+    return chunksAsArray;
+  }
+
+  onExport = async () => {
+    let mapRaw = this.generateMap();
     try {
-      let map = JSON.stringify(chunksAsArray);
+      let map = JSON.stringify(mapRaw);
       await window.navigator.clipboard.writeText(map);
       this.status.innerText = 'Map copied to clipboard!';
       this.status.style.color = 'white'
@@ -110,6 +141,25 @@ class Plugin {
       this.status.style.color = 'red';
     }
   }
+
+  onDownload = async () => {
+    let mapRaw = this.generateMap();
+    try {
+      let map = JSON.stringify(mapRaw);
+      var blob = new Blob([map], { type: 'application/json' }),
+        anchor = document.createElement('a');
+      anchor.download = df.getContractAddress().substring(0, 6) + '_map.json';
+      anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+      anchor.dataset.downloadurl = ['application/json', anchor.download, anchor.href].join(':');
+      anchor.click();
+      this.status.innerText = 'Saving map!';
+      this.status.style.color = 'white';
+    } catch (err) {
+      console.error(err);
+      this.status.innerText = 'Failed to download map.';
+      this.status.style.color = 'red';
+    }
+  };
 
   onMouseMove = () => {
     let coords = ui.getHoveringOverCoords();
@@ -145,7 +195,7 @@ class Plugin {
     container.parentElement.style.minHeight = 'unset';
     container.style.minHeight = 'unset';
 
-    container.style.width = '280px';
+    container.style.width = '400px';
 
     window.addEventListener('mousemove', this.onMouseMove);
     window.addEventListener('click', this.onClick);
@@ -153,20 +203,36 @@ class Plugin {
     let wrapper = document.createElement('div');
     wrapper.style.display = 'flex';
     wrapper.style.justifyContent = 'space-between';
+    wrapper.style.marginBottom = '10px';
+
+    let wrapper2 = document.createElement('div');
+    wrapper2.style.display = 'flex';
+    wrapper2.style.justifyContent = 'space-between';
 
     let exportButton = document.createElement('button');
-    exportButton.innerText = "Export Map";
+    exportButton.innerText = 'Copy Map to Clipboard';
     exportButton.onclick = this.onExport;
 
     let importButton = document.createElement('button');
-    importButton.innerText = "Import Map";
+    importButton.innerText = 'Load Map from Clipboard';
     importButton.onclick = this.onImport;
+
+    let downloadButton = document.createElement('button');
+    downloadButton.innerText = 'Download Map as File';
+    downloadButton.onclick = this.onDownload;
+
+    let uploadButton = document.createElement('button');
+    uploadButton.innerText = 'Upload Map from File';
+    uploadButton.onclick = this.onUpload;
 
     wrapper.appendChild(exportButton);
     wrapper.appendChild(importButton);
+    wrapper2.appendChild(downloadButton);
+    wrapper2.appendChild(uploadButton);
 
     container.appendChild(this.xyWrapper);
     container.appendChild(wrapper);
+    container.appendChild(wrapper2);
     container.appendChild(this.status);
   }
 

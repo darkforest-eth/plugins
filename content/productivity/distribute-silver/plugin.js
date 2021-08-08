@@ -1,8 +1,12 @@
-import {
-  move
-} from 'https://plugins.zkga.me/utils/queued-move.js';
+// Distribute Silver
+//
+// Distribute your silver!
 
-const MAX_LEVEL_PLANET = 9;
+import {
+  PlanetType,
+  PlanetLevel,
+  PlanetLevelNames,
+} from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 class Plugin {
   constructor() {
@@ -50,10 +54,10 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    Array.from(Array(MAX_LEVEL_PLANET+1).keys()).forEach(lvl => {
+    Object.values(PlanetLevel).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
-      opt.innerText = `Level ${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
       level.appendChild(opt);
     });
     level.value = `${this.minPlanetLevel}`;
@@ -77,13 +81,13 @@ class Plugin {
     levelAsteroid.style.width = '100%';
     levelAsteroid.style.marginTop = '10px';
     levelAsteroid.style.marginBottom = '10px';
-    Array.from(Array(MAX_LEVEL_PLANET+1).keys()).forEach(lvl => {
+    Object.values(PlanetLevel).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
-      opt.innerText = `Level ${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
       levelAsteroid.appendChild(opt);
     });
-    levelAsteroid.value = `${this.minPlanetLevel}`;
+    levelAsteroid.value = `${this.maxAsteroidLevel}`;
 
     levelAsteroid.onchange = (evt) => {
       try {
@@ -157,13 +161,12 @@ class Plugin {
       message.innerText = 'Please wait...';
 
       let moves = 0;
-      let silver =0;
-      let tmp; 
+      let silver = 0;
       for (let planet of df.getMyPlanets()) {
         if (isSpaceRift(planet)) {
           setTimeout(() => {
-            silver+= withdrawSilver(planet.locationId);
-            moves+= 1;  
+            silver += withdrawSilver(planet.locationId);
+            moves += 1;
             message.innerText = `Withdrawing ${silver} from ${moves} space rifts.`;
           }, 0);
         }
@@ -186,17 +189,17 @@ class Plugin {
 }
 
 function withdrawSilver(fromId) {
-    const from = df.getPlanetWithId(fromId);
-    const silver =  Math.floor(from.silver);
-    if (silver === 0) {
-      return 0;
-    } 
-    df.withdrawSilver(fromId, silver);
-    return silver;
+  const from = df.getPlanetWithId(fromId);
+  const silver = Math.floor(from.silver);
+  if (silver === 0) {
+    return 0;
+  }
+  df.withdrawSilver(fromId, silver);
+  return silver;
 }
 
 function toPlanetOrSpaceRift(planet, toSpaceRift) {
-        return toSpaceRift ? isSpaceRift(planet) : isPlanet(planet);
+  return toSpaceRift ? isSpaceRift(planet) : isPlanet(planet);
 }
 
 function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpaceRift) {
@@ -204,12 +207,12 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
   const silverBudget = Math.floor(from.silver);
 
   // we ignore 50 silvers or less
-  if( silverBudget < 50 ) {
+  if (silverBudget < 50) {
     return 0;
   }
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter(p => p.owner === df.getAccount()) //get player planets
-    .filter(p => toPlanetOrSpaceRift(p, toSpaceRift)) // filer planet or space rift 
+    .filter(p => toPlanetOrSpaceRift(p, toSpaceRift)) // filer planet or space rift
     .filter(p => p.planetLevel >= minPLevel) // filer level
     .map(to => [to, distance(from, to)])
     .sort((a, b) => a[1] - b[1]);
@@ -232,7 +235,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
     // Rejected if has more than 5 pending arrivals. Transactions are reverted when more arrives. You can't increase it
     const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === candidate.locationId)
     const arrivals = getArrivalsForPlanet(candidate.locationId);
-    if (unconfirmed.length + arrivals.length> 4) {
+    if (unconfirmed.length + arrivals.length > 4) {
       continue;
     }
 
@@ -251,7 +254,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
       continue;
     }
 
-    move(fromId, candidate.locationId, energyNeeded, silverNeeded);
+    df.move(fromId, candidate.locationId, energyNeeded, silverNeeded);
     energySpent += energyNeeded;
     silverSpent += silverNeeded;
     moves += 1;
@@ -261,16 +264,16 @@ function distributeSilver(fromId, maxDistributeEnergyPercent, minPLevel, toSpace
 }
 
 function isAsteroid(planet) {
-  return planet.planetType === 1;
+  return planet.planetType === PlanetType.SILVER_MINE;
 }
 
 function isPlanet(planet) {
-    return planet.planetType === 0;
-  }
+  return planet.planetType === PlanetType.PLANET;
+}
 
 function isSpaceRift(planet) {
-    return planet.planetType === 3;
-  }
+  return planet.planetType === PlanetType.TRADING_POST;
+}
 
 //returns tuples of [planet,distance]
 function distance(from, to) {

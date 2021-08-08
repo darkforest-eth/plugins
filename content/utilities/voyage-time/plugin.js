@@ -1,3 +1,7 @@
+// Voyage Time
+//
+// View estimated time for a voyage.
+
 let oneMinute = 60;
 let oneHour = 60 * oneMinute;
 

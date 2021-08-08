@@ -1,5 +1,14 @@
+// Sitrep
+//
+// See how many other players are active in your map. See incoming attacks. See
+// attacks before you see the red circles. Go to Assess tab to see how an
+// ongoing battle will play out. Make plans to send reinforcement.
+
+
+
 // rendering adopted from artifactory and from repeat-attacks
 import { html, render, useState, useLayoutEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants"
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
@@ -25,12 +34,12 @@ let Clickable = {
 };
 
 
-let PIRATES = "0x0000000000000000000000000000000000000000";
+let PIRATES = EMPTY_ADDRESS;
 
 function simulatedPlanets(planet, t = 0, arrivalQueue = []) {
   // simulate fuutre state of a planet t seconds in the future time
   // first item is t=0 ... accounting for unconfirmed departures
-  // account for arrival queue  
+  // account for arrival queue
   // returns an array of simulated future planets
   // for time = t, we round t to exact seconds so as to make easier for caller to pick it out
 
@@ -266,7 +275,7 @@ function planetIsRevealed(planetId) {
   return !!df.getLocationOfPlanet(planetId);
 }
 
-function summarize(r) {   // 
+function summarize(r) {   //
   let sums = {};
   Object.keys(r[0]).forEach(function (k) { // For each key in the data of a single data object
     this[k] = r.map(function (o) { return o[k] }) // Pluck values
@@ -295,14 +304,11 @@ function Assess({ selected }) {
   //    console.log ("selected..", selectedPlanet);
 
   useLayoutEffect(() => {
-    let onClick = () => {
+    const sub = ui.selectedPlanetId$.subscribe(() => {
       setSelectedPlanet(ui.getSelectedPlanet());
-    }
-    window.addEventListener('click', onClick);
+    });
 
-    return () => {
-      window.removeEventListener('click', onClick);
-    }
+    return sub.unsubscribe;
   }, []);
 
   let arrivalQueue = [];
@@ -516,7 +522,6 @@ function App() {
 
 class Plugin {
   constructor() {
-    this.root = null;
     this.container = null
   }
   async render(container) {
@@ -524,11 +529,11 @@ class Plugin {
 
     container.style.width = '450px';
 
-    this.root = render(html`<${App} />`, container);
+    render(html`<${App} />`, container);
   }
 
   destroy() {
-    render(null, this.container, this.root);
+    render(null, this.container);
   }
 }
 

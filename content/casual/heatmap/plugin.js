@@ -1,6 +1,9 @@
-// # Heatmap
+// Heatmap
+//
 // The heatmap plugin highlights enemy territories on the board.
 // For each planet a semi transparent circle in the color of the owner and the size of the planet's range is rendered.
+
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
 
 class Plugin {
   constructor() {
@@ -91,12 +94,12 @@ class Plugin {
     planets.sort((a, b) => b.range - a.range);
 
     for (const p of planets) {
-      if (p.owner === '0x0000000000000000000000000000000000000000') {
+      if (p.owner === EMPTY_ADDRESS) {
         continue;
       }
 
       // draw range circle
-      const {x, y} = viewport.worldToCanvasCoords(p.location.coords);
+      const { x, y } = viewport.worldToCanvasCoords(p.location.coords);
       const hue = this.getHue(p.owner);
       const lightness = p.owner === df.account ? 100 : 70; // paint own planets in white
 

@@ -1,11 +1,16 @@
-import {
-  move,
-} from 'https://plugins.zkga.me/utils/queued-move.js';
+// Hunt Artifacts
 
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
+import {
+  PlanetType,
+  PlanetLevel,
+  PlanetLevelNames
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
 
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 50;
+    this.minPlanetLevel = 2;
   }
   render(container) {
     container.style.width = '200px';
@@ -36,6 +41,31 @@ class Plugin {
       }
     }
 
+    let levelLabel = document.createElement('label');
+    levelLabel.innerText = 'Min. level to capture';
+    levelLabel.style.display = 'block';
+
+    let level = document.createElement('select');
+    level.style.background = 'rgb(8,8,8)';
+    level.style.width = '100%';
+    level.style.marginTop = '10px';
+    level.style.marginBottom = '10px';
+    Object.values(PlanetLevel).forEach(lvl => {
+      let opt = document.createElement('option');
+      opt.value = `${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
+      level.appendChild(opt);
+    });
+    level.value = `${this.minPlanetLevel}`;
+
+    level.onchange = (evt) => {
+      try {
+        this.minPlanetLevel = parseInt(evt.target.value, 10);
+      } catch (e) {
+        console.error('could not parse planet level', e);
+      }
+    }
+
     let message = document.createElement('div');
 
     let button = document.createElement('button');
@@ -50,6 +80,7 @@ class Plugin {
         let moves = captureArtifacts(
           planet.locationId,
           this.maxEnergyPercent,
+          this.minPlanetLevel
         );
         message.innerText = `Capturing ${moves} planets.`;
       } else {
@@ -69,7 +100,7 @@ class Plugin {
         // TODO: Make asteroid check configurable
         if (!isAsteroid(planet)) {
           setTimeout(() => {
-            moves += captureArtifacts(planet.locationId, this.maxEnergyPercent);
+            moves += captureArtifacts(planet.locationId, this.maxEnergyPercent, this.minPlanetLevel);
             message.innerText = `Capturing ${moves} planets.`;
           }, 0);
         }
@@ -79,6 +110,8 @@ class Plugin {
     container.appendChild(stepperLabel);
     container.appendChild(stepper);
     container.appendChild(percent);
+    container.appendChild(levelLabel);
+    container.appendChild(level);
     container.appendChild(button);
     container.appendChild(globalButton);
     container.appendChild(message);
@@ -88,21 +121,21 @@ class Plugin {
 export default Plugin;
 
 function isAsteroid(planet) {
-  return planet.planetResource === 1;
+  return planet.planetType === PlanetType.SILVER_MINE;
 }
 
-function captureArtifacts(fromId, maxDistributeEnergyPercent) {
+function captureArtifacts(fromId, maxDistributeEnergyPercent, minCaptureLevel) {
   const to = df.getPlanetWithId(fromId);
   const from = df.getPlanetWithId(fromId);
 
   // Rejected if has pending outbound moves
   const unconfirmed = df.getUnconfirmedMoves().filter(move => move.from === fromId)
   if (unconfirmed.length !== 0) {
-    return;
+    return 0;
   }
 
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
-    .filter(p => df.isPlanetMineable(p) && p.owner === "0x0000000000000000000000000000000000000000")
+    .filter(p => df.isPlanetMineable(p) && p.owner === EMPTY_ADDRESS && p.planetLevel >= minCaptureLevel)
     .map(to => {
       return [to, distance(from, to)]
     })
@@ -139,7 +172,7 @@ function captureArtifacts(fromId, maxDistributeEnergyPercent) {
       continue;
     }
 
-    move(fromId, candidate.locationId, energyNeeded, 0);
+    df.move(fromId, candidate.locationId, energyNeeded, 0);
     energySpent += energyNeeded;
     moves += 1;
   }

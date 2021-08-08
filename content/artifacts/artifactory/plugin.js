@@ -1,4 +1,5 @@
-// # Artifactory
+// Artifactory
+//
 // The artifactory plugin is your one-stop-shop for things related to artifacts.
 // * Find artifacts on your planets
 // * See when artifacts unlock
@@ -7,38 +8,50 @@
 // * Deposit artifacts on your planets
 // * Find untaken planets with artifacts and jump to them
 
-const {
+import {
   html,
   render,
   useState,
   useLayoutEffect,
-} = await import('https://unpkg.com/htm/preact/standalone.module.js');
+} from 'https://unpkg.com/htm/preact/standalone.module.js';
 
-const {
-  BiomeNames,
+import {
   energy,
   coords,
-  isMine,
-  isUnowned,
   unlockTime,
   canWithdraw,
   hasArtifact,
   canHaveArtifact,
-  canFindArtifact,
-} = await import('https://plugins.zkga.me/utils/utils.js');
+} from 'https://plugins.zkga.me/utils/utils.js';
 
-const {
+import {
   Energy,
   EnergyGrowth,
   Defense,
   Range,
   Speed,
-} = await import('https://plugins.zkga.me/game/Icons.js');
+} from 'https://plugins.zkga.me/game/Icons.js';
+
+import {
+  EMPTY_ADDRESS
+} from "https://cdn.skypack.dev/@darkforest_eth/constants"
+
+import {
+  BiomeNames
+} from "https://cdn.skypack.dev/@darkforest_eth/types"
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
 // 10 minutes
 let AUTO_INTERVAL = 1000 * 60 * 10;
+
+function isUnowned(planet) {
+  return planet.owner === EMPTY_ADDRESS;
+}
+
+function isMine(planet) {
+  return planet.owner === df.account;
+}
 
 function canDeposit(planet) {
   return planet && isMine(planet) && !planet.heldArtifactId
@@ -73,12 +86,16 @@ function myArtifactsToDeposit() {
 }
 
 function findArtifacts() {
+  let currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
   Array.from(df.getMyPlanets())
     .filter(canHaveArtifact)
-    .filter(canFindArtifact)
     .forEach(planet => {
       try {
-        df.findArtifact(planet.locationId);
+        if (isFindable(planet, currentBlockNumber)) {
+          df.findArtifact(planet.locationId);
+        } else if (isProspectable(planet) && enoughEnergyToProspect(planet) && !planet.unconfirmedProspectPlanet) {
+          df.prospectPlanet(planet.locationId);
+        }
       } catch (err) {
         console.log(err);
       }
@@ -97,7 +114,37 @@ function withdrawArtifacts() {
     });
 }
 
-function FindButton({ planet }) {
+function blocksLeftToProspectExpiration(
+  currentBlockNumber,
+  prospectedBlockNumber
+) {
+  return (prospectedBlockNumber || 0) + 255 - currentBlockNumber;
+}
+
+function prospectExpired(currentBlockNumber, prospectedBlockNumber) {
+  return blocksLeftToProspectExpiration(currentBlockNumber, prospectedBlockNumber) <= 0;
+}
+
+function isFindable(planet, currentBlockNumber) {
+  return (
+    currentBlockNumber !== undefined &&
+    df.isPlanetMineable(planet) &&
+    planet.prospectedBlockNumber !== undefined &&
+    !planet.hasTriedFindingArtifact &&
+    !prospectExpired(currentBlockNumber, planet.prospectedBlockNumber)
+  );
+}
+
+function isProspectable(planet) {
+  return df.isPlanetMineable(planet) && planet.prospectedBlockNumber === undefined;
+}
+
+function enoughEnergyToProspect(p) {
+  return p.energy / p.energyCap > 0.955;
+}
+
+
+function FindButton({ planet, currentBlockNumber }) {
   let [finding, setFinding] = useState(false);
 
   let button = {
@@ -116,10 +163,39 @@ function FindButton({ planet }) {
     setFinding(true);
   }
 
-  if (canFindArtifact(planet)) {
+  if (isFindable(planet, currentBlockNumber)) {
     return html`
       <button style=${button} onClick=${findArtifact} disabled=${finding}>
         ${finding ? 'Finding...' : 'Find!'}
+      </button>
+    `;
+  }
+}
+
+function ProspectButton({ planet }) {
+  let [prospecting, setProspect] = useState(false);
+
+  let button = {
+    marginLeft: '5px',
+    opacity: prospecting ? '0.5' : '1',
+  };
+
+  function prospectPleant() {
+    try {
+      if (!planet.unconfirmedProspectPlanet) {
+        df.prospectPlanet(planet.locationId);
+      }
+    } catch (err) {
+      console.log(err);
+      setProspect(true);
+    }
+    setProspect(true);
+  }
+
+  if (isProspectable(planet) && enoughEnergyToProspect(planet)) {
+    return html`
+      <button style=${button} onClick=${prospectPleant} disabled=${prospecting}>
+        ${prospecting ? 'Prospecting...' : 'Prospect!'}
       </button>
     `;
   }
@@ -164,7 +240,7 @@ function Multiplier({ Icon, bonus }) {
   return html`
     <${Icon} />
     <span style=${style}>${text}</span>
-  `
+  `;
 }
 
 function Unfound({ selected }) {
@@ -173,15 +249,17 @@ function Unfound({ selected }) {
   }
 
   let planetList = {
-    maxHeight: '100px',
+    maxHeight: '300px',
     overflowX: 'hidden',
     overflowY: 'scroll',
   };
 
+  let currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
+
   let [lastLocationId, setLastLocationId] = useState(null);
 
   let planets = myPlanetsWithFindable()
-    .filter(planet => !planet.hasTriedFindingArtifact);
+    .filter(planet => !planet.hasTriedFindingArtifact && (planet.prospectedBlockNumber === undefined || !prospectExpired(currentBlockNumber, planet.prospectedBlockNumber)))
 
   let planetsChildren = planets.map(planet => {
     let planetEntry = {
@@ -202,11 +280,12 @@ function Unfound({ selected }) {
       }
     }
 
-    let text = `${biome} at ${coords(planet)} - ${energy(planet)}% energy`;
+    let text = `LV${planet.planetLevel} ${biome} at ${coords(planet)} - ${energy(planet)}% energy`;
     return html`
       <div key=${planet.locationId} style=${planetEntry}>
         <span onClick=${centerPlanet}>${text}</span>
-        <${FindButton} planet=${planet} />
+        <${ProspectButton} planet="${planet}" />
+        <${FindButton} planet=${planet} currentBlockNumber=${currentBlockNumber} />
       </div>
     `;
   });
@@ -225,7 +304,7 @@ function Withdraw({ selected }) {
   }
 
   let planetList = {
-    maxHeight: '100px',
+    maxHeight: '300px',
     overflowX: 'hidden',
     overflowY: 'scroll',
   };
@@ -276,7 +355,7 @@ function Deposit({ selected }) {
   }
 
   let artifactList = {
-    maxHeight: '100px',
+    maxHeight: '300px',
     overflowX: 'hidden',
     overflowY: 'scroll',
   };
@@ -286,14 +365,11 @@ function Deposit({ selected }) {
   let [planet, setPlanet] = useState(ui.getSelectedPlanet);
 
   useLayoutEffect(() => {
-    let onClick = () => {
+    const sub = ui.selectedPlanetId$.subscribe(() => {
       setPlanet(ui.getSelectedPlanet());
-    }
-    window.addEventListener('click', onClick);
+    });
 
-    return () => {
-      window.removeEventListener('click', onClick);
-    }
+    return sub.unsubscribe;
   }, []);
 
   let artifacts = myArtifactsToDeposit();
@@ -333,9 +409,7 @@ function Deposit({ selected }) {
         ${canDeposit(planet) ? html`
           <button style=${button} onClick=${deposit} disabled=${depositing}>
             ${depositing ? 'Depositing...' : 'Deposit'}
-          </button>
-        ` : null
-      }
+          </button>` : null}
       </div>
     `;
   });
@@ -391,14 +465,17 @@ function Untaken({ selected }) {
     let y = planet.location.coords.y;
     let distanceFromTargeting = parseInt(Math.sqrt(Math.pow((x - centerX), 2) + Math.pow((y - centerY), 2)));
 
-    return { locationId: planet.locationId, biome: planet.biome, x, y, distanceFromTargeting };
+    return {
+      locationId: planet.locationId, biome: planet.biome, planetLevel: planet.planetLevel,
+      x, y, distanceFromTargeting
+    };
   });
 
   planetsArray.sort((p1, p2) => (p1.distanceFromTargeting - p2.distanceFromTargeting));
 
   let planetsChildren = planetsArray.map(planet => {
 
-    let { locationId, x, y, distanceFromTargeting } = planet;
+    let { locationId, x, y, distanceFromTargeting, planetLevel } = planet;
     let biome = BiomeNames[planet.biome];
 
     let planetEntry = {
@@ -416,12 +493,12 @@ function Untaken({ selected }) {
       }
     }
 
-    let text = `${biome} ${distanceFromTargeting} away at (${x}, ${y})`;
+    let text = `LV${planetLevel} ${biome} ${distanceFromTargeting} away at (${x}, ${y})`;
     return html`
-        <div key=${locationId} style=${planetEntry}>
-          <span onClick=${centerPlanet}>${text}</span>
-        </div>
-      `;
+      <div key=${locationId} style=${planetEntry}>
+        <span onClick=${centerPlanet}>${text}</span>
+      </div>
+    `;
   });
 
   return html`
@@ -522,22 +599,23 @@ function App() {
   `;
 }
 
-class Plugin {
+
+class Artifactory {
   constructor() {
-    this.root = null;
     this.container = null
   }
+
   async render(container) {
     this.container = container;
 
     container.style.width = '450px';
 
-    this.root = render(html`<${App} />`, container);
+    render(html`<${App} />`, container);
   }
 
   destroy() {
-    render(null, this.container, this.root);
+    render(null, this.container);
   }
 }
 
-plugin.register(new Plugin());
+export default Artifactory;

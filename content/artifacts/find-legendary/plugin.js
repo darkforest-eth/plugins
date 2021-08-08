@@ -1,3 +1,5 @@
+// Find Legendary
+
 let { locationIdToDecStr, locationIdFromDecStr } = df.getCheckedTypeUtils();
 
 // Exploit calculator script
@@ -279,4 +281,4 @@ class Plugin {
   }
 }
 
-plugin.register(new Plugin());
+export default Plugin;

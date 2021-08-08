@@ -1,6 +1,15 @@
-import {Manager} from "https://plugins.zkga.me/utils/RepeatAttackCore.js";
+// Repeat Attack
+//
+// Setup and manage your repeat attacks.
+// Potential Uses:
+// - Keep your big planets topped up with energy
+// - Take a large pirate owned planet overtime
+// - Mitigate a large enemy planet's energy growth during a siege
+
+
+import { Manager } from "https://plugins.zkga.me/utils/RepeatAttackCore.js";
 import figures from 'https://cdn.skypack.dev/figures';
-import {html, render, useState, useLayoutEffect } from 
+import { html, render, useState, useLayoutEffect } from
   "https://unpkg.com/htm/preact/standalone.module.js";
 
 
@@ -63,13 +72,11 @@ function AddAttack({ onCreate }) {
   let [source, setSource] = useState(false);
   let [target, setTarget] = useState(false);
   useLayoutEffect(() => {
-    let onClick = () => {
+    const sub = ui.selectedPlanetId$.subscribe(() => {
       setPlanet(ui.getSelectedPlanet());
-    };
-    window.addEventListener("click", onClick);
-    return () => {
-      window.removeEventListener("click", onClick);
-    };
+    });
+
+    return sub.unsubscribe;
   }, []);
 
   function createAttack(source, target) {
@@ -111,7 +118,7 @@ function AttackList() {
   const [actions, setActions] = useState(op.actions);
 
   let actionList = {
-    maxHeight: "70px",
+    maxHeight: "50vh",
     overflowX: "hidden",
     overflowY: "scroll",
   };
@@ -156,18 +163,17 @@ class Plugin {
     if (typeof window.op === "undefined") {
       window.op = new Manager();
     }
-    this.root = null;
     this.container = null;
   }
 
   async render(container) {
     this.container = container;
     container.style.width = "380px";
-    this.root = render(html`<${App} />`, container);
+    render(html`<${App} />`, container);
   }
 
   destroy() {
-    render(null, this.container, this.root);
+    render(null, this.container);
   }
 }
 
