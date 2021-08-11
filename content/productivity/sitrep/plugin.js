@@ -333,6 +333,7 @@ function Assess({ selected }) {
   }
 
 /*
+/ this code breaks when switch btw SitRep and Assess tabs
   useLayoutEffect(() => {
     const sub = ui.selectedPlanetId$.subscribe(() => {
       setSelectedPlanet(ui.getSelectedPlanet());
