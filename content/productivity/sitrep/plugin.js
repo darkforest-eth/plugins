@@ -1,10 +1,11 @@
 // Sitrep
 //
-// See how many other players are active in your map. See incoming attacks.  Go to Assess tab to Follow a planet. see how an
-// ongoing battle will play out. Make plans to send reinforcement.
+// REPORT incoming attacks.  
+// FOLLOW a planet. 
+// ASSESS future energy state of a selected planet. Calculate how much reinforcement to send and when. .
 // Release Note v0.6.3:
-//    -- added a "follow" feature
-//    -- "Assess" now reports incoming silver
+//    -- Adding a FOLLOW feature
+//    -- ASSESS now reports incoming silver
 
 
 // rendering adopted from artifactory and from repeat-attacks
@@ -40,7 +41,7 @@ let HalfVerticalSpacing = {
 let PIRATES = EMPTY_ADDRESS;
 
 function simulatedPlanets(planet, t = 0, arrivalQueue = []) {
-  // simulate fuutre state of a planet t seconds in the future time
+  // simulate future state of a planet t seconds in the future time
   // first item is t=0 ... accounting for unconfirmed departures
   // account for arrival queue  
   // returns an array of simulated future planets
@@ -495,7 +496,7 @@ function SitRep({ selected }) {
   let showOnceText="";
 
   if(window.SR_cfg.showOnce ==1) {
-   showOnceText="Welcome to Sit Rep report.  Select a planet and click Assess to follow a planet.";
+   showOnceText="Welcome, Space Traveler. Go to ASSESS tab to select planets to follow. Return to SitRep tab to see reports.";
    window.SR_cfg.showOnce =0;
 }
 
