@@ -9,7 +9,11 @@ const leaderboardRange = 5; // 5 people above and below you
 
 // ---------------------------------------------------------------
 
-const roundEndTime = df.endTimeSeconds*1000;
+// https://github.com/darkforest-eth/client/blob/master/src/Frontend/Views/Leaderboard.tsx#L118
+const roundEndTimestamp = '2021-08-22T16:00:00.000Z';
+const roundEndTime = new Date(roundEndTimestamp).getTime();
+// df.endTimeSeconds does not return the round end time - maybe this is a bug or something else can be used
+// const roundEndTime = df.endTimeSeconds*1000;
 
 function formatDuration(durationMs) {
 	if (durationMs < 0) return '';
@@ -106,7 +110,9 @@ function Plugin() {
 		o.leaderboard = await downloadLeaderboard();
 		o.leaderboard = o.leaderboard.entries;
 		o.leaderboard.sort((p1, p2) => {
-			return p2.score - p1.score;
+			if (!p1.score) return 1;
+			if (!p2.score) return -1;
+			return p1.score - p2.score;
 		});
 
 		o.div_playerList.innerText = "";
