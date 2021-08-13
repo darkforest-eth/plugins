@@ -1,6 +1,11 @@
 // Hunt Artifacts
 
-const planetLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
+import {
+  PlanetType,
+  PlanetLevel,
+  PlanetLevelNames
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
 
 class Plugin {
   constructor() {
@@ -45,10 +50,10 @@ class Plugin {
     level.style.width = '100%';
     level.style.marginTop = '10px';
     level.style.marginBottom = '10px';
-    planetLevels.forEach(lvl => {
+    Object.values(PlanetLevel).forEach(lvl => {
       let opt = document.createElement('option');
       opt.value = `${lvl}`;
-      opt.innerText = `Level ${lvl}`;
+      opt.innerText = PlanetLevelNames[lvl];
       level.appendChild(opt);
     });
     level.value = `${this.minPlanetLevel}`;
@@ -116,7 +121,7 @@ class Plugin {
 export default Plugin;
 
 function isAsteroid(planet) {
-  return planet.planetResource === 1;
+  return planet.planetType === PlanetType.SILVER_MINE;
 }
 
 function captureArtifacts(fromId, maxDistributeEnergyPercent, minCaptureLevel) {
@@ -130,7 +135,7 @@ function captureArtifacts(fromId, maxDistributeEnergyPercent, minCaptureLevel) {
   }
 
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
-    .filter(p => df.isPlanetMineable(p) && p.owner === "0x0000000000000000000000000000000000000000" && p.planetLevel >= minCaptureLevel)
+    .filter(p => df.isPlanetMineable(p) && p.owner === EMPTY_ADDRESS && p.planetLevel >= minCaptureLevel)
     .map(to => {
       return [to, distance(from, to)]
     })

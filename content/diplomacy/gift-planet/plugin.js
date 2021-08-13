@@ -7,6 +7,7 @@ class Plugin {
 
     this.planetEl = document.createElement('span');
     this.planetEl.style.marginLeft = '5px';
+    this.subscription = ui.selectedPlanetId$.subscribe(this.setSelectedPlanet);
     this.setSelectedPlanet();
 
     this.userSelect = document.createElement('select');
@@ -110,8 +111,6 @@ class Plugin {
   }
 
   async render(container) {
-    window.addEventListener('click', this.setSelectedPlanet)
-
     let planetWrapper = document.createElement('div');
     planetWrapper.style.marginBottom = '10px';
 
@@ -158,7 +157,7 @@ class Plugin {
   }
 
   destroy() {
-    window.removeEventListener('click', this.setSelectedPlanet);
+    this.subscription.unsubscribe();
   }
 }
 

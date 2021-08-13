@@ -398,7 +398,7 @@ class Plugin {
 
   destroy() {
     df.move = df._move;
-    render(null, this.container, null);
+    render(null, this.container);
   }
 }
 
