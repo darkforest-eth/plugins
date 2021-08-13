@@ -192,7 +192,7 @@ function move(from, to, forces, silver, artifactMoved) {
 
   const txIntent = {
     actionId,
-    type: "move",
+    methodName: "move",
     from: oldLocation.hash,
     to: newLocation.hash,
     forces: shipsMoved,
