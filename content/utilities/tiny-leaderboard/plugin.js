@@ -110,8 +110,8 @@ function Plugin() {
 		o.leaderboard = await downloadLeaderboard();
 		o.leaderboard = o.leaderboard.entries;
 		o.leaderboard.sort((p1, p2) => {
-			if (!p1.score) return 1;
-			if (!p2.score) return -1;
+			if (p1.score === undefined || p1.score === null) return 1;
+			if (p2.score === undefined || p2.score === null) return -1;
 			return p1.score - p2.score;
 		});
 
