@@ -18,6 +18,7 @@ import { locationIdFromDecStr } from 'https://cdn.skypack.dev/@darkforest_eth/se
 const { MinerManager: Miner, SwissCheesePattern, SpiralPattern, TowardsCenterPattern } = df.getConstructors();
 
 const NEW_CHUNK = 'DiscoveredNewChunk';
+const CHUNK_SIZES = [16, 32, 64, 128, 256, 512, 1024];
 
 function getPattern(coords, patternType, chunkSize) {
   if (patternType === 'swiss') {
@@ -249,9 +250,11 @@ function App({
   };
   const select = {
     background: 'rgb(8,8,8)',
+    marginLeft: '5px',
   };
   const [miners, setMiners] = useState(initialMiners);
   const [nextUrl, setNextUrl] = useState(null);
+  const [chunkSize, setChunkSize] = useState(256);
   const [patternType, setPatternType] = useState('spiral');
 
   const onChange = (evt) => {
@@ -260,7 +263,7 @@ function App({
 
   const add = () => {
     if (nextUrl) {
-      const miners = addMiner(nextUrl, patternType);
+      const miners = addMiner(nextUrl, patternType, chunkSize);
       setMiners(miners);
       setNextUrl(null);
     }
@@ -269,6 +272,13 @@ function App({
   const remove = (miner) => {
     const miners = removeMiner(miner);
     setMiners(miners);
+  };
+
+  const changeChunkSize = (evt) => {
+    const newChunkSize = parseInt(evt.target.value);
+    if (newChunkSize) {
+      setChunkSize(newChunkSize);
+    }
   };
 
   const changePattern = (evt) => {
@@ -287,6 +297,11 @@ function App({
           onChange=${onChange}
           placeholder="URL for explore server"
         />
+        <select style=${select} value=${chunkSize} onChange=${changeChunkSize}>
+          ${CHUNK_SIZES.map((size) => html`
+            <option value="${size}">${size}</option>
+          `)}
+        </select>
         <select style=${select} value=${patternType} onChange=${changePattern}>
           <option value="spiral">Spiral</option>
           <option value="swiss">Swiss</option>
