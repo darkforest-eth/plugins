@@ -330,10 +330,8 @@ function capturePlanets(fromId, minCaptureLevel, maxCaptureLevel, maxDistributeE
         }
 
         // set minimum above energy to % or 1 (if 0%), depending on minimumEnergyAllowed value
-        if (minimumEnergyAllowed === 0) minimumEnergyAllowed = 1
-        else
-            minimumEnergyAllowed = candidate.energyCap * minimumEnergyAllowed / 100
-        const energyArriving = minimumEnergyAllowed + (candidate.energy * (candidate.defense / 100));
+        const energyForCandidate = minimumEnergyAllowed === 0 ? 1 : candidate.energyCap * minimumEnergyAllowed / 100
+        const energyArriving = energyForCandidate + (candidate.energy * (candidate.defense / 100));
         // needs to be a whole number for the contract
         const energyNeeded = Math.ceil(df.getEnergyNeededForMove(fromId, candidate.locationId, energyArriving));
         if (energyLeft - energyNeeded < 0) {
