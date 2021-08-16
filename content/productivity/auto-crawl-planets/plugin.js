@@ -649,7 +649,7 @@ function crawlPlantMy(minPlanetLevel, maxEnergyPercent, poiPlant, candidatePlant
 
           // if (df.getAllVoyages().filter(arrival => arrival.fromPlanet === from.locationId).length  > 1)
           //    continue;
-          energyNeeded = multiCrawlEnergyNeeded;
+          energyNeeded = energyLeft-energyUncomfiredOnTheWay-candidatePlant.energyCap * (100 - maxEnergyPercent) * 0.01;
         }
       }
       else
