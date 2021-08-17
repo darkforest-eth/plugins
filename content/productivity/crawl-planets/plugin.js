@@ -24,6 +24,7 @@ class Plugin {
         this.minPlanetLevelFrom = PlanetLevel.ZERO;
         this.maxPlanetLevelFrom = PlanetLevel.THREE;
         this.maxEnergyPercent = 85;
+        this.maxPlanetsToSendFromLog2 = 5;  // 32 planets = 2**5
     }
     render(container) {
         container.style.width = '400px';
@@ -132,6 +133,32 @@ class Plugin {
             }
         }
 
+        let maxPlanetsLog2StepperLabel = document.createElement("label");
+        maxPlanetsLog2StepperLabel.innerText = "Max number of planets to send energy from";
+        maxPlanetsLog2StepperLabel.style.display = "block";
+
+        let maxPlanetsLog2Stepper = document.createElement("input");
+        maxPlanetsLog2Stepper.type = "range";
+        maxPlanetsLog2Stepper.min = "0";
+        maxPlanetsLog2Stepper.max = "10";
+        maxPlanetsLog2Stepper.step = "1";
+        maxPlanetsLog2Stepper.value = `${this.maxPlanetsToSendFromLog2}`;
+        maxPlanetsLog2Stepper.style.width = "80%";
+        maxPlanetsLog2Stepper.style.height = "24px";
+
+        let maxPlanetsValue = document.createElement("span");
+        maxPlanetsValue.innerText = `${2 ** parseInt(maxPlanetsLog2Stepper.value, 10)}`;
+        maxPlanetsValue.style.float = "right";
+
+        maxPlanetsLog2Stepper.onchange = (evt) => {
+            maxPlanetsValue.innerText = `${2 ** parseInt(evt.target.value)}`;
+            try {
+                this.maxPlanetsToSendFromLog2 = parseInt(evt.target.value, 10);
+            } catch (e) {
+                console.error("could not parse max planets to send from", e);
+            }
+        };
+
         let levelLabelFromMin = document.createElement('label');
         levelLabelFromMin.innerText = 'Min. level to send energy from';
         levelLabelFromMin.style.display = 'block';
@@ -236,25 +263,33 @@ class Plugin {
         globalButton.style.marginBottom = '10px';
         globalButton.innerHTML = 'Crawl everything!'
         globalButton.onclick = () => {
-            message.innerText = 'Please wait...';
-
-            let moves = 0;
-            for (let planet of df.getMyPlanets()) {
-                if (planet.planetLevel >= this.minPlanetLevelFrom && planet.planetLevel <= this.maxPlanetLevelFrom) {
-                    setTimeout(() => {
-                        moves += capturePlanets(
-                            planet.locationId,
-                            this.minPlanetLevelTo,
-                            this.maxPlanetLevelTo,
-                            this.maxEnergyPercent,
-                            this.planetType,
-                            this.minimumEnergyAllowed,
-                        );
-                        message.innerText = `Crawling ${moves} ${PlanetTypeNames[this.planetType]}s.`;
-                    }, 0);
-                }
+            message.innerText = "Please wait...";
+            let selectedPlanet = ui.getSelectedPlanet();
+            if (selectedPlanet) {
+                let moves = 0;
+                planetList = df.getMyPlanets()
+                    .filter((planet) => planet.planetLevel >= this.minPlanetLevelFrom && planet.planetLevel <= this.maxPlanetLevelFrom)
+                    .map((planet) => [planet, distance(selectedPlanet, planet)])
+                    .sort((planetArr1, planetArr2) => planetArr1[1] - planetArr2[1])
+                    .map((planetArr) => planetArr[0])
+                    .slice(0, 2 ** parseInt(this.maxPlanetsToSendFromLog2, 10))
+                    .forEach((planet, idx, arr) => {
+                        setTimeout(() => {
+                            moves += capturePlanets(
+                                planet.locationId,
+                                this.minPlanetLevelTo,
+                                this.maxPlanetLevelTo,
+                                this.maxEnergyPercent,
+                                this.planetType,
+                                this.minimumEnergyAllowed
+                            );
+                            message.innerText = `Crawling ${moves} ${PlanetTypeNames[this.planetType]}${moves===1?'':'s'} from ${arr.length} Planet${arr.length===1?'':'s'}`;
+                        }, 0);
+                    });
+            } else {
+                message.innerText = `Please select a planet to centre the crawl upon`;
             }
-        }
+        };
 
         container.appendChild(stepperLabel);
         container.appendChild(stepper);
@@ -270,6 +305,9 @@ class Plugin {
         container.appendChild(planetType);
         container.appendChild(button);
         container.append(document.createElement("br"), document.createElement("br"));
+        container.appendChild(maxPlanetsLog2StepperLabel);
+        container.appendChild(maxPlanetsLog2Stepper);
+        container.appendChild(maxPlanetsValue);
         container.appendChild(levelLabelFromMin);
         container.appendChild(levelFromMin);
         container.appendChild(levelLabelFromMax);
