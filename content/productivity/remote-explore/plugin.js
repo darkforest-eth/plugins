@@ -298,14 +298,18 @@ function App({
           placeholder="URL for explore server"
         />
         <select style=${select} value=${chunkSize} onChange=${changeChunkSize}>
-          ${CHUNK_SIZES.map((size) => html`
-            <option value="${size}">${size}</option>
-          `)}
+          <optgroup label="Tile size">
+            ${CHUNK_SIZES.map((size) => html`
+              <option value="${size}">${size}</option>
+            `)}
+          </optgroup>
         </select>
         <select style=${select} value=${patternType} onChange=${changePattern}>
-          <option value="spiral">Spiral</option>
-          <option value="swiss">Swiss</option>
-          <option value="towardsCenter">TowardsCenter</option>
+          <optgroup label="Pattern">
+            <option value="spiral">Spiral</option>
+            <option value="swiss">Swiss</option>
+            <option value="towardsCenter">TowardsCenter</option>
+          </optgroup>
         </select>
         <button style=${button} onClick=${add}>Explore!</button>
       </div>
