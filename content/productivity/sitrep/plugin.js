@@ -1,9 +1,11 @@
 // Sitrep
 //
-// See how many other players are active in your map. See incoming attacks. See
-// attacks before you see the red circles. Go to Assess tab to see how an
-// ongoing battle will play out. Make plans to send reinforcement.
-
+// REPORT incoming attacks.  
+// FOLLOW a planet. 
+// ASSESS future energy state of a selected planet. Calculate how much reinforcement to send and when. .
+// Release Note v0.6.3:
+//    -- Adding a FOLLOW feature
+//    -- ASSESS now reports incoming silver
 
 
 // rendering adopted from artifactory and from repeat-attacks
@@ -12,6 +14,14 @@ import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants
 
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
+window.SR_cfg ={  //spaceholder
+  showOnce: 1, 
+};
+
+let theaterDefault = {
+  followedPlanetList: [],
+};
+window.SR_theater = theaterDefault;
 
 function centerPlanet(id) {
   let p = df.getPlanetWithId(id);
@@ -28,18 +38,12 @@ let HalfVerticalSpacing = {
   marginBottom: "6px",
 };
 
-let Clickable = {
-  cursor: "pointer",
-  textDecoration: "underline",
-};
-
-
 let PIRATES = EMPTY_ADDRESS;
 
 function simulatedPlanets(planet, t = 0, arrivalQueue = []) {
-  // simulate fuutre state of a planet t seconds in the future time
+  // simulate future state of a planet t seconds in the future time
   // first item is t=0 ... accounting for unconfirmed departures
-  // account for arrival queue
+  // account for arrival queue  
   // returns an array of simulated future planets
   // for time = t, we round t to exact seconds so as to make easier for caller to pick it out
 
@@ -220,11 +224,6 @@ function getPlanetRank(planet) {
   return planet.upgradeState.reduce((a, b) => a + b);
 };
 
-function getPlanetLevel(planet) {
-  if (!planet || planet === null) return undefined;
-  return planet.planetLevel;
-};
-
 function getEnergyCurveAtPercent(planet, pct0, percent) {
   //getEnergyCurveAtPercent(explorer,20,80)
   // returns time (seconds) that planet will reach percent% of energycap
@@ -267,15 +266,44 @@ function getPlanetShortHash(planet) {
   else return planet.locationId.substring(4, 9);
 };
 
-function getPlayerShortHash(address) {
-  return address.substring(0, 6);
-};
-
 function planetIsRevealed(planetId) {
   return !!df.getLocationOfPlanet(planetId);
 }
 
-function summarize(r) {   //
+
+function getTimeUntilConqured(target) {
+  //assuming we started not owing ....
+  if (target.owner == df.account) return 0.001;
+  let ret = false; //not going to own
+
+  const arrivalQueue = df.getAllVoyages()
+      .filter((v) => v.toPlanet == target.locationId)
+      .filter((v) => v.arrivalTime > Date.now() / 1000);
+
+  let planetAtT = simulatedPlanets(target, 0, arrivalQueue)
+      .filter((p) => (p.owner == df.account));
+
+  if (planetAtT.length > 0) ret = planetAtT[0].futureTinSeconds;
+  return ret;
+}
+
+function getTimeUntilLost(target) {
+  //assuming we started owing ....
+  if (target.owner !== df.account) return 0.001;
+  let ret = false; //not going to own
+
+  const arrivalQueue = df.getAllVoyages()
+      .filter((v) => v.toPlanet == target.locationId)
+      .filter((v) => v.arrivalTime > Date.now() / 1000);
+
+  let planetAtT = simulatedPlanets(target, 0, arrivalQueue)
+      .filter((p) => (p.owner !== df.account));
+
+  if (planetAtT.length > 0) ret = planetAtT[0].futureTinSeconds;
+  return ret;
+}
+
+function summarize(r) {   // 
   let sums = {};
   Object.keys(r[0]).forEach(function (k) { // For each key in the data of a single data object
     this[k] = r.map(function (o) { return o[k] }) // Pluck values
@@ -289,9 +317,6 @@ function summarize(r) {   //
 
 
 function Assess({ selected }) {
-  if (!selected) {
-    return
-  }
 
   let planetList = {
     maxHeight: '200px',
@@ -300,9 +325,16 @@ function Assess({ selected }) {
   };
 
   let [selectedPlanet, setSelectedPlanet] = useState(ui.getSelectedPlanet());
+  let [isFollowed, setIsFollowed] = useState(false);
 
-  //    console.log ("selected..", selectedPlanet);
+  if (!selected) {
+    setSelectedPlanet(false);
+    setIsFollowed(false);
+    return
+  }
 
+/*
+/ this code breaks when switch btw SitRep and Assess tabs
   useLayoutEffect(() => {
     const sub = ui.selectedPlanetId$.subscribe(() => {
       setSelectedPlanet(ui.getSelectedPlanet());
@@ -310,10 +342,23 @@ function Assess({ selected }) {
 
     return sub.unsubscribe;
   }, []);
+*/
+  useLayoutEffect(() => {
+    let onClick = () => {
+      setSelectedPlanet(ui.getSelectedPlanet());
+    }
+    window.addEventListener('click', onClick);
+
+    return () => {
+      window.removeEventListener('click', onClick);
+    }
+  }, []);
+
 
   let arrivalQueue = [];
   let planets = [];
   let planetStatus = "";
+  let silverIncoming =0;
 
   if (selectedPlanet) {
     arrivalQueue = df.getAllVoyages()
@@ -321,11 +366,16 @@ function Assess({ selected }) {
       .filter((v) => v.arrivalTime > Date.now() / 1000);
 
     if (arrivalQueue.length > 0) {
-      if (arrivalQueue.filter((q) => q.player !== selectedPlanet.owner).length > 0) {
-        planetStatus = " UNDER ATTACK";
-      } else
-        planetStatus = " transporting";
+
+      silverIncoming
+      = arrivalQueue.map((p) => { return p.silverMoved }).reduce((a, b) => a + b)
+
+      planetStatus = (silverIncoming > 0) ?  ` +$${silverIncoming} `
+      :"";
     }
+
+    if (window.SR_theater.followedPlanetList.includes(selectedPlanet.locationId)) setIsFollowed(true);
+    else setIsFollowed(false);
 
     planets = simulatedPlanets(selectedPlanet, 0, arrivalQueue);
   }
@@ -391,17 +441,46 @@ function Assess({ selected }) {
   });
 
 
+function follow() {
+
+    if (!selectedPlanet) return;
+
+    if (!isFollowed) {
+        if (!window.SR_theater.followedPlanetList.includes(selectedPlanet.locationId))
+        window.SR_theater.followedPlanetList.push(selectedPlanet.locationId);
+    } else {
+      window.SR_theater.followedPlanetList
+            = window.SR_theater.followedPlanetList.filter((f => f !== selectedPlanet.locationId))
+    }
+    setIsFollowed(!isFollowed);
+    return;
+}
+
+let subButtonBar = {
+  display: 'flex',
+  justifyContent: 'flex-start',
+  marginBottom: '10px',
+  marginLeft: '10px',
+};
+
   return html`
     <div style=${planetList}><u>
           <span style=${planetList}
         > ${selectedPlanet ? getPlanetLongForm(selectedPlanet)
       + " def=" + selectedPlanet.defense + planetStatus : "(select a planet)"}</u></span>
   </div>
+
+
+  <div style=${subButtonBar}>
+    <button onClick=${() => follow()}> ${isFollowed ? "UnFollow" : "Follow"} </button>
+  </div>
+
     <div style=${planetList}>
       ${planetsChildren.length ? planetsChildren : 'Not assessing anything ...'}
     </div>
   `;
 }
+
 
 function SitRep({ selected }) {
   if (!selected) {
@@ -413,6 +492,13 @@ function SitRep({ selected }) {
     overflowX: 'hidden',
     overflowY: 'scroll',
   };
+
+  let showOnceText="";
+
+  if(window.SR_cfg.showOnce ==1) {
+   showOnceText="Welcome, Space Traveler. Go to ASSESS tab to select planets to follow. Return to SitRep tab to see reports.";
+   window.SR_cfg.showOnce =0;
+}
 
 
   let notMyVoages = df.getAllVoyages()
@@ -449,13 +535,14 @@ function SitRep({ selected }) {
     voyAttackingUs = arrivals.length;
   }
 
+  let arrivalEntry = {
+    marginBottom: '1px',
+    display: 'flex',
+    //            justifyContent: 'space-between',
+  };
+
   ////
   let arrivalsChildren = arrivals.map(arrival => {
-    let arrivalEntry = {
-      marginBottom: '1px',
-      display: 'flex',
-      //            justifyContent: 'space-between',
-    };
 
     let toPlanet = df.getPlanetWithId(arrival.toPlanet);
     //        let fromPlanet = df.getPlanetWithId(arrival.fromPlanet);
@@ -474,14 +561,103 @@ function SitRep({ selected }) {
     `;
   })
 
+ //begin to show followedPlanets
+ let tweetHeader = "";
+ let tweetLines = "";
+ let followedPlanets=[];
+
+ if (window.SR_theater.followedPlanetList.length > 0) {
+  tweetHeader = `Following ${window.SR_theater.followedPlanetList.length} planets:`;
+  followedPlanets = window.SR_theater.followedPlanetList.map(p => {
+      let status, text, nextT = 0, text2, T2;
+      let ret = {
+          locationId: p,
+          status: status,
+          text: text,
+          nextT: nextT,
+          text2: text2,
+          T2: T2,
+      }
+
+      let planet = df.getPlanetWithId(p);
+      let curEnergyPercentage = (planet.energy / planet.energyCap) * 100;
+
+      text = getPlanetLongForm(planet);
+
+      let arrivals = df.getAllVoyages()
+          .filter((v) => v.toPlanet == p)
+          .filter((v) => v.arrivalTime > Date.now() / 1000)
+          .sort((a, b) => a.arrivalTime - b.arrivalTime)
+
+      if (arrivals.length == 0) {
+          if (curEnergyPercentage > 105) {
+              nextT = Math.round(getEnergyCurveAtPercent(planet, curEnergyPercentage, 105));
+              ret.text = text + ` t=${nextT}s @105% ----`;
+          } else if (curEnergyPercentage > 94) {
+              ret.text = text + ` no ar/`;
+          } else if (curEnergyPercentage > 75) {
+              nextT = Math.round(getEnergyCurveAtPercent(planet, curEnergyPercentage, 95));
+              ret.text = text + ` t=${nextT}s @95% ----`;
+          } else if (curEnergyPercentage > 50) {
+              nextT = Math.round(getEnergyCurveAtPercent(planet, curEnergyPercentage, 75));
+              ret.text = text + ` t=${nextT}s @75% ----`;
+          } else {
+              nextT = Math.round(getEnergyCurveAtPercent(planet, curEnergyPercentage, 50));
+              ret.text = text + ` t=${nextT}s @50% ----`;
+          }
+          ret.nextT = nextT;
+      } else {
+          nextT = Math.round(arrivals[0].arrivalTime - Date.now() / 1000);
+          ret.text = text + ` ar/@${nextT}s`;
+
+          if (arrivals.length > 2) {
+              ret.text += `/...`;
+          }
+
+          if (arrivals.length > 1) {
+              ret.text += `/${Math.round(arrivals[arrivals.length - 1].arrivalTime - Date.now() / 1000)}s`;
+          }
+
+          if (planet.owner !== df.account) {
+              if (getTimeUntilConqured(planet))
+                  ret.text += ` win/@${Math.round(getTimeUntilConqured(planet))}s`;
+          } else {  //our planet
+              if (getTimeUntilLost(planet))
+                  ret.text += ` lose/@${Math.round(getTimeUntilLost(planet))}s`;
+              //could add ...defenseNeeded...
+          }
+      }
+
+      return ret;
+  })
+}
+
+ if (followedPlanets.length > 0) {
+    followedPlanets.sort((a, b) => a.nextT - b.nextT);
+    tweetLines = followedPlanets.map(p => {
+        if (!p) return html`unknown `;
+
+        return html`
+        <div key=${p.locationId} style=${arrivalEntry}>
+        <span onClick=${() => centerPlanet(p.locationId)}>${p.text}</span>
+        </div>
+        `;
+    })
+}
+
+
   let summaryText = `${notMyVoages.length} voages from ${activePlayers} other players; ${voyInMyMap} in our map. \n`;
 
   return html`
+    <div style=${HalfVerticalSpacing}> ${showOnceText} </div>
     <div style=${HalfVerticalSpacing}> ${summaryText} </div>
     <div style=${HalfVerticalSpacing}> <u> ${voyAttackingUs} incomings attacks!</u> </div>
     <div style=${planetList}>
       ${arrivalsChildren.length ? arrivalsChildren : 'peaceful day today....'}
     </div>
+    <div style=${HalfVerticalSpacing}> <u> ${tweetHeader} </u> </div>
+    <div style=${HalfVerticalSpacing}>  ${tweetLines}  </div>
+
   `;
 }
 
@@ -498,6 +674,7 @@ function App() {
   let [_, setLoop] = useState(0);
 
   useLayoutEffect(() => {
+    
     let intervalId = setInterval(() => {
       setLoop(loop => loop + 1)
     }, REFRESH_INTERVAL);
@@ -538,4 +715,3 @@ class Plugin {
 }
 
 export default Plugin;
-
