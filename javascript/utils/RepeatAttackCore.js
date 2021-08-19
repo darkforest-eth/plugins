@@ -180,13 +180,15 @@ function pester(
   percentageTrigger = 65,
   percentageSend = 20
 ) {
-  const match = df
-    .getMyPlanets()
-    .filter((t) => t.locationId == yourPlanetLocationId);
-  if (match.length == 0) {
+  const source = df.getPlanetWithId(yourPlanetLocationId);
+  if (!source) {
+    console.error(`[pester] Unable to get planet: ${yourPlanetLocationId}`);
     return;
   }
-  const source = match[0];
+  if (source.owner !== df.account) {
+    console.error(`[pester] You don't own planet: ${yourPlanetLocationId}`);
+    return;
+  }
   const unconfirmedDepartures = source.unconfirmedDepartures.reduce(
     (acc, dep) => {
       return acc + dep.forces;
