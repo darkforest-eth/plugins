@@ -141,7 +141,8 @@ function Plugin() {
 		let i = centerRank - leaderboardRange;
 		if (i < 0) i = 0;
 		let max = centerRank + leaderboardRange;
-		if (max-i < 10) max += 10 - (max-i); // show at least 11 players
+		let lr = leaderboardRange*2;
+		if (max-i < lr) max += lr - (max-i); // show at least leaderboardRange*2 + 1 players
 		for ( ; i < o.leaderboard.length && i <= max; ++i) {
 			o.addPlayerToBoard(table, o.leaderboard[i], i+1);
 		}
