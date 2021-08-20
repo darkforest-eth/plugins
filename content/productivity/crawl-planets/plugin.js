@@ -261,7 +261,7 @@ class Plugin {
         let globalButton = document.createElement('button');
         globalButton.style.width = '100%';
         globalButton.style.marginBottom = '10px';
-        globalButton.innerHTML = 'Crawl everything!'
+        globalButton.innerHTML = 'Crawl everything near selected!'
         globalButton.onclick = () => {
             message.innerText = "Please wait...";
             let selectedPlanet = ui.getSelectedPlanet();
