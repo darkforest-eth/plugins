@@ -3,8 +3,8 @@
 // REPORT incoming attacks.  
 // FOLLOW a planet. 
 // ASSESS future energy state of a selected planet. Calculate how much reinforcement to send and when. .
-// Release Note v0.6.3:
-//    -- Adding a FOLLOW feature
+// Release Note v0.6.3.1:
+//    -- Adding a FOLLOW feature.  Add a highlight circle to followed planets
 //    -- ASSESS now reports incoming silver
 
 
@@ -701,6 +701,44 @@ class Plugin {
   constructor() {
     this.container = null
   }
+
+  draw(ctx) {
+    // @ts-ignore
+    const viewport = ui.getViewport();
+
+    ctx.save();
+
+    ctx.fillStyle = "magenta";
+    ctx.strokeStyle = "magenta";
+    for (let planetId of window.SR_theater.followedPlanetList) {
+        let planet = df.getPlanetWithId(planetId);
+        if (!planet.location) continue;
+        let { x, y } = planet.location.coords;
+
+        let drawRadius = (planet.planetLevel <= 3)
+            ? ui.getRadiusOfPlanetLevel(3) * 4
+            : ui.getRadiusOfPlanetLevel(planet.planetLevel) * 1.5;
+
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "dashed";
+        ctx.beginPath();
+        ctx.arc(
+            viewport.worldToCanvasX(x),
+            viewport.worldToCanvasY(y),
+            viewport.worldToCanvasDist(drawRadius),
+
+            //              viewport.worldToCanvasDist(ui.getRadiusOfPlanetLevel(3) * 6),
+            0,
+            2 * Math.PI
+        );
+        // ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    ctx.restore();
+}
+
   async render(container) {
     this.container = container;
 
