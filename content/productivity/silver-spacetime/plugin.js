@@ -13,10 +13,13 @@
  * and will even try to capture unowned spacetime rips nearby.
  */
 
+import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants"
+import { PlanetType } from "https://cdn.skypack.dev/@darkforest_eth/types"
+
 const players = [
   df.getAccount(),
   // Crawls nearby unowned spacetimes
-  "0x0000000000000000000000000000000000000000",
+  EMPTY_ADDRESS,
 ];
 
 class Plugin {
@@ -187,7 +190,7 @@ class Plugin {
         this.withdrawTimer = setInterval(() => {
           const myPlanets = df.getMyPlanets();
           const spacetimeWithSilver = myPlanets.filter((planet) => (
-            planet.planetType === 3 && planet.silver > 0 && !planet.unconfirmedWithdrawSilver
+            planet.planetType === PlanetType.TRADING_POST && planet.silver > 0 && !planet.unconfirmedWithdrawSilver
           ));
 
           for (const planet of spacetimeWithSilver) {
@@ -267,7 +270,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent) {
 
   const candidates_ = df.getPlanetsInRange(fromId, maxDistributeEnergyPercent)
     .filter(p => {
-      if (!players.includes(p.owner) || p.planetType !== 3) {
+      if (!players.includes(p.owner) || p.planetType !== PlanetType.TRADING_POST) {
         return false;
       }
 
@@ -333,7 +336,7 @@ function distributeSilver(fromId, maxDistributeEnergyPercent) {
 }
 
 function isAsteroid(planet) {
-  return planet.planetType === 1;
+  return planet.planetType === PlanetType.SILVER_MINE;
 }
 
 //returns tuples of [planet,distance]
