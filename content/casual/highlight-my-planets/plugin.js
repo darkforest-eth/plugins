@@ -6,7 +6,7 @@
 class Plugin {
   constructor() {
     this.highlightStyle = 0;
-    this.rangePercent = 20;
+    this.rangePercent = 8;
     this.alpha = 0;
     this.globalAlpha = 1;
     this.ownColor = '#ffffff';
@@ -165,7 +165,7 @@ class Plugin {
       const { x, y } = viewport.worldToCanvasCoords(p.location.coords);
       const hsl = this.hexToHsl(this.ownColor);
 
-      const fac = this.rangePercent*0.01;
+      const fac = Math.max(0, Math.log2(this.rangePercent / 5));
       const range = fac * p.range;
       const trueRange = viewport.worldToCanvasDist(range);
 
