@@ -764,12 +764,12 @@ function capturePlanets(
     const candidate = candidates_[i++];
 
     // Rejected if it is processed before and level < 3
-    if (
-      planetMoves.has(candidate.locationId) &&
-      candidate.planetLevel < PlanetLevel.THREE
-    ) {
-      continue;
-    }
+    // if (
+    //   planetMoves.has(candidate.locationId) &&
+    //   candidate.planetLevel < PlanetLevel.THREE
+    // ) {
+    //   continue;
+    // }
 
     const unconfirmed = df
       .getUnconfirmedMoves()
