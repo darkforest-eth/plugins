@@ -192,7 +192,7 @@ function move(from, to, forces, silver, artifactMoved) {
 
   const txIntent = {
     actionId,
-    type: "MOVE",
+    methodName: "move",
     from: oldLocation.hash,
     to: newLocation.hash,
     forces: shipsMoved,
@@ -398,7 +398,7 @@ class Plugin {
 
   destroy() {
     df.move = df._move;
-    render(null, this.container, null);
+    render(null, this.container);
   }
 }
 

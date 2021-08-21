@@ -1,5 +1,5 @@
 // Artifactory
-// 
+//
 // The artifactory plugin is your one-stop-shop for things related to artifacts.
 // * Find artifacts on your planets
 // * See when artifacts unlock
@@ -16,11 +16,8 @@ import {
 } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
 import {
-  BiomeNames,
   energy,
   coords,
-  isMine,
-  isUnowned,
   unlockTime,
   canWithdraw,
   hasArtifact,
@@ -35,10 +32,26 @@ import {
   Speed,
 } from 'https://plugins.zkga.me/game/Icons.js';
 
+import {
+  EMPTY_ADDRESS
+} from "https://cdn.skypack.dev/@darkforest_eth/constants"
+
+import {
+  BiomeNames
+} from "https://cdn.skypack.dev/@darkforest_eth/types"
+
 // 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
 // 10 minutes
 let AUTO_INTERVAL = 1000 * 60 * 10;
+
+function isUnowned(planet) {
+  return planet.owner === EMPTY_ADDRESS;
+}
+
+function isMine(planet) {
+  return planet.owner === df.account;
+}
 
 function canDeposit(planet) {
   return planet && isMine(planet) && !planet.heldArtifactId
@@ -246,7 +259,7 @@ function Unfound({ selected }) {
   let [lastLocationId, setLastLocationId] = useState(null);
 
   let planets = myPlanetsWithFindable()
-  .filter(planet => !planet.hasTriedFindingArtifact && (planet.prospectedBlockNumber === undefined || !prospectExpired(currentBlockNumber, planet.prospectedBlockNumber)))
+    .filter(planet => !planet.hasTriedFindingArtifact && (planet.prospectedBlockNumber === undefined || !prospectExpired(currentBlockNumber, planet.prospectedBlockNumber)))
 
   let planetsChildren = planets.map(planet => {
     let planetEntry = {
@@ -352,14 +365,11 @@ function Deposit({ selected }) {
   let [planet, setPlanet] = useState(ui.getSelectedPlanet);
 
   useLayoutEffect(() => {
-    let onClick = () => {
+    const sub = ui.selectedPlanetId$.subscribe(() => {
       setPlanet(ui.getSelectedPlanet());
-    }
-    window.addEventListener('click', onClick);
+    });
 
-    return () => {
-      window.removeEventListener('click', onClick);
-    }
+    return sub.unsubscribe;
   }, []);
 
   let artifacts = myArtifactsToDeposit();
@@ -592,7 +602,6 @@ function App() {
 
 class Artifactory {
   constructor() {
-    this.root = null;
     this.container = null
   }
 
@@ -601,11 +610,11 @@ class Artifactory {
 
     container.style.width = '450px';
 
-    this.root = render(html`<${App} />`, container);
+    render(html`<${App} />`, container);
   }
 
   destroy() {
-    render(null, this.container, this.root);
+    render(null, this.container);
   }
 }
 

@@ -2,7 +2,7 @@
 //
 // Retrieve energy and silver from nearby planets
 
-const MAX_LEVEL_PLANET = 9;
+import { PlanetLevel } from "https://cdn.skypack.dev/@darkforest_eth/types";
 
 class Plugin {
     constructor() {
@@ -38,7 +38,7 @@ class Plugin {
         minLevelPlanetLabel.innerText = 'Min. Lvl planet from:';
         minLevelPlanetLabel.style.display = 'block';
 
-        let minLevelPlanetSelect = createSelect(Array.from(Array(MAX_LEVEL_PLANET + 1).keys()), this.minPlanetLevel, "Level", (evt) => {
+        let minLevelPlanetSelect = createSelect(Object.values(PlanetLevel), this.minPlanetLevel, "Level", (evt) => {
             try {
                 this.minPlanetLevel = parseInt(evt.target.value);
             } catch (e) {
@@ -51,7 +51,7 @@ class Plugin {
         maxLevelPlanetLabel.innerText = 'Max. Lvl planet from:';
         maxLevelPlanetLabel.style.display = 'block';
 
-        let maxLevelPlanetSelect = createSelect(Array.from(Array(MAX_LEVEL_PLANET + 1).keys()), this.maxPlanetLevel, "Level", (evt) => {
+        let maxLevelPlanetSelect = createSelect(Object.values(PlanetLevel), this.maxPlanetLevel, "Level", (evt) => {
             try {
                 this.maxPlanetLevel = parseInt(evt.target.value);
             } catch (e) {
