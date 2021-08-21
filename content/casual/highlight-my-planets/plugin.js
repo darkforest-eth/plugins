@@ -5,11 +5,13 @@
 
 class Plugin {
   constructor() {
-    this.rangePercent = 20;
+    this.highlightStyle = 0;
+    this.rangePercent = 8;
     this.alpha = 0;
     this.globalAlpha = 1;
     this.ownColor = '#ffffff';
 
+    this.highlightStyleHandler = this.highlightStyleHandler.bind(this);
     this.rangeHandler = this.rangeHandler.bind(this);
     this.alphaHandler = this.alphaHandler.bind(this);
     this.globalAlphaHandler = this.globalAlphaHandler.bind(this);
@@ -47,6 +49,7 @@ class Plugin {
   }
 
   getSliderHtml(className, text, min, max, step, value) {
+    
     return `<label class='${className}'>
       <div style='display: inline-block; min-width: 120px'>${text}</div><input type='range'
           value='${value}'
@@ -66,18 +69,35 @@ class Plugin {
       </label>`;
   }
 
+  getSelect(className, text, items, selectedValue) {
+
+    return `<label class='${className}'>
+      <div style='display: inline-block; min-width: 120px'>${text}</div>
+        <select style='background: rgb(8,8,8); margin-top: 5px; padding: 3px 5px; border: 1px solid white; border-radius: 3px;' 
+          value=${selectedValue}
+        >
+          ${items.map(
+            ({ value, text }) => {return `<option value=${value}>${text}</option>`}
+          )}
+        </select>
+      </label>`;
+  }
+
   async render(div) {
     div.style.width = '330px';
-    div.style.height = '100px';
-    div.style.minHeight = '100px';
+    //div.style.height = '100px';
+    //div.style.minHeight = '100px';
 
-    const label = document.createElement('label');
     div.innerHTML = [
       this.getColorPicker('ownColor', 'Color:', this.ownColor),
+      this.getSelect('highlight', 'Highligh:', [{value: 0, text: "Heatmap"}, {value: 1, text: "Circle"}], this.highlightStyle),
       this.getSliderHtml('range', 'Planet Range:', 1, 100, 1, this.rangePercent),
       this.getSliderHtml('alpha', 'Gradient Alpha:', 0, 1, 0.01, this.alpha),
       this.getSliderHtml('globalAlpha', 'Global Alpha:', 0, 1, 0.01, this.globalAlpha)
     ].join('<br />');
+
+    this.selectHighlightStyle = div.querySelector('label.highlight select');
+    this.selectHighlightStyle.addEventListener('change', this.highlightStyleHandler);
 
     this.valueRange = div.querySelector('label.range span');
     this.sliderRange = div.querySelector('label.range input');
@@ -93,6 +113,21 @@ class Plugin {
 
     this.colorPickerOwnColor = div.querySelector('label.ownColor input');
     this.colorPickerOwnColor.addEventListener('input', this.ownColorHandler);
+  }
+
+  highlightStyleHandler() {
+    this.highlightStyle = this.selectHighlightStyle.value;
+
+    //I couldn't find a better way...
+    if(this.highlightStyle == 0) {
+      document.querySelector('label.alpha').style.display = "inline-block";
+      document.querySelector('label.range').style.display = "inline-block";
+      document.querySelector('label.globalAlpha').style.display = "inline-block";
+    } else {
+      document.querySelector('label.alpha').style.display = "none";
+      document.querySelector('label.range').style.display = "none";
+      document.querySelector('label.globalAlpha').style.display = "none";
+    }
   }
 
   rangeHandler() {
@@ -122,15 +157,15 @@ class Plugin {
     const planets = df.getMyPlanets();
 
     // paint bigger ones first
-    planets.sort((a, b) => b.range - a.range);
+    // planets.sort((a, b) => b.range - a.range);
 
-    for (const p of planets) {
+    if(this.highlightStyle == 0) for (const p of planets) {
 
       // draw range circle
       const { x, y } = viewport.worldToCanvasCoords(p.location.coords);
       const hsl = this.hexToHsl(this.ownColor);
 
-      const fac = this.rangePercent*0.01;
+      const fac = Math.max(0, Math.log2(this.rangePercent / 5));
       const range = fac * p.range;
       const trueRange = viewport.worldToCanvasDist(range);
 
@@ -147,14 +182,54 @@ class Plugin {
       ctx.fillStyle = origFillStyle;
       ctx.strokeStyle = origSrokeStyle;
       ctx.globalAlpha = origGlobalAlpha;
+    } else {
+
+      ctx.fillStyle = this.ownColor;
+      ctx.strokeStyle = this.ownColor;
+      
+      for (let planet of planets) {
+        if (!planet.location) continue;
+        let { x, y } = planet.location.coords;
+
+        // add red circle when level <= 4
+        if (planet.planetLevel <= 4) {
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = "dashed";
+          ctx.beginPath();
+          ctx.arc(
+            viewport.worldToCanvasX(x),
+            viewport.worldToCanvasY(y),
+            viewport.worldToCanvasDist(ui.getRadiusOfPlanetLevel(3) * 6),
+            0,
+            2 * Math.PI
+          );
+          // ctx.fill();
+          ctx.stroke();
+          ctx.closePath();
+        }
+
+        ctx.beginPath();
+        ctx.arc(
+          viewport.worldToCanvasX(x),
+          viewport.worldToCanvasY(y),
+          viewport.worldToCanvasDist(
+            ui.getRadiusOfPlanetLevel(planet.planetLevel)
+          ),
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+        // ctx.stroke();
+        ctx.closePath();
+      }
     }
   }
 
   destroy() {
+    this.selectHighlightStyle.removeEventListener('select', this.highlightStyleHandler);
     this.sliderRange.removeEventListener('input', this.rangeHandler);
     this.sliderAlpha.removeEventListener('input', this.alphaHandler);
     this.sliderGlobalAlpha.removeEventListener('input', this.globalAlphaHandler);
-    this.colorPickerOwnColor.removeEventListener('input', this.ownColorHandler);
   }
   
 }
