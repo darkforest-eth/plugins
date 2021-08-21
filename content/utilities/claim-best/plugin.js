@@ -1,6 +1,6 @@
 // Claim Best
 //
-// find the best planet you should claim :) 
+// find the best planet you should claim :)
 //
 
 function drawRound(ctx,p){
@@ -51,32 +51,32 @@ class ClaimBest {
       this.dis.innerHTML='Distance From Center: '+this.minDis;
       return;
     }
+
     const planets = df.getMyPlanets();
-    var minDis2=undefined;
     var minPlanet=undefined;
+    var minDis=undefined;
 
     for(const p of planets) {
+      if(p.destroyed) continue;
       if (p.planetLevel < 3) continue;
-      let tx = p.location.coords.x;
-      let ty = p.location.coords.y;
+      if(!p?.location?.coords) continue;
 
-      let tDis2 = tx * tx + ty * ty;
+      let tDis = Math.floor(df.getDistCoords(p.location.coords,{x:0,y:0}));
 
-      if (minDis2 == undefined) {
-        minDis2 = tDis2;
+      if (minDis == undefined) {
+        minDis = tDis;
         minPlanet = p;
-      } else if (minDis2 > tDis2) {
-        minDis2 = tDis2;
+      } else if (minDis > tDis) {
+        minDis = tDis;
         minPlanet = p;
       }
     }
-    if(minDis2==undefined) return;
+    if(minDis==undefined) return;
     this.planet=minPlanet;
     let content = drawRound(ctx, minPlanet);
     this.coords.innerHTML = content;
-    let minDis=Math.round(Math.sqrt(minDis2));
     this.minDis=minDis;
-    this.dis.innerHTML='Distance From Center: '+minDis;
+    this.dis.innerHTML='Distance From Center: '+this.minDis;
 
   }
 
