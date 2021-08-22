@@ -1,8 +1,7 @@
 // Upgrade Manager
 //
-// d = defense, r = range, s = speed
-// upgrades all the planets in your empire every minute according to a pattern
-// for example, if the pattern is "rrrsd: a planet that can upgrade is at rank 3 it will choose to upgade the speed branch
+// upgrades all the planets in your empire every minute according to a pattern (d = defense, r = range, s = speed)
+// for example, if the pattern is "rrrsd" a rank 3 planet that can upgrade will choose to upgrade the speed branch
 
 import {
   SpaceType,
