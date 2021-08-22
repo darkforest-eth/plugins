@@ -1,4 +1,4 @@
-// plugins/UpgradeManager.ts
+// Upgrade Manager
 //
 // d = defense, r = range, s = speed
 // upgrades all the planets in your empire every minute according to a pattern
