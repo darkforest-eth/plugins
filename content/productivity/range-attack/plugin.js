@@ -524,12 +524,6 @@ export default class Plugin {
   constructor() {
     this.root = null;
     this.container = null;
-
-    // add concurrency of contract call queue and txExecutor call queue
-    df.contractsAPI.contractCaller.queue.invocationIntervalMs = 50;
-    df.contractsAPI.contractCaller.queue.maxConcurrency = 50;
-    df.contractsAPI.txExecutor.queue.invocationIntervalMs = 300;
-    df.contractsAPI.txExecutor.queue.maxConcurrency = 1;
   }
 
   onClick = () => {
@@ -628,12 +622,6 @@ export default class Plugin {
   }
 
   destroy() {
-    // restore the contracts api queue currency settings
-    df.contractsAPI.contractCaller.queue.invocationIntervalMs = 100;
-    df.contractsAPI.contractCaller.queue.maxConcurrency = 20;
-    df.contractsAPI.txExecutor.queue.invocationIntervalMs = 200;
-    df.contractsAPI.txExecutor.queue.maxConcurrency = 1;
-
     window.removeEventListener("click", this.onClick);
     render(null, this.container, this.root);
   }
