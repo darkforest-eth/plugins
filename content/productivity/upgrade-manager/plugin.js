@@ -1,4 +1,8 @@
 // plugins/UpgradeManager.ts
+//
+// d = defense, r = range, s = speed
+// upgrades all the planets in your empire every minute according to a pattern
+// for example, if the pattern is "rrrsd: a planet that can upgrade is at rank 3 it will choose to upgade the speed branch
 
 import {
   SpaceType,
