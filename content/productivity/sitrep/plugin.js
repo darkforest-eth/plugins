@@ -21,7 +21,7 @@ window.SR_cfg ={  //spaceholder
 let theaterDefault = {
   followedPlanetList: [],
 };
-window.SR_theater = theaterDefault;
+if (!window.SR_theater) window.SR_theater = theaterDefault;
 
 function centerPlanet(id) {
   let p = df.getPlanetWithId(id);
@@ -501,11 +501,11 @@ function SitRep({ selected }) {
 }
 
 
-  let notMyVoages = df.getAllVoyages()
+  let notMyVoyages = df.getAllVoyages()
     .filter((v) => v.player !== df.getAccount())
     .filter((v) => v.arrivalTime > Date.now() / 1000)
 
-  let inMymap = notMyVoages
+  let inMymap = notMyVoyages
     .filter((v) => planetIsRevealed(v.fromPlanet) || planetIsRevealed(v.toPlanet))
     .sort((a, b) => { return a.arrivalTime - b.arrivalTime })
 
@@ -524,8 +524,8 @@ function SitRep({ selected }) {
   let summary;
   let activePlayers = 0;
 
-  if (notMyVoages.length !== 0) {
-    summary = summarize(notMyVoages);
+  if (notMyVoyages.length !== 0) {
+    summary = summarize(notMyVoyages);
     // if sorting needed: Object.entries(obj).sort((a, b) => b[0].localeCompare(a[0]));
     activePlayers = Object.keys(summary.player).length;
   }
@@ -646,7 +646,7 @@ function SitRep({ selected }) {
 }
 
 
-  let summaryText = `${notMyVoages.length} voages from ${activePlayers} other players; ${voyInMyMap} in our map. \n`;
+  let summaryText = `${notMyVoyages.length} voyages from ${activePlayers} other players; ${voyInMyMap} in our map. \n`;
 
   return html`
     <div style=${HalfVerticalSpacing}> ${showOnceText} </div>
@@ -708,8 +708,8 @@ class Plugin {
 
     ctx.save();
 
-    ctx.fillStyle = "magenta";
-    ctx.strokeStyle = "magenta";
+    ctx.fillStyle = "blue";
+    ctx.strokeStyle = "blue";
     for (let planetId of window.SR_theater.followedPlanetList) {
         let planet = df.getPlanetWithId(planetId);
         if (!planet.location) continue;
@@ -719,7 +719,7 @@ class Plugin {
             ? ui.getRadiusOfPlanetLevel(3) * 4
             : ui.getRadiusOfPlanetLevel(planet.planetLevel) * 1.5;
 
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 4;
         ctx.strokeStyle = "dashed";
         ctx.beginPath();
         ctx.arc(
