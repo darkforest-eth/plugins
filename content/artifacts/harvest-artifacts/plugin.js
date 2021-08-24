@@ -239,7 +239,7 @@ function transportART2(srcId, artId, maxRangePct = 50, tgtId = "", errorPlanets 
   if (tgtId === "") {
     let targetList = df.getMyPlanets()
       .filter((p) => df.getLocationOfPlanet(p.locationId))
-      .filter((p) => p.planetType == 3)  //only to RIP
+      .filter((p) => p.planetType == planetTypes["Spacetime Rip"])  //only to RIP
       .filter((p) => p.planetLevel > myART.rarity)
       .filter((p) => (df.getDist(srcId, p.locationId) < df.getMaxMoveDist(srcId, maxRangePct)))
       .filter((p) => p.locationId !== srcId)
@@ -256,7 +256,7 @@ function transportART2(srcId, artId, maxRangePct = 50, tgtId = "", errorPlanets 
     let targetList = Array.from(df.getAllPlanets())
       .filter((p) => df.getLocationOfPlanet(p.locationId))
       .filter((p) => p.owner == "0x0000000000000000000000000000000000000000")
-      .filter((p) => p.planetType == 3)  //only to RIP
+      .filter((p) => p.planetType == planetTypes["Spacetime Rip"])  //only to RIP
       .filter((p) => p.planetLevel > myART.rarity)
       .filter((p) => (0.9 * source.energy) > //0.9 hard coded for peace time transporting
         (df.getEnergyNeededForMove(srcId, p.locationId, (p.energy * (p.defense / 100) + 0.01 * p.energy))))
@@ -270,12 +270,8 @@ function transportART2(srcId, artId, maxRangePct = 50, tgtId = "", errorPlanets 
     let targetList = [];
   }
 
-  //#2.5 look for an unowned RIP in range and try capture it
-
   //#3 if no RIP, send to a higher level planet nearby, but not quasar
   if (tgtId === "") {
-    console.log(` --No space RIP nearby... `);
-
     let targetList = df.getMyPlanets()
       .filter((p) => df.getLocationOfPlanet(p.locationId))
       .filter((p) => p.planetLevel > source.planetLevel)
@@ -284,6 +280,12 @@ function transportART2(srcId, artId, maxRangePct = 50, tgtId = "", errorPlanets 
       .sort((a, b) => { return df.getDist(srcId, a.locationId) - df.getDist(srcId, a.locationId) })
     if (targetList.length > 0) {
       tgtId = targetList[0].locationId;
+    } else {
+      console.log(` --No spacetime rip nearby and no higher level planets nearby... `);
+      console.log(`  --intervention required: ui.centerLocationId(${srcId})`);
+      df.terminal.current.println("intervention required");
+      errorPlanets.push(srcId);
+      return;
     }
   }
 
@@ -305,7 +307,7 @@ function transportART2(srcId, artId, maxRangePct = 50, tgtId = "", errorPlanets 
 
     let silverTOSEND = 0;
 
-    if (FORCES < source.energy * 0.95) {  //hard code 95% for peace time
+    if (FORCES < source.energy * 0.98) {  //hard code 98% for peace time
       df.terminal.current.println(`  --Sending ART to L${target.planetLevel} ${tgtId}`);
       console.log(`  --Sending ART to L${target.planetLevel} ${tgtId}`);
       df.move(srcId, tgtId, FORCES, silverTOSEND, artId);
