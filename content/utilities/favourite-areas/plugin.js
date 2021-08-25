@@ -63,9 +63,31 @@ function AreaRow({ area, onRemove, onGoTo }) {
   </div> `;
 }
 
+/**
+ * Like useState, but persist all changes to local storage
+ */
+function useLocalStorageState(key, initialValue) {
+  const [state, setState] = useState(() => {
+    try {
+      const rawSavedState = localStorage.getItem(key);
+      return rawSavedState ? JSON.parse(rawSavedState) : defaultValue;
+    } catch (e) {
+      console.error("[useLocalStorageState] error parsing saved state", e);
+      return initialValue;
+    }
+  });
+
+  const saveState = newState => {
+    setState(newState)
+    localStorage.setItem(key, JSON.stringify(newState))
+  }
+
+  return [state, saveState]
+}
+
 function App() {
   const [areaName, setAreaName] = useState(null);
-  const [areas, setAreas] = useState([]);
+  const [areas, setAreas] = useLocalStorageState("df.plugin.favouriteAreas.areas", []);
 
   const onAreaNameChange = (event) => {
     setAreaName(event.target.value);
