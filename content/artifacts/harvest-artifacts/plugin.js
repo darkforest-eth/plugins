@@ -1,6 +1,6 @@
 /* Harvest artifacts. Transport artifacts to suitable spacetime rips and withdraw.
 ** Optimized for peacetime. Use with caution if at war.
-** To protect a planet from been harvested, "Follow" it by using the SitRep plugin.
+** To protect a planet from been harvested, uncomment a line in function autoProcessArtifacts.
 ** 
 ** Code Logic:
 **   Step 1, Withdraw if it is on a spacetime rip. Deactivate if necessary.
@@ -26,13 +26,11 @@ const planetTypes = {
 
 const planetLevels = [9, 8, 7, 6, 5, 4, 3, 2, 1];
 
-let autoDeactivate = true;
+let autoDeactivate = true;  
 //if (window.SR_cfg) autoDeactivate = window.cfg.ARTautoDeactivate == 1? true: false;
 
-const players = [
-  "0x0000000000000000000000000000000000000000",
-];
 
+ 
 class Plugin {
   constructor() {
     this.minPlanetLevel = 2;
@@ -153,34 +151,46 @@ export default Plugin;
 
 function countArtifactsByPlanetLevel(minPlanetLevel = 2) {
   let planets =
-    df.getMyPlanets()
-      .filter((p) => df.getLocationOfPlanet(p.locationId))
-      .filter((p) => p.heldArtifactIds)
-      .filter((p) => p.heldArtifactIds.length > 0)
-      .filter((p) => p.planetLevel >= minPlanetLevel)
-
-  return planets.length;
+    getMyValidPlanets()
+      .filter((p) => p.heldArtifactIds
+                  && p.heldArtifactIds.length > 0
+                  && p.planetLevel >= minPlanetLevel);
+return planets.length;
 }
 
+
+function getMyValidPlanets() {
+  return df.getMyPlanets()
+  .filter((p) => df.getLocationOfPlanet(p.locationId)
+                 &&!p.destroyed)
+}
+
+function getUnclaimedValidPlanets() {
+    return Array.from(df.getAllPlanets())
+    .filter((p) => df.getLocationOfPlanet(p.locationId)
+            &&!p.destroyed
+            &&  p.owner == "0x0000000000000000000000000000000000000000")
+}
+
+
 async function autoProcessArtifacts(reviewonly = true, number = 5, minPlanetLevel = 2, theaterBoxNum = 3, autoDeactivate) {
+
+  let followedPlanetList = [];
+// NOTE: uncomment the line below to use SitRep FOLLOW feature to protect a planet from been harvested
+//
+// followedPlanetList = (window.SR_theater && window.SR_theater.followedPlanetList) ? window.SR_theater.followedPlanetList : [];
 
   if (autoDeactivate == undefined && window.SR_cfg) {  //space holder for a config editor
     autoDeactivate = (window.SR_cfg.ARTautoDeactivate == 1) ? true : false;
   }
 
-  let followedPlanetList = (window.SR_theater && window.SR_theater.followedPlanetList) ? window.SR_theater.followedPlanetList : [];
-
-  console.log(followedPlanetList);
-
-
   let errorPlanets = [];
   let planets =
-    df.getMyPlanets()
-      .filter((p) => df.getLocationOfPlanet(p.locationId))
-      .filter((p) => p.heldArtifactIds)
-      .filter((p) => p.heldArtifactIds.length > 0)
-      .filter((p) => p.planetLevel >= minPlanetLevel)
-      .filter((p) => !followedPlanetList.includes(p.locationId))
+    getMyValidPlanets()
+    .filter((p) => p.heldArtifactIds
+              && p.heldArtifactIds.length > 0
+              && p.planetLevel >= minPlanetLevel
+              && !followedPlanetList.includes(p.locationId))
       .sort((b, a) => a.planetLevel - b.planetLevel)
       .slice(0, number)
 
@@ -190,12 +200,6 @@ async function autoProcessArtifacts(reviewonly = true, number = 5, minPlanetLeve
 
     for (let i = 0; i < arts.length; ++i) {
       if (!df.getArtifactWithId(arts[i])) {
-        ///HACK
-        //          if (df.getArtifactWithId(arts[i].artifactType <=4) )  //only get consumables
-        //         {
-        //          console.log ("skipping non consumables"); 
-        //          return;
-        //         }  
         console.log(" --artifact not found:", arts[i]);
         break;
       }
@@ -237,12 +241,11 @@ function transportART2(srcId, artId, maxRangePct = 50, tgtId = "", errorPlanets 
 
   //#1, try send to a RIP
   if (tgtId === "") {
-    let targetList = df.getMyPlanets()
-      .filter((p) => df.getLocationOfPlanet(p.locationId))
-      .filter((p) => p.planetType == planetTypes["Spacetime Rip"])  //only to RIP
-      .filter((p) => p.planetLevel > myART.rarity)
-      .filter((p) => (df.getDist(srcId, p.locationId) < df.getMaxMoveDist(srcId, maxRangePct)))
-      .filter((p) => p.locationId !== srcId)
+    let targetList = getMyValidPlanets()
+      .filter((p) => p.planetType == planetTypes["Spacetime Rip"]  //only to RIP
+                  && p.planetLevel > myART.rarity
+                  && df.getDist(srcId, p.locationId) < df.getMaxMoveDist(srcId, maxRangePct)
+                  && p.locationId !== srcId)
       .sort((a, b) => { return df.getDist(srcId, a.locationId) - df.getDist(srcId, b.locationId) })
 
     if (targetList.length > 0) {
@@ -253,12 +256,10 @@ function transportART2(srcId, artId, maxRangePct = 50, tgtId = "", errorPlanets 
 
   //#2, try acquire a RIP
   if (tgtId === "") {
-    let targetList = Array.from(df.getAllPlanets())
-      .filter((p) => df.getLocationOfPlanet(p.locationId))
-      .filter((p) => p.owner == "0x0000000000000000000000000000000000000000")
-      .filter((p) => p.planetType == planetTypes["Spacetime Rip"])  //only to RIP
-      .filter((p) => p.planetLevel > myART.rarity)
-      .filter((p) => (0.9 * source.energy) > //0.9 hard coded for peace time transporting
+    let targetList = getUnclaimedValidPlanets()
+      .filter((p) => p.planetType == planetTypes["Spacetime Rip"]  //only to RIP
+  && p.planetLevel > myART.rarity
+  && (0.9 * source.energy) > //0.9 hard coded for peace time transporting
         (df.getEnergyNeededForMove(srcId, p.locationId, (p.energy * (p.defense / 100) + 0.01 * p.energy))))
       .sort((a, b) => { return df.getDist(srcId, a.locationId) - df.getDist(srcId, b.locationId) })
 
@@ -272,12 +273,14 @@ function transportART2(srcId, artId, maxRangePct = 50, tgtId = "", errorPlanets 
 
   //#3 if no RIP, send to a higher level planet nearby, but not quasar
   if (tgtId === "") {
-    let targetList = df.getMyPlanets()
-      .filter((p) => df.getLocationOfPlanet(p.locationId))
-      .filter((p) => p.planetLevel > source.planetLevel)
-      .filter((p) => (df.getDist(srcId, p.locationId) < df.getMaxMoveDist(srcId, maxRangePct)))
-      .filter((p) => p.locationId !== srcId && p.planetType !== planetTypes.Quasar)  //not quasar
+    let targetList = getMyValidPlanets()
+      .filter((p) => p.planetType == planetTypes["Spacetime Rip"]  //only to RIP
+                  && p.planetLevel > source.planetLevel
+                  && df.getDist(srcId, p.locationId) < df.getMaxMoveDist(srcId, maxRangePct)
+                  && p.locationId !== srcId
+                  && p.planetType !== planetTypes.Quasar)
       .sort((a, b) => { return df.getDist(srcId, a.locationId) - df.getDist(srcId, a.locationId) })
+
     if (targetList.length > 0) {
       tgtId = targetList[0].locationId;
     } else {
