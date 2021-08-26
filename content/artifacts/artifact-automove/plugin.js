@@ -37,12 +37,31 @@ function isActiveArtifact(fromPlanet, artifactId) {
 }
 
 
+function isCooldown(artifact) {
+    if (artifact) {
+      if (artifact.lastDeactivated == 0) {
+        return false;
+      }
+      if (artifact.artifactType == 5) {
+        // Wormhole
+        if (Date.now() > (artifact.lastDeactivated + 48 * 60 * 60) * 1000) {
+          return false;
+        }
+      }
+      if (Date.now() > (artifact.lastDeactivated + 24 * 60 * 60) * 1000) {
+        return false;
+      }
+    }
+    return true;
+}
+
+
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 100;
     this.maxMiddlePlanetLevel = PlanetLevel.FOUR;
-    this.conCurrentNum = 3;
-    this.autoSeconds = 30;
+    this.conCurrentNum = 5;
+    this.autoSeconds = 180;
     this.deactiveArtifactIfNeeded = false;
     this.message = document.createElement('div');
     this.logs = document.createElement('div');
@@ -108,6 +127,10 @@ class Plugin {
         }
       }
 
+      if (isCooldown(artifact)) {
+        continue;
+      }
+
       if (isSpaceRip(artifactPlanet) && artifactPlanet.planetLevel > artifact.rarity) {
         // no more move, withdraw it!
         df.withdrawArtifact(artifactPlanet.locationId, artifactId);
@@ -155,9 +178,6 @@ class Plugin {
       if (unconfirmed.length !== 0) {
         continue;
       }
-      if (!canWithdraw(planet)) {
-        continue;
-      }
       if (planet.heldArtifactIds.length != 0) {
         n += this.automove(planet, rips);
         if (n >= this.conCurrentNum) {
@@ -165,19 +185,6 @@ class Plugin {
         }
       }
     }
-  }
-
-
-  withdrawArtifacts() {
-    Array.from(df.getMyPlanets())
-      .filter(canWithdraw)
-      .forEach(planet => {
-        try {
-          df.withdrawArtifact(planet.locationId);
-        } catch (err) {
-          console.log(err);
-        }
-      });
   }
 
 
@@ -259,7 +266,6 @@ class Plugin {
     showButton.style.width = '100%';
     showButton.innerText = 'Artifact Go Home!';
     showButton.onclick = () => {
-        //this.withdrawArtifacts();
         this.globalAutoMove();
     }
 
@@ -298,8 +304,6 @@ class Plugin {
       if (evt.target.checked) {
         this.message.innerText = 'Artifact AutoMove...';
         this.sendTimer = setInterval(() => {
-
-          //setTimeout(this.withdrawArtifacts.bind(this), 0);
           setTimeout(this.globalAutoMove.bind(this), 0);
         }, 1000 * this.autoSeconds)
       } else {
