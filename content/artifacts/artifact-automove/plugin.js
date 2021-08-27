@@ -134,6 +134,11 @@ class Plugin {
         continue;
       }
 
+      if (artifact.unconfirmedWithdrawArtifact) {
+        // pending artifact withdraw
+        continue;
+      }
+
       // can't move an activated artifact
       if (isActiveArtifact(artifactPlanet, artifactId)) {
         if (this.deactiveArtifactIfNeeded) {
