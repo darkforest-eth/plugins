@@ -1,6 +1,14 @@
 // author: https://twitter.com/lulks4
 //
 // Attack planets based on your selection of source and target planets
+// This plugin allows you to select a range of space, or a single planet as source planet
+// select a range of space, or a single planet as target planet
+
+// Set Range: click `Set Range` and click the space to select upper left point
+// and then select bottom right point
+// Set Selected Planet: select any planet and then click 'Set Selected Planet'
+// to set source or target planet
+
 
 import {
   html,
@@ -623,7 +631,7 @@ export default class Plugin {
 
   destroy() {
     window.removeEventListener("click", this.onClick);
-    render(null, this.container, this.root);
+    render(null, this.container);
   }
 }
 
@@ -687,7 +695,7 @@ function getEligiblePlanets(
   console.log("try to get eligible planets in range", planetRange);
   if (selectedSourcePlanet) {
     console.log("single source planet is selected", selectedSourcePlanet);
-    return selectedSourcePlanet;
+    return [selectedSourcePlanet];
   }
   return df
     .getMyPlanets()
