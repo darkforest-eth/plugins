@@ -56,6 +56,11 @@ function isCooldown(artifact) {
 }
 
 
+function getArrivalsForPlanet(planetId) {
+    return df.getAllVoyages().filter(arrival => arrival.toPlanet === planetId).filter(p => p.arrivalTime > Date.now() / 1000);
+}
+
+
 class Plugin {
   constructor() {
     this.maxEnergyPercent = 100;
@@ -92,6 +97,18 @@ class Plugin {
     for (let candidate of candidates) {
       // Remember its a tuple of candidates and their distance
       let toId = candidate[0].locationId;
+
+      // Rejected if has unconfirmed pending arrivals
+      const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === toId)
+      if (unconfirmed.length !== 0) {
+          continue;
+      }
+
+      // Rejected if has pending arrivals
+      const arrivals = getArrivalsForPlanet(toId);
+      if (arrivals.length !== 0) {
+          continue;
+      }
 
       let energyNeeded = Math.ceil(df.getEnergyNeededForMove(fromId, toId, 10));
 
@@ -148,7 +165,7 @@ class Plugin {
         .sort((a, b) => a[1] - b[1]);
 
         if(candidate_rips.length == 0) {
-          console.log(fromPlanet.locationId + 'can not automove to any spacetime rip');
+          console.log(fromPlanet.locationId + ' can not automove to any spacetime rip');
           continue;
         }
 
@@ -173,11 +190,7 @@ class Plugin {
     ));
 
     for (let planet of df.getMyPlanets()) {
-      // Rejected if has pending outbound moves
-      const unconfirmed = df.getUnconfirmedMoves().filter(move => move.from === planet.locationId)
-      if (unconfirmed.length !== 0) {
-        continue;
-      }
+
       if (planet.heldArtifactIds.length != 0) {
         n += this.automove(planet, rips);
         if (n >= this.conCurrentNum) {
