@@ -33,12 +33,14 @@ After you've created a new plugin directory, update the `index.md`, `plugin.js`,
 Feel free to add additional information to your plugin directory, such as we did with `remote-explorer`.
 
 ## Contribution Guidelines
-
+- Comments on top of the script explaining what is is and how to use it
 - Has to have screenshot, ideally with result of action and or the ui, should to be ~20kb in size unless you really need more
 - Check desctructors cleanup all constructors, delete all new, reset all listeners and timers
-- Comments on top of the script explaining what is is and how to use it
 - Simple clean auditable javascript, expect to go through a little back and forth code review
 - No external scripts being loaded except for from us https://plugins.zkga.me/utils/ or a few REALLY big names from knowns cdns have been allowed so far like: https://unpkg.com/htm/preact/standalone.module.js and https://cdn.skypack.dev/lodash.range
+- No use of localstorage, overriding internal rpc timers/settings (df.contractsAPI.contractCaller), interaction with or depending on other plugins
+
+Please understand these 'rules' are our best effort to be able to lightly audit code for the protection of the users. Its an impossible job but were trying anyway. If your code doesn't fit in here don't take it personally. The community has also created repos like [Awesome Dark Forest](https://github.com/snowtigersoft/awesome-darkforest) which provide no such gatekeeping and are a great way to showcase your work as well.
 
 ## Showcase local development
 
