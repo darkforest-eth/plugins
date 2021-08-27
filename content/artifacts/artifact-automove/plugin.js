@@ -134,8 +134,8 @@ class Plugin {
         continue;
       }
 
-      if (artifact.unconfirmedWithdrawArtifact || artifact.unconfirmedMove) {
-        // skip pending (withdraw or move) artifact 
+      if (artifact.unconfirmedWithdrawArtifact || artifact.unconfirmedMove || artifact.unconfirmedDeactivateArtifact) {
+        // skip pending (withdraw or move or deactive) artifact
         continue;
       }
 
