@@ -98,16 +98,18 @@ class Plugin {
       // Remember its a tuple of candidates and their distance
       let toId = candidate[0].locationId;
 
-      // Rejected if has unconfirmed pending arrivals
+      const heldArtifactNum = candidate[0].heldArtifactIds.length;
       const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === toId)
-      if (unconfirmed.length !== 0) {
-          continue;
+      const arrivals = getArrivalsForPlanet(toId);
+
+      // Rejected if >5 tx (pending + unconfirmed) arrivals
+      if (unconfirmed + arrivals > 5) {
+        continue;
       }
 
-      // Rejected if has pending arrivals
-      const arrivals = getArrivalsForPlanet(toId);
-      if (arrivals.length !== 0) {
-          continue;
+      // one planet can only held <= 4 artifacts
+      if (unconfirmed + arrivals + heldArtifactNum > 4) {
+        continue;
       }
 
       let energyNeeded = Math.ceil(df.getEnergyNeededForMove(fromId, toId, 10));
