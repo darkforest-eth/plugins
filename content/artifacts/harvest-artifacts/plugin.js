@@ -1,6 +1,5 @@
 /* Harvest artifacts. Transport artifacts to suitable spacetime rips and withdraw.
 ** Optimized for peacetime. Use with caution if at war.
-** To protect a planet from been harvested, uncomment a line in function autoProcessArtifacts.
 ** 
 ** Code Logic:
 **   Step 1, Withdraw if it is on a spacetime rip. Deactivate if necessary.
@@ -26,10 +25,7 @@ const planetTypes = {
 
 const planetLevels = [9, 8, 7, 6, 5, 4, 3, 2, 1];
 
-let autoDeactivate = true;  
-//if (window.SR_cfg) autoDeactivate = window.cfg.ARTautoDeactivate == 1? true: false;
-
-
+let autoDeactivate = false;  
  
 class Plugin {
   constructor() {
@@ -175,22 +171,13 @@ function getUnclaimedValidPlanets() {
 
 async function autoProcessArtifacts(reviewonly = true, number = 5, minPlanetLevel = 2, theaterBoxNum = 3, autoDeactivate) {
 
-  let followedPlanetList = [];
-// NOTE: uncomment the line below to use SitRep FOLLOW feature to protect a planet from been harvested
-//
-// followedPlanetList = (window.SR_theater && window.SR_theater.followedPlanetList) ? window.SR_theater.followedPlanetList : [];
-
-  if (autoDeactivate == undefined && window.SR_cfg) {  //space holder for a config editor
-    autoDeactivate = (window.SR_cfg.ARTautoDeactivate == 1) ? true : false;
-  }
 
   let errorPlanets = [];
   let planets =
     getMyValidPlanets()
     .filter((p) => p.heldArtifactIds
               && p.heldArtifactIds.length > 0
-              && p.planetLevel >= minPlanetLevel
-              && !followedPlanetList.includes(p.locationId))
+              && p.planetLevel >= minPlanetLevel)
       .sort((b, a) => a.planetLevel - b.planetLevel)
       .slice(0, number)
 
