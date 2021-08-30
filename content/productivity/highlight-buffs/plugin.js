@@ -4,9 +4,43 @@
 //
 // author: https://twitter.com/davidryan59
 
-import { PlanetType, PlanetLevel, PlanetLevelNames } from "https://cdn.skypack.dev/@darkforest_eth/types";
+import { PlanetType, PlanetTypeNames, PlanetLevel, PlanetLevelNames } from "https://cdn.skypack.dev/@darkforest_eth/types";
+
+const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
+
+const viewport = ui.getViewport();
 
 const PLUGIN_NAME = "Highlight Buffs";
+
+const WIDTH_PX_CONTAINER = "320px";
+const WIDTH_PX_HALF = "145px";
+const MARGIN_WRAPPER = "0px 3px 6px 3px";
+const PADDING_SECTION_LABEL = "3px 0px 3px 5px";
+
+const LEVEL_MIN = "LEVEL_MIN";
+const LEVEL_MAX = "LEVEL_MAX";
+const PLANET_LEVELS = Object.values(PlanetLevel).map( lvl => [lvl, PlanetLevelNames[lvl]]);
+
+const PLANET_TYPE = "PLANET_TYPE";
+const ALL_PLANET_TYPES = -1;  // PlanetType is an Enum, values 0..4, so adding one more value here
+const PLANET_TYPES = Object.values(PlanetType).map( type => [type, PlanetTypeNames[type]]);
+PLANET_TYPES.push([ALL_PLANET_TYPES, "All types"]);
+
+const RANGE_MAX = "RANGE_MAX";
+const MAX_DISTANCE = 10 ** 8;
+const RANGES = [
+  [1000, "Up to 1000"],
+  [2000, "Up to 2000"],
+  [5000, "Up to 5000"],
+  [10000, "Up to 10,000"],
+  [20000, "Up to 20,000"],
+  [50000, "Up to 50,000"],
+  [100000, "Up to 100,000"],
+  [200000, "Up to 200,000"],
+  [500000, "Up to 500,000"],
+  [999999, "Up to 999,999"]
+];
+const DEFAULT_RANGE_MAX = RANGES[3][0];
 
 // See Dark Forest Client, file: src/_types/global/GlobalTypes.ts/StatIdx
 const StatIdx = {
@@ -21,6 +55,8 @@ const StatIdx = {
 // Additive for Fill, Multiplicative for Line
 const DEFAULT_LEVEL_MIN = 2;  // default minimum level of planets to highlight
 const DEFAULT_LEVEL_MAX = 9;  // default maximum level of planets to highlight
+
+// Miscellaneous constants
 const BASE_LINE_WIDTH_PX = 1.0;
 const LINE_WIDTH_PLANET_LEVEL_FACTOR = 0.5;
 const EXTRA_RADIUS_CANVAS_PX_ADD = 2.0; 
@@ -31,15 +67,11 @@ const PULSES_PER_ROTATION = 3;  // Number of pulses for full rotation of the cir
 const CIRC_START_RAD = 0;
 const CIRC_END_RAD = 2 * Math.PI;
 const PULSE_FAST_FACTOR = 2;  // In fast mode, how much faster than normal mode
-
-// If not pulsing alpha, use this constant alpha
-const DEFAULT_ALPHA = 0.75;
-
-// Desynchronises pulsing of separate planets using prime numbers multiplied by canvas coord components
-const [DESYNC_X, DESYNC_Y] = [101, 103]
-
-// Planet arrays are not highlighted if they have this constant as first element (and will be otherwise empty)
-const TOGGLE_OFF = "TOGGLE_OFF";
+const ALWAYS_PULSE = 'ALWAYS_PULSE';
+const SMALL_TEXT_SIZE = "90%";
+const DEFAULT_ALPHA = 0.75;  // If not pulsing alpha, use this constant alpha
+const [DESYNC_X, DESYNC_Y] = [101, 103];  // Desynchronises pulsing of separate planets using prime numbers multiplied by canvas coord components
+const TOGGLE_OFF = "TOGGLE_OFF";  // Planet arrays are not highlighted if they have this constant as first element (and will be otherwise empty)
 const isToggledOn = (arr) => arr[0] !== TOGGLE_OFF;
 
 // When hovering over / mouseover a button, it is normal brightness
@@ -91,19 +123,26 @@ const prospectExpired = (plugin, planet) => {
   if (planet.hasTriedFindingArtifact) return false;
   return planet.prospectedBlockNumber + 255 - df.contractsAPI.ethConnection.blockNumber <= 0;  // 256 blocks to prospect an artifact
 }
-const levelInRange = (plugin, planet) => plugin.levelMinValue <= planet.planetLevel && planet.planetLevel <= plugin.levelMaxValue;
-const filter2xStat = stat => (plugin, planet) => levelInRange(plugin, planet) && planet.bonus && planet.bonus[stat];
+const distanceToPlanetSquared = planet => planet.location ? (viewport.centerWorldCoords.x - planet.location.coords.x) ** 2 + (viewport.centerWorldCoords.y - planet.location.coords.y) ** 2 : MAX_DISTANCE;
+const distanceInRange = (plugin, planet) => distanceToPlanetSquared(planet) <= plugin.getSelectValue(RANGE_MAX) ** 2;
+const levelInRange = (plugin, planet) => plugin.getSelectValue(LEVEL_MIN) <= planet.planetLevel && planet.planetLevel <= plugin.getSelectValue(LEVEL_MAX);
+const distanceAndLevelInRange = (plugin, planet) => levelInRange(plugin, planet) && distanceInRange(plugin, planet);
+const planetTypeMatches = (plugin, planet) => {
+  const type = plugin.getSelectValue(PLANET_TYPE);
+  return type === ALL_PLANET_TYPES || type === planet.planetType;
+};
+const filter2xStat = (statIdx, upgradeIdx=-1) => (plugin, planet) => distanceAndLevelInRange(plugin, planet) && planetTypeMatches(plugin, planet) && (planet.bonus && planet.bonus[statIdx] || planet.upgradeState && planet.upgradeState[upgradeIdx]);
 
 // Filters for each highlight type
 const filter2xEnergyCap = filter2xStat(StatIdx.EnergyCap);
 const filter2xEnergyGro = filter2xStat(StatIdx.EnergyGro);
-const filter2xDefense = filter2xStat(StatIdx.Defense);
-const filter2xSpeed = filter2xStat(StatIdx.Speed);
-const filter2xRange = filter2xStat(StatIdx.Range);
-const filterRip = (plugin, planet) => levelInRange(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
+const filter2xDefense = filter2xStat(StatIdx.Defense, 0);  // defense rank upgrades are on planet.upgradeState[0]
+const filter2xSpeed = filter2xStat(StatIdx.Speed, 2);  // speed rank upgrades are on planet.upgradeState[2]
+const filter2xRange = filter2xStat(StatIdx.Range, 1);  // range rank upgrades are on planet.upgradeState[1]
+const filterRip = (plugin, planet) => distanceAndLevelInRange(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
 const filterArtifact = (plugin, planet) => {
   // Filter out planets of wrong size
-  if (!levelInRange(plugin, planet)) return false;
+  if (!distanceAndLevelInRange(plugin, planet)) return false;
 
   // Include any planet with an artifact circling (and is big enough)
   if (planet.heldArtifactIds.length > 0) return true;
@@ -114,35 +153,45 @@ const filterArtifact = (plugin, planet) => {
     && !prospectExpired(plugin, planet);
 };
 
-let viewport = ui.getViewport();
+const divCreator = ({width, margin, padding, devCol="#550000"}) => {
+  const div = document.createElement("div");
+  div.style.display = "flex";
+  div.style.flexWrap = "wrap";
+  if (width) div.style.width = width;
+  if (margin) div.style.margin = margin;
+  if (padding) div.style.padding = padding;
+  if (DEV_MODE) div.style.backgroundColor = devCol;
+  return div;
+}
 
 const hrCreator = () => {
-  let hr = document.createElement("hr");
+  const hr = document.createElement("hr");
   hr.style.margin = "7px 0px";
   hr.style.borderColor = "rgb(80, 80, 80)";
   return hr;
 };
 
-const labelCreator = (labelText, halfWidth=false) => {
-  let label = document.createElement("label");
+const labelCreator = ({text, color, padding, smallText=false, devCol="#111155"}) => {
+  const label = document.createElement("label");
   label.style.display = "flex";
-  label.style.width = halfWidth ? "125px" : "270px";
-  label.style.margin = "3px 9px";
-  label.innerText = labelText;
+  label.innerText = text;
+  if (color) label.style.color = color;
+  if (padding) label.style.padding = padding;
+  if (smallText) label.style.fontSize = SMALL_TEXT_SIZE;
+  if (DEV_MODE) label.style.backgroundColor = devCol;
   return label;
 };
 
-const selectCreator = (initialValue, valueLabelArr, onChange) => {
-  let select = document.createElement("select");
+const selectCreator = ({initialValue, valueLabelArr, onchange}) => {
+  const select = document.createElement("select");
   let mouseOver = false;
   select.style.display = "inline";
-  select.style.width = "135px";
+  select.style.width = WIDTH_PX_HALF;
   select.style.border = "1px solid";
   select.style.borderRadius = "6px";
-  select.style.margin = "3px 3px";
-  select.style.padding = "3px 3px";
+  select.style.padding = "5px 3px";
   valueLabelArr.forEach(([value, label]) => {
-    let option = document.createElement("option");
+    const option = document.createElement("option");
     option.value = `${value}`;
     option.innerText = label;
     select.appendChild(option);
@@ -163,24 +212,70 @@ const selectCreator = (initialValue, valueLabelArr, onChange) => {
     updateColours();
   };
   select.onchange = () => {
-    onChange();
+    onchange();
     select.blur();
   }
   select.value = `${initialValue}`;
   return select;
 };
 
-const buttonCreator = (buttonText, onClickFn, initialToggleState=false, bgOverrideOn=false, invertTextOn=false, smallText=false) => {
-  let button = document.createElement("button");
+const selectData = [
+  {
+    id: LEVEL_MIN,
+    label: "Min. level:",
+    initialValue: DEFAULT_LEVEL_MIN,
+    list: PLANET_LEVELS,
+  },
+  {
+    id: LEVEL_MAX,
+    label: "Max. level:",
+    initialValue: DEFAULT_LEVEL_MAX,
+    list: PLANET_LEVELS,
+  },
+  {
+    id: RANGE_MAX,
+    label: "Max. range:",
+    initialValue: DEFAULT_RANGE_MAX,
+    list: RANGES,
+  },
+  {
+    id: PLANET_TYPE,
+    label: "Planet type:",
+    initialValue: ALL_PLANET_TYPES,
+    list: PLANET_TYPES,
+  },
+];
+const initialiseSelectWrappers = plugin => {
+  selectData.forEach(obj => {
+    obj.value = obj.initialValue;
+    const wrapper = divCreator({width: WIDTH_PX_HALF, margin: MARGIN_WRAPPER, devCol: "#006633"});
+    const label = labelCreator({text: obj.label, color: "#888888", padding: "0px 0px 0px 8px", smallText: true});
+    const select = selectCreator({
+      initialValue: obj.initialValue,
+      valueLabelArr: obj.list,
+      onchange: plugin.recalcAllHighlights
+    });
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+    obj.element = {};
+    obj.element.wrapper = wrapper;
+    obj.element.label = label;
+    obj.element.select = select;
+    plugin.ui.select[obj.id] = obj;
+  });  
+}
+
+const buttonCreator = ({text, onclick, initialToggleState=false, bgOverrideOn=false, invertTextOn=false, smallText=false}) => {
+  const button = document.createElement("button");
   let toggledOn = initialToggleState;
   let mouseOver = false;
-  button.innerText = buttonText;
+  button.innerText = text;
   button.style.display = "inline";
-  button.style.width = "135px";
+  button.style.width = WIDTH_PX_HALF;
   button.style.border = "1px solid";
   button.style.borderRadius = "6px";
-  button.style.margin = "3px 3px";
-  if (smallText) button.style.fontSize = "85%";
+  button.style.padding = "3px";
+  if (smallText) button.style.fontSize = SMALL_TEXT_SIZE;
   const setButtonColours = () => {
     const colArrs = toggledOn ? buttonDefaultColours.on : buttonDefaultColours.off;
     const bgCols = toggledOn && bgOverrideOn ? bgOverrideOn : colArrs.bg;
@@ -200,7 +295,7 @@ const buttonCreator = (buttonText, onClickFn, initialToggleState=false, bgOverri
   button.onclick = () => {
     toggledOn = !toggledOn;
     setButtonColours();
-    onClickFn();
+    onclick();
     button.blur();
   };
   return button;
@@ -213,13 +308,16 @@ const drawHighlights = (plugin, planetArr, colRgbArr, periodMs) => {
   if (isToggledOn(planetArr)) {
     for (let planet of planetArr) {
       if (!planet.location) continue;
-      let { x, y } = planet.location.coords;
+      const { x, y } = planet.location.coords;
       // Function to calculate pulse shape, to vary parameter by a triangle wave between 0 and 1
       const getSawWave01 = (item, defaultValue=0.5, slowFactor=1) => {
-        if (!drawOptions[item].value) return defaultValue;
-        const thisTimeMs = drawOptions.sync.value ? (timeMs / slowFactor) : (timeMs / slowFactor) + DESYNC_X * x + DESYNC_Y * y;  // Large number of seconds from 1970 (approx)
-        const thisPeriodMs = drawOptions.pulseFast.value ? periodMs / PULSE_FAST_FACTOR : periodMs;  // Cycle Period, in ms
-        return (thisTimeMs % thisPeriodMs) / thisPeriodMs;  // Sawtooth Wave, position in cycle, between 0 and 1
+        if (item === ALWAYS_PULSE || drawOptions[item].value) {
+          const thisTimeMs = drawOptions.sync.value ? (timeMs / slowFactor) : (timeMs / slowFactor) + DESYNC_X * x + DESYNC_Y * y;  // Large number of seconds from 1970 (approx)
+          const thisPeriodMs = drawOptions.pulseFast.value ? periodMs / PULSE_FAST_FACTOR : periodMs;  // Cycle Period, in ms
+          return (thisTimeMs % thisPeriodMs) / thisPeriodMs;  // Sawtooth Wave, position in cycle, between 0 and 1
+        } else {
+          return defaultValue;
+        }
       }
       const getTriWave01 = (item, defaultValue=0.5) => {
         const sawWave01 = getSawWave01(item, defaultValue);
@@ -244,7 +342,7 @@ const drawHighlights = (plugin, planetArr, colRgbArr, periodMs) => {
       const cX = viewport.worldToCanvasX(x);
       const cY = viewport.worldToCanvasY(y);
       const cR = extraRadiusFactor * (viewport.worldToCanvasDist(radius) + EXTRA_RADIUS_CANVAS_PX_ADD);
-      const rotationRad = CIRC_END_RAD * getSawWave01("line", 0, PULSES_PER_ROTATION);
+      const rotationRad = CIRC_END_RAD * getSawWave01(ALWAYS_PULSE, 0, PULSES_PER_ROTATION);
       if (drawOptions.ellipse.value && ctx.ellipse) {
         const cR1 = cR / ELLIPSE_FACTOR;
         const cR2 = cR * ELLIPSE_FACTOR;
@@ -266,10 +364,9 @@ class Plugin {
   constructor() {
     this.ctx = null;
     this.dateNow = Date.now();
-    this.levelMinValue = DEFAULT_LEVEL_MIN;
-    this.levelMaxValue = DEFAULT_LEVEL_MAX;
-    this.levelMinSelect = null;
-    this.levelMaxSelect = null;
+    this.ui = {};
+    this.ui.select = {};
+    initialiseSelectWrappers(this);
     this.drawOptions = {
       ellipse: {value: false, label: "Ellipse"},
       pulseOpacity: {value: true, label: "Pulse Opacity"},
@@ -284,13 +381,15 @@ class Plugin {
     this.highlightData = {
       planetsWithArtifact: {label: "Artifacts", filter: filterArtifact, array: [TOGGLE_OFF], periodMs: periodMsHighlightArtifact, cols: colsHighlightArtifact},
       planetsWithRip: {label: "Spacetime Rips", filter: filterRip, array: [TOGGLE_OFF], periodMs: periodMsHighlightRip, cols: colsHighlightRip},
-      planetsWith2xDefense: {label: "2x Defense", filter: filter2xDefense, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xDefense, cols: colsHighlight2xDefense},
-      planetsWith2xEnergyCap: {label: "2x Energy Cap", filter: filter2xEnergyCap, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xEnergyCap, cols: colsHighlight2xEnergyCap},
-      planetsWith2xSpeed: {label: "2x Speed", filter: filter2xSpeed, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xSpeed, cols: colsHighlight2xSpeed},
-      planetsWith2xEnergyGro: {label: "2x Energy Gro", filter: filter2xEnergyGro, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xEnergyGro, cols: colsHighlight2xEnergyGro},
-      planetsWith2xRange: {label: "2x Range", filter: filter2xRange, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xRange, cols: colsHighlight2xRange},
+      planetsWith2xDefense: {label: "Defense", filter: filter2xDefense, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xDefense, cols: colsHighlight2xDefense},
+      planetsWith2xEnergyCap: {label: "Energy Cap", filter: filter2xEnergyCap, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xEnergyCap, cols: colsHighlight2xEnergyCap},
+      planetsWith2xSpeed: {label: "Speed", filter: filter2xSpeed, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xSpeed, cols: colsHighlight2xSpeed},
+      planetsWith2xEnergyGro: {label: "Energy Gro", filter: filter2xEnergyGro, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xEnergyGro, cols: colsHighlight2xEnergyGro},
+      planetsWith2xRange: {label: "Range", filter: filter2xRange, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xRange, cols: colsHighlight2xRange},
     };
     this.highlightList = Object.keys(this.highlightData);
+    console.log(`Initialised ${PLUGIN_NAME} plugin:`);
+    console.dir(this);
   }
 
   // Toggle individual draw options on or off
@@ -298,9 +397,15 @@ class Plugin {
     this.drawOptions[key].value = !this.drawOptions[key].value;
   };
 
-  updateLevelValues = () => {
-    this.levelMinValue = parseInt(this.levelMinSelect.value, 10);
-    this.levelMaxValue = parseInt(this.levelMaxSelect.value, 10);
+  getSelectValue = id => {
+    return this.ui.select[id].value;
+  }
+
+  updateSelectValues = () => {
+    selectData.forEach(obj => {
+      const uiEntry = this.ui.select[obj.id];
+      uiEntry.value = parseInt(uiEntry.element.select.value, 10);
+    })
   };
 
   logHighlight = (label, count) => {
@@ -309,7 +414,7 @@ class Plugin {
 
   // Recalculate all highlights, keep each state
   recalcAllHighlights = () => {
-    this.updateLevelValues();
+    this.updateSelectValues();
     this.highlightList.forEach(key => {
       const obj = this.highlightData[key];
       const arr = obj.array;
@@ -331,7 +436,7 @@ class Plugin {
 
   // Recalculate specific highlight, toggle its state
   toggleHighlight = key => {
-    this.updateLevelValues();
+    this.updateSelectValues();
     const obj = this.highlightData[key];
     const arr = obj.array;
     const filterFn = obj.filter;
@@ -352,50 +457,51 @@ class Plugin {
   render(container) {
     container.parentElement.style.minHeight = "unset";
     container.style.minHeight = "unset";
-    container.style.width = "300px";
+    container.style.width = WIDTH_PX_CONTAINER;
+    if (DEV_MODE) container.style.backgroundColor = "#663300";
 
-    const levelValueLabelArr = Object.values(PlanetLevel).map( lvl => [lvl, PlanetLevelNames[lvl]]);
-    let levelMinSelect = selectCreator(this.levelMinValue, levelValueLabelArr, this.recalcAllHighlights);
-    let levelMaxSelect = selectCreator(this.levelMaxValue, levelValueLabelArr, this.recalcAllHighlights);
-    this.levelMinSelect = levelMinSelect;
-    this.levelMaxSelect = levelMaxSelect;
-
-    let levelDiv = document.createElement("div");
-    levelDiv.style.display = "flex";
-    const halfWidth = true;
-    levelDiv.appendChild(labelCreator("Min. level:", halfWidth));
-    levelDiv.appendChild(labelCreator("Max. level:", halfWidth));
-    container.appendChild(levelDiv);
-    container.appendChild(levelMinSelect);
-    container.appendChild(levelMaxSelect);
-
-    container.appendChild(hrCreator());
-
-    container.appendChild(labelCreator("Buffs to highlight:"));
+    container.appendChild(labelCreator({text: "Highlights:", padding: PADDING_SECTION_LABEL}));
+    const highlightDiv = divCreator({});
     this.highlightList.forEach(key => {
       const obj = this.highlightData[key];
-      const buttonText = obj.label;
-      const onClickFn = () => this.toggleHighlight(key);
-      const initialToggleState = isToggledOn(obj.array);
-      const bgOverrideOn = obj.cols;
-      const invertTextOn = true;
-      const smallText = false;
-      container.appendChild(buttonCreator(buttonText, onClickFn, initialToggleState, bgOverrideOn, invertTextOn, smallText));
+      const wrapper = divCreator({width: WIDTH_PX_HALF, margin: MARGIN_WRAPPER, devCol: "#006633"});
+      wrapper.appendChild(buttonCreator({
+        text: obj.label,
+        onclick: () => this.toggleHighlight(key),
+        initialToggleState: isToggledOn(obj.array),
+        bgOverrideOn: obj.cols,
+        invertTextOn: true
+      }));
+      highlightDiv.appendChild(wrapper);
     })
+    container.appendChild(highlightDiv);
 
     container.appendChild(hrCreator());
 
-    container.appendChild(labelCreator("Display options:"));
+    container.appendChild(labelCreator({text: "Filters:", padding: PADDING_SECTION_LABEL}));
+    const filterDiv = divCreator({});
+    filterDiv.appendChild(this.ui.select[LEVEL_MIN].element.wrapper);
+    filterDiv.appendChild(this.ui.select[LEVEL_MAX].element.wrapper);
+    filterDiv.appendChild(this.ui.select[RANGE_MAX].element.wrapper);
+    filterDiv.appendChild(this.ui.select[PLANET_TYPE].element.wrapper);
+    container.appendChild(filterDiv);
+
+    container.appendChild(hrCreator());
+
+    container.appendChild(labelCreator({text: "Display options:", padding: PADDING_SECTION_LABEL}));
+    const displayOptsDiv = divCreator({});
     this.drawOptionList.forEach(key => {
       const obj = this.drawOptions[key];
-      const buttonText = obj.label;
-      const onClickFn = () => this.toggleDrawOption(key);
-      const initialToggleState = obj.value;
-      const bgOverrideOn = false;
-      const invertTextOn = false;
-      const smallText = true;
-      container.appendChild(buttonCreator(buttonText, onClickFn, initialToggleState, bgOverrideOn, invertTextOn, smallText));
+      const wrapper = divCreator({width: WIDTH_PX_HALF, margin: MARGIN_WRAPPER, devCol: "#006633"});
+      wrapper.appendChild(buttonCreator({
+        text: obj.label,
+        onclick: () => this.toggleDrawOption(key),
+        initialToggleState: obj.value,
+        smallText: true
+      }));
+      displayOptsDiv.appendChild(wrapper);
     })
+    container.appendChild(displayOptsDiv);
   }
 
   draw(ctx) {
