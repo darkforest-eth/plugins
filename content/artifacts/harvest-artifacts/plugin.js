@@ -9,7 +9,6 @@
 ** Note: wait for tx to confirm between runs. Code does not handle unconfirmed tx gracefully.      
 ** Note2: code loops over all planets with artifacts instead of looping over all artifacts. 
 **     This is to get around a bug with df.getArtifactWithId occasionally returning _undefined_ even with a valid artifactId.
-** Note3: a GUI checkbox to toggle autoDeativate would be really nice! Feel free to contribute!
 ** 
 ** Rendering code adapted from crawplanet plugin.
 **
@@ -102,12 +101,31 @@ class Plugin {
     let message = document.createElement('div');
     let failedPlanets = document.createElement('div');
 
+    let autoDeactivateCheckbox = document.createElement('input');
+    autoDeactivateCheckbox.type = "Checkbox";
+    autoDeactivateCheckbox.style.marginLeft = "15px";
+    autoDeactivateCheckbox.checked = autoDeactivate;
+    autoDeactivateCheckbox.id = "autoDeactivateCheckbox";
+
+    let checkBoxLabel = document.createElement('label');
+    checkBoxLabel.setAttribute('for','autoDeactivateCheckbox');
+    checkBoxLabel.innerText = "Auto Deactivate:";
+
+    function setAutoDeactivateCheckbox() {
+      if(autoDeactivateCheckbox.checked == true) 
+        autoDeactivate = true;
+      else {
+        autoDeactivate = false;
+      }
+    }    
+
     let button = document.createElement('button');
     button.style.width = '100%';
     button.style.marginBottom = '10px';
     button.innerHTML = 'Harvest Artifacts'
     button.onclick = () => {
       message.innerText = `Harvesting ${this.numberCount} planets.`;
+      setAutoDeactivateCheckbox();
 
       let moves = autoProcessArtifacts(
         false, // true = "showOnly" for debug
@@ -131,6 +149,9 @@ class Plugin {
       popolateLevel();
       level.value = `${this.minPlanetLevel}`;
     }, 30 * 1000);
+
+    container.appendChild(checkBoxLabel);
+    container.appendChild(autoDeactivateCheckbox);
 
     container.appendChild(stepperLabel);
     container.appendChild(stepper);
@@ -171,6 +192,7 @@ function getUnclaimedValidPlanets() {
 
 async function autoProcessArtifacts(reviewonly = true, number = 5, minPlanetLevel = 2, theaterBoxNum = 3, autoDeactivate) {
 
+//console.log ("autoDeactivate", autoDeactivate);
 
   let errorPlanets = [];
   let planets =
