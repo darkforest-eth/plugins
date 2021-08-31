@@ -16,7 +16,8 @@ import {
   ArtifactTypeNames
 } from "https://cdn.skypack.dev/@darkforest_eth/types";
 
-const ARTIFACT_TYPES = Object.values(ArtifactType).filter((type) => type !== ArtifactType.Unknown).map((type) => ({ value: type, text: ArtifactTypeNames[type] }));
+const EXCEPT_ARTIFACT_TYPES = [ArtifactType.BlackDomain, ArtifactType.BloomFilter, ArtifactType.Unknown];
+const ARTIFACT_TYPES = Object.values(ArtifactType).filter((type) => EXCEPT_ARTIFACT_TYPES.indexOf(type) === -1).map((type) => ({ value: type, text: ArtifactTypeNames[type] }));
 
 
 function getPlayerColor(ethAddress) {
@@ -39,7 +40,7 @@ function drawArc(ctx, planet, artifact, color){
     return false;
   }
   const {x, y} = viewport.worldToCanvasCoords(planet.location.coords);
-  const range = planet.range * 0.01 * 20;
+  const range = ui.getRadiusOfPlanetLevel(planet.planetLevel) * 4;
   const trueRange = viewport.worldToCanvasDist(range);
   ctx.beginPath();
   ctx.arc(x, y, trueRange, 0, 2 * Math.PI * percent);
