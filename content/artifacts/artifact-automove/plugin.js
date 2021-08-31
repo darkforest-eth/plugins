@@ -11,9 +11,17 @@ import {
   canWithdraw
 } from 'https://plugins.zkga.me/utils/utils.js';
 
+// Execute 5 moves or withdraws every time
+const CONCURRENCY = 5;
+
+// Trigger automove every 3 minutes
+const AUTO_INTERVAL = 60 * 3;
+
+// debug mode
+const DEBUG = 0;
+
 const planetLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-const DEBUG = 1;
 
 function distance(from, to) {
     let fromloc = from.location;
@@ -65,8 +73,8 @@ class Plugin {
   constructor() {
     this.maxEnergyPercent = 100;
     this.maxMiddlePlanetLevel = PlanetLevel.FOUR;
-    this.conCurrentNum = 5;
-    this.autoSeconds = 180;
+    this.conCurrentNum = CONCURRENCY;
+    this.autoSeconds = AUTO_INTERVAL;
     this.deactiveArtifactIfNeeded = false;
     this.message = document.createElement('div');
     this.logs = document.createElement('div');
