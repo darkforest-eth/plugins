@@ -1,4 +1,7 @@
 // Display the planet with active artifact, specially for cannon.
+// When cannon first activated, only a thin circle can be seen around the planet.
+// As time goes by, a thick arc will appears, and it will extend longer and longer.
+// The thick arc become a circle when the cannon ready.
 
 import { 
   BiomeNames
@@ -21,24 +24,12 @@ function getPlayerColor(ethAddress) {
 }
 
 
-function drawArc(ctx, planet, color, artifactTypes){
-  if(!planet) {
-    return false;
-  }
-
-  let artifact = df.getActiveArtifact(planet);
-  if (!artifact) {
-    return false;
-  }
-
-  if (artifactTypes.indexOf(artifact.artifactType ) == -1)  {
-    return false;
-  }
+function drawArc(ctx, planet, artifact, color){
 
   let percent = 1;
-  if (artifact.artifactType == 7) {
+  if (artifact.artifactType === ArtifactType.PhotoidCannon) {
     let timePass = Math.floor(Date.now() / 1000 - artifact.lastActivated);
-    percent = timePass / ( 4 * 60 * 60);
+    percent = timePass / ui.gameManager.contractConstants.PHOTOID_ACTIVATION_DELAY;
   }
 
   const viewport = ui.getViewport();
@@ -53,7 +44,7 @@ function drawArc(ctx, planet, color, artifactTypes){
   ctx.beginPath();
   ctx.arc(x, y, trueRange, 0, 2 * Math.PI * percent);
   ctx.stroke();
-  if (artifact.artifactType == 7 && percent < 0.99) {
+  if (artifact.artifactType === ArtifactType.PhotoidCannon && percent < 0.99) {
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(x, y, trueRange, 0, 2 * Math.PI);
@@ -67,7 +58,7 @@ class Plugin {
   constructor() {
     this.message = document.createElement('div');
     this.showGroup = 'My';
-    this.showArifactTypes = [7];
+    this.showArifactTypes = [ArtifactType.PhotoidCannon];
   }
 
 
@@ -76,7 +67,7 @@ class Plugin {
     container.style.width = '300px';
 
     let groupNameLabel = document.createElement('div');
-    groupNameLabel.innerHTML = 'Highlight all active planet or mine?'
+    groupNameLabel.innerHTML = 'Highlight all active artifacts or just mine?'
     container.appendChild(groupNameLabel);
 
     let radioDiv = document.createElement('div');
@@ -156,8 +147,12 @@ class Plugin {
       if (!artifact) {
         continue;
       }
-      let color = getPlayerColor(planet.owner);
-      drawArc(ctx, planet, color, this.showArifactTypes);
+
+      // just highlight the artifact you choose.
+      if (this.showArifactTypes.indexOf(artifact.artifactType) != -1)  {
+        let color = getPlayerColor(planet.owner);
+        drawArc(ctx, planet, artifact, color);
+      }
     }
   }
 
