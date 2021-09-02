@@ -59,7 +59,7 @@ class Plugin {
   constructor() {
     this.message = document.createElement('div');
     this.showGroup = 'My';
-    this.showArifactTypes = [ArtifactType.PhotoidCannon];
+    this.showArtifactTypes = [ArtifactType.PhotoidCannon];
   }
 
 
@@ -108,20 +108,20 @@ class Plugin {
       checkboxInput.style.width = '10%';
       checkboxInput.type = "checkbox";
       checkboxInput.value = artifactType.value;
-      if (this.showArifactTypes.indexOf(artifactType.value) != -1) {
+      if (this.showArtifactTypes.indexOf(artifactType.value) != -1) {
         checkboxInput.checked = true;
       }
       checkboxInput.onchange = (evt) => {
         if (evt.target.checked) {
-          this.showArifactTypes.push(parseInt(evt.target.value));
+          this.showArtifactTypes.push(parseInt(evt.target.value));
         } else {
-          let index = this.showArifactTypes.indexOf(parseInt(evt.target.value));
+          let index = this.showArtifactTypes.indexOf(parseInt(evt.target.value));
           if (index != -1) {
-            this.showArifactTypes.splice(index, 1);
+            this.showArtifactTypes.splice(index, 1);
           }
-          this.showArifactTypes.sort();
+          this.showArtifactTypes.sort();
         }
-        //this.message.innerHTML = this.showArifactTypes;
+        //this.message.innerHTML = this.showArtifactTypes;
       }
 
       let checkboxLabel = document.createElement('label');
@@ -150,7 +150,7 @@ class Plugin {
       }
 
       // just highlight the artifact you choose.
-      if (this.showArifactTypes.indexOf(artifact.artifactType) != -1)  {
+      if (this.showArtifactTypes.indexOf(artifact.artifactType) != -1)  {
         let color = getPlayerColor(planet.owner);
         drawArc(ctx, planet, artifact, color);
       }
