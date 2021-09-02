@@ -158,11 +158,6 @@ class Plugin {
   }
 
 
-  destroy() {
-    if (this.tickTimer) {
-      clearInterval(this.tickTimer);
-    }
-  }
 }
 
 export default Plugin;
