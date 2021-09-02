@@ -20,6 +20,12 @@ const AUTO_INTERVAL = 60 * 3;
 // debug mode
 const DEBUG = 0;
 
+// Wormhole cooldown time (48 hours)
+const WORMHOLE_COOLDOWN_TIME = 48 * 60 * 60;
+
+// Artifacts(except warmhole) cooldown time (24 hours)
+const ARTIFACT_COOLDOWN_TIME = 24 * 60 * 60;
+
 const planetLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 
@@ -52,11 +58,11 @@ function isCooldown(artifact) {
       }
       if (artifact.artifactType == 5) {
         // Wormhole
-        if (Date.now() > (artifact.lastDeactivated + 48 * 60 * 60) * 1000) {
+        if (Date.now() > (artifact.lastDeactivated + WORMHOLE_COOLDOWN_TIME) * 1000) {
           return false;
         }
       }
-      if (Date.now() > (artifact.lastDeactivated + 24 * 60 * 60) * 1000) {
+      if (Date.now() > (artifact.lastDeactivated + ARTIFACT_COOLDOWN_TIME) * 1000) {
         return false;
       }
     }
@@ -75,7 +81,7 @@ class Plugin {
     this.maxMiddlePlanetLevel = PlanetLevel.FOUR;
     this.conCurrentNum = CONCURRENCY;
     this.autoSeconds = AUTO_INTERVAL;
-    this.deactiveArtifactIfNeeded = false;
+    this.deactivateArtifactIfNeeded = false;
     this.message = document.createElement('div');
     this.logs = document.createElement('div');
   }
@@ -151,7 +157,7 @@ class Plugin {
 
       // can't move an activated artifact
       if (isActiveArtifact(artifactPlanet, artifactId)) {
-        if (this.deactiveArtifactIfNeeded) {
+        if (this.deactivateArtifactIfNeeded) {
           df.deactivateArtifact(fromId, artifactId);
           console.log("DeactivateArtifact:" + fromId + " artifactId:" + artifactId);
           this.logAction("DeactivateArtifact", artifactPlanet);
@@ -273,19 +279,19 @@ class Plugin {
       }
     }
 
-    let deactiveArtifactLabel = document.createElement('label');
-    deactiveArtifactLabel.innerText = 'Deactivate Artifact';
-    deactiveArtifactLabel.style.paddingRight = "10px";
-    deactiveArtifactLabel.style.marginBottom = '10px';
+    let deactivateArtifactLabel = document.createElement('label');
+    deactivateArtifactLabel.innerText = 'Deactivate Artifact';
+    deactivateArtifactLabel.style.paddingRight = "10px";
+    deactivateArtifactLabel.style.marginBottom = '10px';
 
     let deactivateArtifactCheck = document.createElement('input');
     deactivateArtifactCheck.type = "checkbox";
     deactivateArtifactCheck.checked = false;
     deactivateArtifactCheck.onchange = (evt) => {
       if (evt.target.checked) {
-        this.deactiveArtifactIfNeeded = true;
+        this.deactivateArtifactIfNeeded = true;
       } else {
-        this.deactiveArtifactIfNeeded = false;
+        this.deactivateArtifactIfNeeded = false;
       }
     };
 
@@ -345,7 +351,7 @@ class Plugin {
     container.appendChild(percent);
     container.appendChild(levelLabel);
     container.appendChild(level);
-    container.appendChild(deactiveArtifactLabel);
+    container.appendChild(deactivateArtifactLabel);
     container.appendChild(deactivateArtifactCheck);
     container.appendChild(showButton);
 
