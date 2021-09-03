@@ -3,9 +3,6 @@
 // As time goes by, a thick arc will appears, and it will extend longer and longer.
 // The thick arc become a circle when the cannon ready.
 
-import { 
-  BiomeNames
-} from "https://cdn.skypack.dev/@darkforest_eth/types";
 
 import {
   coords
