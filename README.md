@@ -35,7 +35,7 @@ Feel free to add additional information to your plugin directory, such as we did
 ## Contribution Guidelines
 - Comments on top of the script explaining what is is and how to use it
 - Has to have screenshot, ideally with result of action and or the ui, should to be ~20kb in size unless you really need more
-- Check desctructors cleanup all constructors, delete all new, reset all listeners and timers
+- Check destructors cleanup all constructors, delete all new, reset all listeners and timers
 - Simple clean auditable javascript, expect to go through a little back and forth code review
 - No external scripts being loaded except for from us https://plugins.zkga.me/utils/ or a few REALLY big names from knowns cdns have been allowed so far like: https://unpkg.com/htm/preact/standalone.module.js and https://cdn.skypack.dev/lodash.range
 - No use of localstorage, overriding internal rpc timers/settings (df.contractsAPI.contractCaller), interaction with or depending on other plugins
