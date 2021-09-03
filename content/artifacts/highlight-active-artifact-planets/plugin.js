@@ -9,6 +9,7 @@ import {
 } from 'https://plugins.zkga.me/utils/utils.js';
 
 import {
+  BiomeNames,
   ArtifactType,
   ArtifactTypeNames
 } from "https://cdn.skypack.dev/@darkforest_eth/types";
