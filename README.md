@@ -42,6 +42,21 @@ Feel free to add additional information to your plugin directory, such as we did
 
 Please understand these 'rules' are our best effort to be able to lightly audit code for the protection of the users. Its an impossible job but were trying anyway. If your code doesn't fit in here don't take it personally. The community has also created repos like [Awesome Dark Forest](https://github.com/snowtigersoft/awesome-darkforest) which provide no such gatekeeping and are a great way to showcase your work as well.
 
+## Reviewer Guidelines
+This repo always needs more help reviewing the incoming plugins PRs. Please 'watch' the repo so you get emails of all the new stuff coming in.
+
+**Note incoming PRs are obviously not reviewed so you need to be much more careful testing unmerged PRS as they could be malicious. Read the code closely before running, and if possible review untrusted code with a throwaway wallet or local copy of game** 
+
+Reviewing isn't that big of a task! Anyone can do it
+* Is it documented at all?
+* Does it work like you'd expect based on documentation?
+* Does it work at all, did you test it? report back
+* Does it overlap heavily with an existing plugin, or at least say why its different and better than an old one, can you ping the original developer or people who have touched it to give some feedback
+* Make sure it follows the contribution and security guidelines 
+* Think about the general javascript code quality (but don't nitpick too hard)
+
+Leave that feedback in the issue, more than one reviewer is always appreciated
+
 ## Showcase local development
 
 To develop on the showcase page or theme itself, you can use `hugo` by installing as per above. You need to checkout the git submodules for the theme with `git submodule update --init --recursive` and then running `hugo server -D` in this repository will start a local webserver you can visit with your browser.
