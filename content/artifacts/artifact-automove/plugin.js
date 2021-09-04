@@ -113,16 +113,18 @@ class Plugin {
       let toId = candidate[0].locationId;
 
       const heldArtifactNum = candidate[0].heldArtifactIds.length;
-      const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === toId)
+      const unconfirmed = df.getUnconfirmedMoves().filter(move => move.to === toId);
       const arrivals = getArrivalsForPlanet(toId);
 
       // Rejected if >5 tx (pending + unconfirmed) arrivals
-      if (unconfirmed + arrivals > 5) {
+      if (unconfirmed.length + arrivals.length > 5) {
         continue;
       }
 
-      // one planet can only held <= 4 artifacts
-      if (unconfirmed + arrivals + heldArtifactNum > 4) {
+      // one planet can only held <= 5 artifacts
+      const unconfirmedArtifacts = unconfirmed.filter(move => move.artifact);
+      const arrivalArtifacts = arrivalArtifacts.filter(arrival = > arrival.artifactId);
+      if (unconfirmedArtifacts.length + arrivalArtifacts.length + heldArtifactNum > 5) {
         continue;
       }
 
