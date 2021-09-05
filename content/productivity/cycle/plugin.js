@@ -1,35 +1,37 @@
-const abortC = new AbortController() // for removing eventlistener from window
-let cycleKey = "F9" // key you press to go to next planet
-let levelFilter =1 // minimum level of planets to cycle around
-let planets        // the planets you will cycle
-let planetsIter    // the iterator of the planets
+//This plugin lets you cycle around your planets that are above a certain level when you press a key.
 
 /**
  * filter which planets to cycle through
  */
-function planetFilter() {
-  planets = df.getMyPlanets().filter((e)=> {return e.planetLevel >= levelFilter})
-  planetsIter = planets.values()
+function planetFilter(t) {
+  t.planets = df.getMyPlanets().filter((e)=> {return e.planetLevel >= t.levelFilter})
+  t.planetsIter = t.planets.values()
 }
 
 class Plugin {
-  constructor() {}
+  constructor() {
+    this.abortC = new AbortController() // for removing eventlistener from window
+    this.cycleKey = "F9" // key you press to go to next planet
+    this.levelFilter =1 // minimum level of planets to cycle around
+    this.planets = null    // the planets you will cycle
+    this.planetsIter = null   // the iterator of the planets
+  }
 
   /**
    * Called when plugin is launched with the "run" button.
    */
   async render(container) {
-    planetFilter()
+    planetFilter(this)
     window.addEventListener("keyup",(e)=>{ // handles the pressing of the cycle key
-      if (e.key === cycleKey){
-        let next = planetsIter.next().value
+      if (e.key === this.cycleKey){
+        let next = this.planetsIter.next().value
         if(next === undefined){
-          planetsIter = planets.values()
+          this.planetsIter = this.planets.values()
         }
         ui.setSelectedPlanet(next)
         ui.centerPlanet(next)
       }
-    }, {signal: abortC.signal}) 
+    }, {signal: this.abortC.signal}) 
 
     const lvlLabel=document.createElement("label") // label for level selection menu
     lvlLabel.innerText="level >="
@@ -41,8 +43,8 @@ class Plugin {
     }
     levelMenu.value=1
     levelMenu.addEventListener("input",(e)=>{ // handles the change of level in menu
-      levelFilter=e.target.value
-      planetFilter()
+      this.levelFilter=e.target.value
+      planetFilter(this)
     })
     lvlLabel.appendChild(levelMenu)
 
@@ -51,7 +53,7 @@ class Plugin {
     const keySelector = document.createElement("input") // text field where you type which key to bind cycling to
     keySelector.type="text"
     keySelector.value="F9"
-    keySelector.addEventListener("change",(e)=>{cycleKey=e.target.value})
+    keySelector.addEventListener("change",(e)=>{this.cycleKey=e.target.value})
     ksLabel.appendChild(keySelector)
   
     container.appendChild(ksLabel)
@@ -63,7 +65,7 @@ class Plugin {
    * Called when plugin modal is closed.
    */
   destroy(){
-    abortC.abort() // remove event listener from window
+    this.abortC.abort() // remove event listener from window
     while(this.container.firstChild){ // remove plugin
       this.container.removeChild(this.container.firstChild)
     }
