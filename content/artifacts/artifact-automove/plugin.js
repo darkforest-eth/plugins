@@ -123,7 +123,7 @@ class Plugin {
 
       // one planet can only held <= 5 artifacts
       const unconfirmedArtifacts = unconfirmed.filter(move => move.artifact);
-      const arrivalArtifacts = arrivalArtifacts.filter(arrival = > arrival.artifactId);
+      const arrivalArtifacts = arrivals.filter(arrival => arrival.artifactId);
       if (unconfirmedArtifacts.length + arrivalArtifacts.length + heldArtifactNum > 5) {
         continue;
       }
