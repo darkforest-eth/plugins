@@ -1,6 +1,6 @@
 ---
 title: Cycle
-date: 
+date:
 subtitle: cycle through planets using a hotkey
-version: 0.6.0
+version: 0.6.4
 ---
