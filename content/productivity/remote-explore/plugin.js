@@ -7,10 +7,15 @@
 // a webserver that exposes a `/mine` endpoint and connect to it from in-game
 // with this plugin.
 //
-// When running this on https://zkga.me/, you might get an error about blocked
-// insecure content. You probably should install an SSL Certificate on your
-// explore server. If you can't, you can enable mixed content, __but this can be
-// extremely dangerous.__
+// When trying contact a remote server (not also running on your computer) from
+// a webpage like this plugin does it may not work or you may see an error about
+// blocked insecure content. Theres 3 ways make this work:
+// * The right but rather technical way is to install a SSL Certificate on your
+//   server.
+// * Another technical solution is routing your local port to your remote server
+//   as described https://developer.zkga.me/mining/connecting-to-a-remote-headless-miner
+// * Finally a bad but quick solution is to google enabling mixed content in your browser
+//   NOTE however this can be extremely dangerous also allowing any other code to do the same.
 
 import { html, render, useState, useEffect, useLayoutEffect } from 'https://unpkg.com/htm/preact/standalone.module.js';
 import { locationIdFromDecStr } from 'https://cdn.skypack.dev/@darkforest_eth/serde';

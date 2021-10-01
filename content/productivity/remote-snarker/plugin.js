@@ -3,11 +3,17 @@
 // Similar to the remote explore plugin, the remote snarker plugin allows
 // players to run snark proof generation on another computer. We
 // usehttps://github.com/bind/df-snarker as a webserver that exposes a `/move`
-// endpoint and connect to it from in-game with this plugin. When running this
-// on https://zkga.me/, you might get an error about blocked insecure content.
-// You probably just want to install a SSL Certificate on your explore server.
-// If you can't, you can enable mixed content __but this can be extremely
-// dangerous.__
+// endpoint and connect to it from in-game with this plugin. 
+//
+// When trying contact a remote server (not also running on your computer) from
+// a webpage like this plugin does it may not work or you may see an error about
+// blocked insecure content. Theres 3 ways make this work:
+// * The right but rather technical way is to install a SSL Certificate on your
+//   server.
+// * Another technical solution is routing your local port to your remote server
+//   as described https://developer.zkga.me/mining/connecting-to-a-remote-headless-miner
+// * Finally a bad but quick solution is to google enabling mixed content in your browser
+//   NOTE however this can be extremely dangerous also allowing any other code to do the same.
 
 import PromiseQueue from "https://cdn.skypack.dev/p-queue";
 
