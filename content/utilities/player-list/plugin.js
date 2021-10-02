@@ -8,6 +8,17 @@
 // players with more than one planet. The view will refresh every 60 seconds
 // while open.
 
+// change the following if you want to disaplay or hide certain rows:
+const COLUMN_VISIBLE_HASH = true;
+const COLUMN_VISIBLE_NAME = true;
+const COLUMN_VISIBLE_PLANETS = true;
+const COLUMN_VISIBLE_ENERGY = true;
+const COLUMN_VISIBLE_ENERGYCAP = false;
+const COLUMN_VISIBLE_ENERGYAVAIL = true;
+const COLUMN_VISIBLE_SILVER = true;
+const COLUMN_VISIBLE_SCORE = true;
+const COLUMN_VISIBLE_RANK = true;
+
 const minPlayerPlanetCount = 2;
 const updateTimeInSeconds = 60;
 
@@ -66,13 +77,22 @@ function findBestPlanetOfPlayer(ethAddress) {
 }
 
 function sortScoreFunc(p1, p2) {
-	if (p1.score === undefined || p1.score === null) return 1;
-	if (p2.score === undefined || p2.score === null) return -1;
-	return p1.score - p2.score;
+	if (p1.score === undefined || p1.score === null) return -1;
+	if (p2.score === undefined || p2.score === null) return 1;
+	return p2.score - p1.score;
+}
+
+function Column(name, funcGetStr, funcSortPlayers) {
+	let o = {};	
+	o.name = name;
+	o.getStr = funcGetStr;
+	o.sortPlayers = funcSortPlayers;
+	return o;
 }
 
 function Plugin() {
 	let o = {};
+	o.columns = [];
 	o.players = {};
 	o.playerList = [];
 	o.allPlayers;
@@ -82,18 +102,122 @@ function Plugin() {
 	o.firstRender = true;
 	o.twitterNames = null;
 	o.leaderboard = [];
+	o.lastClickedColumn = "";
+	o.reverseSort = false;
 
 	o.init = function () {
+		o.initColumns();
 		downloadTwitterNames().then(twitter => {
 			o.twitterNames = twitter;
 			o.update();
 		});
 		o.updateInterv = setInterval(o.update, 1000 * updateTimeInSeconds);
 	}
+	
+	function createColumnHash() {
+		function getStr(player) {
+			return player.hash.substr(0, 8);
+		}
+		function sortPlayers(p1, p2) {
+			if (p1.hash < p2.hash) return -1;
+			if (p1.hash > p2.hash) return 1;
+			return 0;
+		}
+		return Column("hash", getStr, sortPlayers);
+	}
+	function createColumnName() {
+		function getStr(player) {
+			return o.getTwitterName(player.hash).substr(0, 12);
+		}
+		function sortPlayers(p1, p2) {
+			let n1 = o.getTwitterName(p1.hash);
+			let n2 = o.getTwitterName(p2.hash);
+			if (n1.length === 0) return 1;
+			if (n2.length === 0) return -1;
+			if (n1 < n2) return -1;
+			if (n1 > n2) return 1;
+			return 0;
+		}
+		return Column("name", getStr, sortPlayers);
+	}
+	function createColumnPlanets() {
+		function getStr(player) {
+			return formatNumberForDisplay(player.planets.length);
+		}
+		function sortPlayers(p1, p2) {
+			return p2.planets.length - p1.planets.length;
+		}
+		return Column("planets", getStr, sortPlayers);
+	}
+	function createColumnEnergy() {
+		function getStr(player) {
+			return formatNumberForDisplay(player.energy);
+		}
+		function sortPlayers(p1, p2) {
+			return p2.energy - p1.energy;
+		}
+		return Column("energy", getStr, sortPlayers);
+	}
+	function createColumnEnergyCap() {
+		function getStr(player) {
+			return formatNumberForDisplay(player.energyCap);
+		}
+		function sortPlayers(p1, p2) {
+			return p2.energyCap - p1.energyCap;
+		}
+		return Column("energyCap", getStr, sortPlayers);
+	}
+	function createColumnEnergyAvail() {
+		function getStr(player) {
+			return parseInt(player.energyAvailablePercent * 100) + "%";
+		}
+		function sortPlayers(p1, p2) {
+			return p2.energyAvailablePercent - p1.energyAvailablePercent;
+		}
+		return Column("energyAvail", getStr, sortPlayers);
+	}
+	function createColumnSilver() {
+		function getStr(player) {
+			return formatNumberForDisplay(player.silver);
+		}
+		function sortPlayers(p1, p2) {
+			return p2.silver - p1.silver;
+		}
+		return Column("silver", getStr, sortPlayers);
+	}
+	function createColumnScore() {
+		function getStr(player) {
+			return formatNumberForDisplay(player.score);
+		}
+		return Column("score", getStr, sortScoreFunc);
+	}
+	function createColumnRank() {
+		function getStr(player) {
+			return formatNumberForDisplay(player.leaderboardRank);
+		}
+		function sortPlayers(p1, p2) {
+			return p2.leaderboardRank - p1.leaderboardRank;
+		}
+		return Column("rank", getStr, sortPlayers);
+	}
+					
+	o.initColumns = function() {
+		if (COLUMN_VISIBLE_HASH) o.columns.push(createColumnHash());
+		if (COLUMN_VISIBLE_NAME) o.columns.push(createColumnName());
+		if (COLUMN_VISIBLE_PLANETS) o.columns.push(createColumnPlanets());
+		if (COLUMN_VISIBLE_ENERGY) o.columns.push(createColumnEnergy());
+		if (COLUMN_VISIBLE_ENERGYCAP) o.columns.push(createColumnEnergyCap());
+		if (COLUMN_VISIBLE_ENERGYAVAIL) o.columns.push(createColumnEnergyAvail());
+		if (COLUMN_VISIBLE_SILVER) o.columns.push(createColumnSilver());
+		if (COLUMN_VISIBLE_SCORE) o.columns.push(createColumnScore());
+		if (COLUMN_VISIBLE_RANK) o.columns.push(createColumnRank());
+	}
 
 	o.render = function (div) {
 		o.div = div;
 		div.style.width = '700px';
+		div.style.color = "#FFF";
+		div.style.backgroundColor = "#000";
 		div.parentElement.parentElement.style.bot = '0px'
 
 		o.div_playerList = document.createElement('div');
@@ -180,24 +304,25 @@ function Plugin() {
 		table.width = (parseInt(o.div.style.width)-20) + "px";
 		{
 			const tr = document.createElement('tr');
-			const groups = ["hash", "name", "planets", "energy", "energyCap", "energyAvail", "silver", "score", "rank"];
-			for (let group of groups) {
+			for (let c of o.columns) {
 				let th = document.createElement('th');
-				th.innerText = group;
-				if (th.innerText !== "hash" && th.innerText !== "name")
-					th.style.cursor = "pointer";
-
+				th.innerText = c.name;
+				th.style.cursor = "pointer";
+				th.addEventListener("mouseenter", ()=>{
+					th.style.color = "#000000";
+					th.style.backgroundColor = "#FFFFFF";
+				});
+				th.addEventListener("mouseleave", ()=>{
+					th.style.color = "#FFFFFF";
+					th.style.backgroundColor = "#000000";
+				});
 				th.onclick=()=>{
-					if(th.innerText=='planets')	o.playerList.sort((a,b)=> b.planets.length-a.planets.length);
-					else if(th.innerText=='energy') o.playerList.sort((a, b) => b.energy - a.energy);
-					else if(th.innerText=='energyCap') o.playerList.sort((a,b)=> b.energyCap-a.energyCap);
-					else if(th.innerText=='energyAvail') o.playerList.sort((a,b)=>b.energyAvailablePercent-a.energyAvailablePercent);
-					else if(th.innerText=='silver') o.playerList.sort((a,b)=>b.silver-a.silver);
-					else if(th.innerText=='score') o.playerList.sort(sortScoreFunc);
-					else if(th.innerText=='rank') o.playerList.sort((a,b)=>a.leaderboardRank-b.leaderboardRank);
+					o.playerList.sort(c.sortPlayers);
+					if (th.innerText === o.lastClickedColumn) o.reverseSort = !o.reverseSort;
+					o.lastClickedColumn = th.innerText;
+					if (o.reverseSort) o.playerList.reverse();
 					o.drawPlayerInfo();
 				}
-
 				tr.appendChild(th);
 			}
 			table.appendChild(tr);
@@ -212,24 +337,14 @@ function Plugin() {
 			const tr = document.createElement('tr');
 			tr.style["color"] = getPlayerColor(player.hash);
 			tr.style.cursor = "pointer";
-			const bestPlanet = findBestPlanetOfPlayer(player.hash);
-			tr.onclick = () => {
-				ui.centerPlanet(bestPlanet);
-			}
-			const twitterName = o.getTwitterName(player.hash);
-			const name = twitterName !== "" ? twitterName : player.hash.substr(0, 8);
-			tr.title = "jump to " + name;
+//			const bestPlanet = findBestPlanetOfPlayer(player.hash);
+//			tr.onclick = () => {
+//				ui.centerPlanet(bestPlanet);
+//			}
+			
+			for (let c of o.columns)
+				addAsTd(tr, c.getStr(player));
 
-			addAsTd(tr, player.hash.substr(0, 8));
-			addAsTd(tr, twitterName);
-			addAsTd(tr, player.planets.length);
-			addAsTd(tr, formatNumberForDisplay(player.energy));
-			addAsTd(tr, formatNumberForDisplay(player.energyCap));
-			addAsTd(tr, parseInt(player.energyAvailablePercent * 100) + "%");
-			addAsTd(tr, formatNumberForDisplay(player.silver));
-			if (player.score === undefined) addAsTd(tr, "none");
-			else addAsTd(tr, formatNumberForDisplay(player.score));
-			addAsTd(tr, formatNumberForDisplay(player.leaderboardRank));
 			table.appendChild(tr);
 		}
 		o.div_playerList.appendChild(table);
