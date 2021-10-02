@@ -10,6 +10,7 @@ const updateTimeInSeconds = 60;
 const leaderboardRange = 5; // 5 people above and below you
 
 const emptyAddress = "0x0000000000000000000000000000000000000000";
+const reverseOrdering = false;
 
 // ---------------------------------------------------------------
 
@@ -131,7 +132,7 @@ function Plugin() {
 		o.leaderboard.sort((p1, p2) => {
 			if (p1.score === undefined || p1.score === null) return 1;
 			if (p2.score === undefined || p2.score === null) return -1;
-			return p1.score - p2.score;
+			return reverseOrdering ? p1.score - p2.score : p2.score - p1.score;
 		});
 
 		o.div_playerList.innerText = "";
