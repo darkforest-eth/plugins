@@ -21,6 +21,7 @@ const COLUMN_VISIBLE_SCORE = true; // leaderboard score
 const COLUMN_VISIBLE_RANK = true; // leaderboard rank
 const COLUMN_VISIBLE_LASTACTIVE = true; // when was the last time a player made a move
 
+const windowHeight = 400;
 // players with less planets than this will not show up in the list
 const minPlayerPlanetCount = 2;
 // how often the list updates
@@ -447,6 +448,7 @@ function Plugin() {
 		if (o.columns.length < 1) o.initColumns();
 		o.div = div;
 		div.style.width = o.columns.length*80+"px";
+		div.style.height = windowHeight+"px";
 		div.style.color = "#FFF";
 		div.style.backgroundColor = "#000";
 
