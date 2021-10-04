@@ -27,7 +27,7 @@ const COLUMN_VISIBLE_LASTACTIVE = true; // when was the last time a player made 
 const windowHeight = 400;
 // players with less planets than this will not show up in the list
 const minPlayerPlanetCount = 2;
-// if enabled you can click on a planet
+// if enabled you can click on a planet to move the owner of it to the top of the list
 const onClickMovePlayerToTheTop = true;
 // how often the list updates
 const updateTimeInSeconds = 60;
