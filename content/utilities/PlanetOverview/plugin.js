@@ -1,4 +1,6 @@
 // Overview of Planets by STX
+// Manage your empire. Sort your planets by level or name, quick view when they will reach max energy and silver.
+//
 // How to use:
 // 1. Select your preffered planet type, level and set count of top lines. = Will be refreshed according preselected level is equal or higher. (scroll able)
 // 2. Default sorting according distance from homeplanet if is not pre-selected any object on map. Or if is selected some object on map it sorting distance from here.
