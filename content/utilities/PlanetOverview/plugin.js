@@ -1,6 +1,24 @@
 // Overview of Planets by STX
-// Start sort from homeplanet if is not pre-selected planet
-// remixed from Palnet score plugin -> THX to Phated
+// How to use:
+// 1. Select your preffered planet type, level and set count of top lines. = Will be refreshed according preselected level is equal or higher. (scroll able)
+// 2. Default sorting according distance from homeplanet if is not pre-selected any object on map. Or if is selected some object on map it sorting distance from here.
+// 3. By clic on line of table will centered map on it.
+// 4. Checkbox is to show only your or all planets on your map. (spy mode)
+// === feel free to see overview of silver & energy budget status and estimated time to have full stock of it.
+//
+// Optional function:
+// Is implemented default refresh 30 seconds if you need immediately refresh push button 'Update'
+// If you are interested about current status of your unconfirmed transaction push button 'Un.Trans'. At console reveal detailed information.
+//
+// remixed from Planet score plugin R3 -> THX to @Phated ,
+// was used for base frame and advanced html table coding. Whole complex coding inside from original.
+// removed all connected with score
+// remixed sorting of distance
+// added auto-refresh
+// added checkbox owner/all
+// added timestamp of filled stocks silver/energy
+//
+// THX to @Modukon + @jacobrosenthal for main audit and recommended optimalization.
 
 // Import game utils
 import { getSilver } from "https://plugins.zkga.me/utils/utils.js";
@@ -273,6 +291,23 @@ class Overview {
       console.log("Moves : ", df.getUnconfirmedMoves());
       console.log("Upgrades : ", df.getUnconfirmedUpgrades());
       console.log("Wormhole : ", df.getUnconfirmedWormholeActivations().length);
+    }
+    // Formating of big numbers silver + energy
+    
+    function roundToDecimal(num, decimalCount = 1) {
+      if (decimalCount < 1) return Math.round(num);
+      let p = Math.pow(10, decimalCount);
+      num = num * p;
+      num = Math.round(num) / p;
+      return num;
+    }
+    
+    function formatNumberForDisplay(num, decimalCount = 1) {
+      if (num < 1e3) return roundToDecimal(num, decimalCount);
+      if (num < 1e6) return roundToDecimal(num / 1e3, decimalCount) + "k";
+      if (num < 1e9) return roundToDecimal(num / 1e6, decimalCount) + "m";
+      if (num < 1e12) return roundToDecimal(num / 1e9, decimalCount) + "b";
+      return roundToDecimal(num / 1e12, decimalCount) + "t";
     }
 
     // Grafic append
