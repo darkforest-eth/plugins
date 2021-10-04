@@ -1,10 +1,13 @@
 // Player List
 //
 // Shows a list of players that appear on your map.
-// Click on a planet of a player to move that player to the top of the list.
+// Click on a planet of a player to move that player to the top of the list. (can be disabled)
 // Click on one of the categories to sort the list by it.
 // Click on one of the players in the list to jump to one of their planets.
+// You can hover over some elements in the table for more information about them.
 // The list will refresh every 60 seconds.
+// Downloads twitter names from the df site if available.
+// Downloads graph data. (const GRAPH_API_URL)
 
 // change the following if you want to disaplay or hide certain rows:
 const COLUMN_VISIBLE_HASH = true; // player address
@@ -24,6 +27,8 @@ const COLUMN_VISIBLE_LASTACTIVE = true; // when was the last time a player made 
 const windowHeight = 400;
 // players with less planets than this will not show up in the list
 const minPlayerPlanetCount = 2;
+// if enabled you can click on a planet
+const onClickMovePlayerToTheTop = true;
 // how often the list updates
 const updateTimeInSeconds = 60;
 // for how many players the last move time will be updated at once
@@ -472,6 +477,7 @@ function Plugin() {
 		if (newPlayer === emptyAddress) newPlayer = null;
 		if (newPlayer === o.planetSelectedPlayer) return;
 		o.planetSelectedPlayer = newPlayer;
+		if (!onClickMovePlayerToTheTop) return;
 		o.sortPlayerList();
 		o.updateLastActive().then(()=> { o.drawPlayerList(); });
 		o.drawPlayerList();
@@ -493,7 +499,7 @@ function Plugin() {
 				});
 			} else o.playerList.sort(o.sortByColumn.sortPlayers);
 		}
-		if (o.planetSelectedPlayer) {
+		if (onClickMovePlayerToTheTop && o.planetSelectedPlayer) {
 			let p = o.players[o.planetSelectedPlayer];
 			let index = o.playerList.findIndex(pl => pl === p);
 			if (index != -1) o.playerList.splice(index, 1);
@@ -570,13 +576,15 @@ function Plugin() {
 		let voyages = getActiveVoyages();
 		for (let voy of voyages) {
 			let destPlanet = df.getPlanetWithId(voy.toPlanet);
+			if (!o.players[voy.player]) continue;
 			if (voy.player === destPlanet.owner) {
 				o.players[voy.player].voyagesFriendly.push(voy);
 			} else if (destPlanet.owner === emptyAddress) {
 				o.players[voy.player].voyagesNeutral.push(voy);
 			} else {
 				o.players[voy.player].voyagesHostile.push(voy);
-				o.players[destPlanet.owner].voyagesVictim.push(voy);
+				if (o.players[destPlanet.owner])
+					o.players[destPlanet.owner].voyagesVictim.push(voy);
 			}
 		}
 	}
@@ -633,6 +641,7 @@ function Plugin() {
 			const tr = document.createElement('tr');
 			for (let c of o.columns) {
 				let th = document.createElement('th');
+				if (c === o.sortByColumn) th.style.fontStyle = "italic";
 				th.innerText = c.name;
 				th.style.cursor = "pointer";
 				th.addEventListener("mouseenter", ()=>{
