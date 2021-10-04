@@ -91,25 +91,33 @@ class Overview {
       const fullSilverDate = new Date(
         df.getSilverCurveAtPercent(planet, 99) * 1000
       ).toString();
-      const fullSilverTime = [
-        fullSilverDate.substr(4, 6),
-        fullSilverDate.substr(16, 8),
-      ];
+
+      let fullSilverTime = "";
+      if (fullSilverDate != "Invalid Date")
+        fullSilverTime = [
+          fullSilverDate.substr(4, 6),
+          fullSilverDate.substr(16, 8),
+        ];
 
       const energyPercent = Math.round(
         100 / (planet.energyCap / Math.round(planet.energy))
       );
+
       const fullEnergyDate = new Date(
         df.getEnergyCurveAtPercent(planet, 99) * 1000
       ).toString();
-      const fullEnergyTime = [
-        fullEnergyDate.substr(4, 6),
-        fullEnergyDate.substr(16, 8),
-      ];
 
-      row.innerHTML = `<td>${idx + 1}.</td><td>${getPlanetName(
-        planet
-      )}</td><td style="text-align: center">${
+      let fullEnergyTime = "";
+      if (fullEnergyDate != "Invalid Date")
+        fullEnergyTime = [
+          fullEnergyDate.substr(4, 6),
+          fullEnergyDate.substr(16, 8),
+        ];
+
+      let planetName = getPlanetName(planet).substr(0, 10);
+      row.innerHTML = `<td>${
+        idx + 1
+      }.</td><td>${planetName}</td><td style="text-align: center">${
         planet.planetLevel
       }</td><td>${getSilver(planet)}/${
         planet.silverCap
@@ -199,7 +207,6 @@ class Overview {
     unconfirmedButton.innerText = "Un.Trans";
     unconfirmedButton.style.marginRight = "10px";
     unconfirmedButton.addEventListener("click", () => {
-      updateTxStatus();
       unconfirmed();
       updateTx();
       this.renderPlanets();
@@ -208,7 +215,7 @@ class Overview {
     // Slider for count of total list lines
     const topSlider = document.createElement("input");
     topSlider.style.marginTop = "13px";
-    topSlider.style.width = "37%";
+    topSlider.style.width = "40%";
     topSlider.type = "range";
     topSlider.value = `${this.topX}`;
     topSlider.min = 1;
@@ -259,11 +266,6 @@ class Overview {
         df.getUnconfirmedUpgrades().length +
         "  Wormhole :  " +
         df.getUnconfirmedWormholeActivations().length;
-    }
-
-    // This is the fuction that updates the transactions - change client response
-    function updateTxStatus() {
-      df.contractsAPI.contractCaller.queue.invocationIntervalMs = 100;
     }
 
     // This is the function that shows the transactions in the console
