@@ -88,12 +88,14 @@ class Plugin {
       const planetTarget = item[1];
       if (planetTarget) {
         if (isSpaceRift(df.getPlanetWithId(planetTarget))) {
-          withdrawSilver(planetTarget);
-          i++;
+          if (withdrawSilver(planetTarget) != 0) {
+            i++;
+          }
         }
         if (planetSource) {
-          sendSilver(planetSource, planetTarget);
-          i++;
+          if (sendSilver(planetSource, planetTarget) != 0) {
+            i++;
+          }
         }
       }
       if (i >= MAX_CONCURRENT_NUM) {
@@ -365,13 +367,13 @@ function sendSilver(fromId, toId, maxDistributeEnergyPercent = 99) {
   const minDistributeSilver = from.silverCap * MIN_DISTRIBUTE_PERCENT / 100;
   console.log(`from.silver: ${from.silver} minDistributeSilver: ${minDistributeSilver} silverSpaceLeft: ${silverSpaceLeft}`);
   if (from.silver > minDistributeSilver) {
-    // near full or full
+    // source is near full
     silverNeeded = silverSpaceLeft > Math.floor(from.silver) ? Math.floor(from.silver) : silverSpaceLeft;
     console.log(`planA`)
   } else {
-    // not full
-    if (to.silver == 0 && to.silverCap < from.silver) {
-      silverNeeded = Math.floor(to.silverCap);
+    // source is not full
+    if (silverSpaceLeft < from.silver) {
+      silverNeeded = Math.floor(silverSpaceLeft);
       console.log(`planB`)
     } else {
       console.log(`silver source not full`);
