@@ -234,7 +234,7 @@ class Plugin {
       let pairs = JSON.stringify(this.pairList);
       var blob = new Blob([pairs], { type: 'application/json' }),
       anchor = document.createElement('a');
-      anchor.download = df.getContractAddress().substring(0, 6) + '_pairs.json';
+      anchor.download = new Date().toLocaleString() + "_" + df.getAccount() + '_Silver-pairs.json';
       anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
       anchor.dataset.downloadurl = ['application/json', anchor.download, anchor.href].join(':');
       anchor.click();
