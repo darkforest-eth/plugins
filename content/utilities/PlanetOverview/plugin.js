@@ -176,8 +176,9 @@ class Overview {
     // Setup size for main plugin window
     container.style.width = "800px";
 
-    // Select from list PLanetType , with text loaded from client
+    // Select from list PlanetType , with text loaded from client
     const planetType = document.createElement("select");
+    planetType.title = "Select planet type to reveal";
     planetType.style.background = "rgb(8,8,8)";
     planetType.style.width = "22%";
     planetType.style.marginTop = "10px";
@@ -206,6 +207,7 @@ class Overview {
 
     // Select from list planeLevel , with text loaded from client
     const minPlanetLevel = document.createElement("select");
+    minPlanetLevel.title = "Select min. lvl to reveal";
     minPlanetLevel.style.background = "rgb(8,8,8)";
     minPlanetLevel.style.width = "15%";
     minPlanetLevel.style.marginTop = "10px";
@@ -259,6 +261,7 @@ class Overview {
 
     // Slider for count of total list lines
     const topSlider = document.createElement("input");
+    topSlider.title = "Select count of top revealed planets (default: 10, range: 0-100)";
     topSlider.style.marginTop = "13px";
     topSlider.style.width = "40%";
     topSlider.type = "range";
@@ -290,6 +293,7 @@ class Overview {
 
     // Checkbox for my planets ?
     let MyPlanets = document.createElement("input");
+    MyPlanets.title = "If checked reveal only your planet";
     MyPlanets.type = "Checkbox";
     MyPlanets.checked = true;
     MyPlanets.id = "myPlanets";
