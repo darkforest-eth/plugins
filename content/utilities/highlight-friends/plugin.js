@@ -48,7 +48,7 @@ let maxLevel = 9;
 
 function friendList() {
 
-  const [inPlanet, setInPlanet] = useState(window.HIGHLIGHT_FRIENDS.planet);
+  const [inPlanet, setInPlanet] = useState(window.HIGHLIGHT_FRIENDS);
   const [chosenPlanet, setChosenPlanet] = useState(undefined);
 
   const [inMinLevel, setInMinLevel] = useState(minLevel);
@@ -143,38 +143,38 @@ function friendList() {
   function addFriend() {
     if (chosenPlanet == undefined) return;
     let flag = true;
-    for (let i in HIGHLIGHT_FRIENDS.planet) {
-      if (HIGHLIGHT_FRIENDS.planet[i].owner == chosenPlanet.owner)
+    for (let i in HIGHLIGHT_FRIENDS) {
+      if (HIGHLIGHT_FRIENDS[i].owner == chosenPlanet.owner)
         flag = false;
     }
 
-    if (flag == true) HIGHLIGHT_FRIENDS.planet.push(chosenPlanet);
-    setInPlanet([...HIGHLIGHT_FRIENDS.planet]);
+    if (flag == true) HIGHLIGHT_FRIENDS.push(chosenPlanet);
+    setInPlanet([...HIGHLIGHT_FRIENDS]);
     friend = [];
-    for (const i in HIGHLIGHT_FRIENDS.planet)
-      friend.push(HIGHLIGHT_FRIENDS.planet[i].owner);
+    for (const i in HIGHLIGHT_FRIENDS)
+      friend.push(HIGHLIGHT_FRIENDS[i].owner);
   }
 
 
   function removeFriend(thePlanet) {
     let newPlanet = [];
-    for (let i in HIGHLIGHT_FRIENDS.planet) {
-      let p = HIGHLIGHT_FRIENDS.planet[i];
+    for (let i in HIGHLIGHT_FRIENDS) {
+      let p = HIGHLIGHT_FRIENDS[i];
       if (p.owner == thePlanet.owner) continue;
       newPlanet.push(p);
     }
-    HIGHLIGHT_FRIENDS.planet = newPlanet;
-    setInPlanet([...HIGHLIGHT_FRIENDS.planet]);
+    HIGHLIGHT_FRIENDS = newPlanet;
+    setInPlanet([...HIGHLIGHT_FRIENDS]);
     friend = [];
-    for (const i in HIGHLIGHT_FRIENDS.planet) {
-      friend.push(HIGHLIGHT_FRIENDS.planet[i].owner);
+    for (const i in HIGHLIGHT_FRIENDS) {
+      friend.push(HIGHLIGHT_FRIENDS[i].owner);
     }
   }
 
   function clearFriend() {
-    HIGHLIGHT_FRIENDS.planet = [];
+    HIGHLIGHT_FRIENDS = [];
     friend = [];
-    setInPlanet(HIGHLIGHT_FRIENDS.planet);
+    setInPlanet(HIGHLIGHT_FRIENDS);
   }
 
   return html`<div  style=${divStyle} >
@@ -215,13 +215,13 @@ function App() {
 
 class Plugin {
   constructor() {
-    if (typeof window.HIGHLIGHT_FRIENDS.planet === "undefined") {
-      window.HIGHLIGHT_FRIENDS.planet = [];
+    if (typeof window.HIGHLIGHT_FRIENDS === "undefined") {
+      window.HIGHLIGHT_FRIENDS = [];
       friend = [];
 
     } else {
       friend = [];
-      let rhs = window.HIGHLIGHT_FRIENDS.planet;
+      let rhs = window.HIGHLIGHT_FRIENDS;
       for (const i in rhs) {
         friend.push(rhs[i].owner);
       }
