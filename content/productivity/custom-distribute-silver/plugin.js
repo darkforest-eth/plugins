@@ -1,6 +1,18 @@
 // Custom distribute Silver
 //
-// Custom distribute your silver!
+// The "silver-spacetime" plugin has done a lot of automated works, however sometimes we have to make special configuration.
+// For example: asteroid is too far away from spacetime rip, silver can not send directly, in this case the "silver-spacetime" plugins don't work.
+// Use this plugin, we can first send silver from asteroid to a middle planet, and then send to spacetime rip.
+//
+// Custom distribute silver based on your selection of source(asteroid or middle planet) and target(middle planet or spacetime rip) , we call them a pair.
+// After test a pair(use the "Test" button), you can add the pair to the pair list(use the "AddList" button).
+// "Back up" by downloading the pair list, and upload the pair list when you restart the browser and the plugin.
+//
+// Constants
+// MAX_CONCURRENT_NUM       :   Max concurrent ( withdraws + moves) num
+// MIN_SILVER_SEND          :   Min silver moves per time
+// MIN_DISTRIBUTE_PERCENT   :   Never send less than 90% of silverCap (except silverCap of the target planet is too small)
+// AUTO_SECONDS             :   Trigger auto silver move and withdraw every 30 seconds
 
 import {
   PlanetType,
@@ -8,16 +20,16 @@ import {
   PlanetLevelNames,
 } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
-// concurrent num
+// Max concurrent ( withdraws + moves) num
 const MAX_CONCURRENT_NUM = 5;
 
-// min silver send
+// Min silver moves per time
 const MIN_SILVER_SEND = 2000;
 
-// min silver distribute percent
+// Never send less than 90% of silverCap (except silverCap of the target planet is too small)
 const MIN_DISTRIBUTE_PERCENT = 90;
 
-// auto seconds
+// Trigger auto silver move and withdraw every 30 seconds
 const AUTO_SECONDS = 30;
 
 var pg = df.getProcgenUtils();
