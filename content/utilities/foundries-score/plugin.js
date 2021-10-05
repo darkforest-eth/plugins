@@ -3,7 +3,7 @@
  * 
  * Summary points of your unprospected foundries
  * 
- * Level 1 = Common
+ * Level 1 = Common - [100%] - [5k points]
  * Level 2 = Rare - [1/64(1.56%) for Epic] - [~ 23k points]
  * Level 3 = Rare - [1/16(6.25%) for Epic] - [~ 31k points]
  * Level 4 = Epic - [1/64(1.56%) for Legendary] - [~ 244k points]
