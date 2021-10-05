@@ -19,6 +19,7 @@
 // added auto-refresh
 // added checkbox owner/all
 // added timestamp of filled stocks silver/energy
+// added button for unconfirmed Txs
 //
 // THX to @Modukon + @jacobrosenthal for main audit and recommended optimalization.
 
@@ -139,12 +140,34 @@ class Overview {
         idx + 1
       }.</td><td>${planetName}</td><td style="text-align: center">${
         planet.planetLevel
-      }</td><td>${getSilver(planet)}/${
+      }</td><td>${formatNumberForDisplay(
+        getSilver(planet)
+      )} / ${formatNumberForDisplay(
         planet.silverCap
-      }=${silverPercent}%</td><td>${fullSilverTime}</td><td>${Math.round(
-        planet.energy
-      )}/${planet.energyCap}=${energyPercent}%</td><td>${fullEnergyTime}</td>`;
+      )}=${silverPercent}%</td><td>${fullSilverTime}</td><td>${formatNumberForDisplay(
+        Math.round(planet.energy)
+      )} / ${formatNumberForDisplay(
+        planet.energyCap
+      )}=${energyPercent}%</td><td>${fullEnergyTime}</td>`;
       this.tbody.appendChild(row);
+    }
+
+    // Formating for big numbers k/m/b
+
+    function roundToDecimal(num, decimalCount = 1) {
+      if (decimalCount < 1) return Math.round(num);
+      let p = Math.pow(10, decimalCount);
+      num = num * p;
+      num = Math.round(num) / p;
+      return num;
+    }
+
+    function formatNumberForDisplay(num, decimalCount = 1) {
+      if (num < 1e3) return roundToDecimal(num, decimalCount);
+      if (num < 1e6) return roundToDecimal(num / 1e3, decimalCount) + "k";
+      if (num < 1e9) return roundToDecimal(num / 1e6, decimalCount) + "m";
+      if (num < 1e12) return roundToDecimal(num / 1e9, decimalCount) + "b";
+      return roundToDecimal(num / 1e12, decimalCount) + "t";
     }
   }
   // Render function
@@ -209,7 +232,7 @@ class Overview {
       }
     };
 
-    // Button "Update" for label info status of the transactions
+    // Button "Update" for table
     const updateButton = document.createElement("button");
     updateButton.innerText = "Update";
     updateButton.style.marginRight = "10px";
@@ -222,13 +245,13 @@ class Overview {
       }
     });
 
-    // Button "Un.Trans"
+    // Button "Un.Trans" for label info status of the transactions
     const unconfirmedButton = document.createElement("button");
     unconfirmedButton.innerText = "Un.Trans";
     unconfirmedButton.style.marginRight = "10px";
     unconfirmedButton.addEventListener("click", () => {
-      unconfirmed();
-      updateTx();
+      unconfirmedLabel();
+      unconfirmedConsole();
       this.renderPlanets();
     });
 
@@ -254,6 +277,7 @@ class Overview {
     const dynamicLabel = document.createElement("label");
     dynamicLabel.style.width = "50%";
     dynamicLabel.style.padding = "5px 0";
+    dynamicLabel.style.marginLeft = "20px";
     dynamicLabel.style.marginRight = "170px";
     dynamicLabel.innerText = `Top ${this.topX} of PlanetType: ${this.planetType} up Lvl: ${this.minLevel}`;
 
@@ -277,8 +301,8 @@ class Overview {
       }
     };
 
-    // This is the fuction for button upgrade that show current unconfirmed tx
-    function updateTx() {
+    // This is the function that shows the status of transactions in dynamicLabel
+    function unconfirmedLabel() {
       dynamicLabel.innerText =
         "Moves :  " +
         df.getUnconfirmedMoves().length +
@@ -289,27 +313,10 @@ class Overview {
     }
 
     // This is the function that shows the transactions in the console
-    function unconfirmed() {
+    function unconfirmedConsole() {
       console.log("Moves : ", df.getUnconfirmedMoves());
       console.log("Upgrades : ", df.getUnconfirmedUpgrades());
       console.log("Wormhole : ", df.getUnconfirmedWormholeActivations().length);
-    }
-    // Formating of big numbers silver + energy
-    
-    function roundToDecimal(num, decimalCount = 1) {
-      if (decimalCount < 1) return Math.round(num);
-      let p = Math.pow(10, decimalCount);
-      num = num * p;
-      num = Math.round(num) / p;
-      return num;
-    }
-    
-    function formatNumberForDisplay(num, decimalCount = 1) {
-      if (num < 1e3) return roundToDecimal(num, decimalCount);
-      if (num < 1e6) return roundToDecimal(num / 1e3, decimalCount) + "k";
-      if (num < 1e9) return roundToDecimal(num / 1e6, decimalCount) + "m";
-      if (num < 1e12) return roundToDecimal(num / 1e9, decimalCount) + "b";
-      return roundToDecimal(num / 1e12, decimalCount) + "t";
     }
 
     // Grafic append
