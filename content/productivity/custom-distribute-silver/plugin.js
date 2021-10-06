@@ -336,7 +336,7 @@ class Plugin {
   }
 
   destroy() {
-    if (this.sendTimer) {
+    if (this.timerId) {
       clearInterval(this.timerId);
     }
   }
