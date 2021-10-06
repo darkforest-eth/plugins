@@ -1,7 +1,7 @@
 /**
  * Foundries Score
  * 
- * Summary points of your unprospected foundries
+ * Summary points of your unprospected foundries. Recalculates every 60 seconds by default.
  * 
  * Level 1 = Common - [100%] - [5k points]
  * Level 2 = Rare - [1/64(1.56%) for Epic] - [~ 23k points]
