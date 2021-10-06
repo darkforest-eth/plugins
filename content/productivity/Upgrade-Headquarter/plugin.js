@@ -3,7 +3,7 @@
 //
 // How to use:
 // 1. Select your planet from map to know if is ready to upgrade or find How much silver miss to be able to do.
-// 2. Select your planel from list ready to upgrade.
+// 2. Select your planel from list ready to upgrade. (scroll able)
 // 3. Upgrade all your plannets from one place
 // 4. Upgrades all the planets in your empire every minute according to a pattern (d = defense, r = range, s = speed)
 // for example, if the pattern is "rrrsd" a rank 3 planet that can upgrade will choose to upgrade the speed branch
@@ -18,6 +18,7 @@
 // added buttons title
 // remixed Upgrade Manager container to html
 // added comments
+// format k/m/b for silver amount in planet upgradeable list
 
 // Import Hyperscript Tagged Markup
 import {
@@ -249,7 +250,22 @@ function UpgradeAllPlanets() {
       </div>
     `;
 }
+// Function for formating of big numbers k/m/b
+function roundToDecimal(num, decimalCount = 1) {
+    if (decimalCount < 1) return Math.round(num);
+    let p = Math.pow(10, decimalCount);
+    num = num * p;
+    num = Math.round(num) / p;
+    return num;
+}
 
+function formatNumberForDisplay(num, decimalCount = 1) {
+    if (num < 1e3) return roundToDecimal(num, decimalCount);
+    if (num < 1e6) return roundToDecimal(num / 1e3, decimalCount) + "k";
+    if (num < 1e9) return roundToDecimal(num / 1e6, decimalCount) + "m";
+    if (num < 1e12) return roundToDecimal(num / 1e9, decimalCount) + "b";
+    return roundToDecimal(num / 1e12, decimalCount) + "t";
+}
 // Function for frame planet list
 function App() {
     let [selectedPlanet, setSelectedPlanet] = useState(() => {
@@ -351,7 +367,7 @@ class UpgradeHeadquarter {
 
                 this.colorSelected(planetEntry);
 
-                let text = `${getPlanetName(planet)} - Lvl ${planet.planetLevel} - ${getSilver(planet)} / ${getSilverNeeded(planet)} silver`;
+                let text = `${getPlanetName(planet)} - Lvl ${planet.planetLevel} - ${formatNumberForDisplay(getSilver(planet))}/${formatNumberForDisplay(getSilverNeeded(planet))} silver`;
                 let content = this.renderSelectable(planet, text)
                 planetEntry.appendChild(content);
 
