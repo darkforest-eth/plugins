@@ -74,19 +74,6 @@ const getPlanetMaxRank = (planet) => {
 const dfyellow = '#e8e228';
 const subbertext = '#565656';
 
-// if planet is not at max rank and has enough silver
-const planetCanUpgrade = (planet) => {
-    const totalRank = planet.upgradeState.reduce((a, b) => a + b);
-    if (planet.spaceType === SpaceType.NEBULA && totalRank >= 3) return false;
-    if (planet.spaceType === SpaceType.SPACE && totalRank >= 4) return false;
-    if (planet.spaceType === SpaceType.DEEP_SPACE && totalRank >= 5) return false;
-    if (planet.spaceType === SpaceType.DEAD_SPACE && totalRank >= 5) return false;
-    return (
-        planet.planetLevel !== 0 &&
-        planet.planetType === PlanetType.PLANET &&
-        planet.silver >= silverNeededForUpgrade(planet)
-    );
-};
 // Functions definitíon
 // Function to change collors according current lvl of upgrade deffault dark grey
 function Subber({ children }) {
