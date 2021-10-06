@@ -24,13 +24,6 @@ const planetLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const colors = ['#5c5c5c', '#5c5c5c', '#5c5c5c', '#a0a0a0', '#00dc80', '#6b68ff', '#c13cff', '#f8b73e', '#ff44b7'];
 const points = [0, 5000, 23000, 31000, 244000, 375000, 3300000, 4100000, 20000000, 20000000];
 
-
-const players = [
-    df.getAccount(),
-    // Crawls nearby unowned spacetimes
-    "0x0000000000000000000000000000000000000000",
-];
-
 class Plugin {
     constructor() {
         this.content = document.createElement('div');
@@ -42,9 +35,7 @@ class Plugin {
     render(container) {
         // Create refresh interval
         this.refreshTimer = setInterval(() => {
-            setTimeout(() => {
-                this.update();
-            }, 0);
+            this.update();
         }, 1000 * 60 * this.refreshInterval)
 
 
@@ -76,14 +67,14 @@ class Plugin {
         updateButton.innerHTML = 'Refresh'
         updateButton.onclick = () => {
             this.message.innerText = 'Please wait...';
-        
+
             setTimeout(() => {
                 this.update();
             }, 0);
         }
 
-        buttonContainer.appendChild(buttonDescr.cloneNode(true));
-        buttonContainer.appendChild(updateButton.cloneNode(true));
+        buttonContainer.appendChild(buttonDescr);
+        buttonContainer.appendChild(updateButton);
 
         // Content
         container.appendChild(buttonContainer);
@@ -172,9 +163,7 @@ class Plugin {
     }
 
     clearRefresh() {
-        if (this.refreshTimer) {
-            clearInterval(this.refreshTimer);
-        }
+        clearInterval(this.refreshTimer);
     }
 
     destroy() {
