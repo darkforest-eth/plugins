@@ -215,7 +215,6 @@ function PluginObj() {
 	let intervUpdate = null;
 	
 	o.init = function() {
-		let planets = df.getMyPlanets();
 		window.addEventListener("click", o.onMouseClick);
 	}
 	
