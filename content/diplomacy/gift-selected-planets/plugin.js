@@ -1,50 +1,149 @@
 // Gift Selected Planets
 // Easily transfer planets to others.
 // Select start/end coordinates to filter the planets.
+import {
+  PlanetType,
+  PlanetTypeNames
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
+
 
 let viewport = ui.getViewport();
 let pg = df.getProcgenUtils();
+
+const ANY = -1;
+const PLANET_TYPES = [
+  { value: ANY, text: "Any" },
+  ...Object.values(PlanetType).filter((type) => type !== PlanetType.Unknown).map((type) => ({ value: type, text: PlanetTypeNames[type] }))
+];
+
+const ArtifactFilterType = {
+  ANY: ANY,
+  WITH: 0,
+  WITHOUT: 1,
+}
+const ARTIFACT_FILTER = [
+  { value: ArtifactFilterType.ANY, text: "Any" },
+  { value: ArtifactFilterType.WITH, text: "With artifacts" },
+  { value: ArtifactFilterType.WITHOUT, text: "Without artifacts" }
+]
+
+function blocksLeftToProspectExpiration(
+  currentBlockNumber,
+  prospectedBlockNumber
+) {
+  return (prospectedBlockNumber || 0) + 255 - currentBlockNumber;
+}
+
+function prospectExpired(currentBlockNumber, prospectedBlockNumber) {
+  return blocksLeftToProspectExpiration(currentBlockNumber, prospectedBlockNumber) <= 0;
+}
+
+function isFindable(planet, currentBlockNumber) {
+  return (
+    currentBlockNumber !== undefined &&
+    df.isPlanetMineable(planet) &&
+    planet.prospectedBlockNumber !== undefined &&
+    !planet.hasTriedFindingArtifact &&
+    !planet.unconfirmedFindArtifact &&
+    !prospectExpired(currentBlockNumber, planet.prospectedBlockNumber)
+  );
+}
+
+function isProspectable(planet) {
+  return df.isPlanetMineable(planet) && planet.prospectedBlockNumber === undefined && !planet.unconfirmedProspectPlanet;
+}
+
+function hasArtifact(planet) {
+  return planet.heldArtifactId != null
+}
+
+function canHaveArtifact(planet) {
+  const currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
+  return isProspectable(planet) || isFindable(planet, currentBlockNumber);
+}
+
+function createDivider() {
+  let e = document.createElement('div');
+  e.style.width = "100%";
+  e.style.border = "0.1px solid white";
+  e.style.margin = "20px 0";
+  e.style.height = "0";
+  return e;
+}
+
+function createSelect(options, onchange) {
+  let e = document.createElement('select');
+  e.style.background = 'rgb(8,8,8)';
+  e.style.padding = '5px';
+  e.style.marginLeft = '5px';
+  e.style.marginRight = '5px';
+  e.style.width = "50%";
+  if (options && options.length > 0) {
+    options.forEach(o => {
+      let option = document.createElement('option');
+      option.value = o.value;
+      option.innerText = o.text;
+      e.appendChild(option);
+    })
+  }
+  if (onchange) {
+    e.onchange = onchange;
+  }
+  return e;
+}
+
+function createWrapper(labelText, children) {
+  let wrapper = document.createElement('div');
+  wrapper.style.marginBottom = '10px';
+
+  if (labelText) {
+    let label = document.createElement('span');
+    label.innerText = labelText;
+  
+    wrapper.appendChild(label);
+  }
+
+  if (children && children.length > 0) {
+    children.forEach(e => wrapper.appendChild(e));
+  }
+
+  return wrapper;
+}
+
+function createButton(text, width, onclick) {
+  let btn = document.createElement('button');
+  btn.innerText = text;
+  btn.style.width = width;
+  btn.onclick = onclick;
+  return btn;
+}
 
 class Plugin {
   constructor() {
     this.selectedPlanets = [];
 
-    this.xyWrapper = document.createElement('div');
-    this.xyWrapper.style.marginBottom = '10px';
-
-    let msg = document.createElement('div');
-    msg.innerText = 'Click on the map to pin selection.';
     this.beginXY = document.createElement('div');
     this.endXY = document.createElement('div');
 
-    let clear = document.createElement('button');
-    clear.innerText = 'Clear selection';
-    clear.style.width = '100%';
-    clear.onclick = () => {
+    let clear = createButton('Clear selection', '100%', () => {
       this.beginCoords = null;
       this.beginXY.innerText = 'Begin: ???';
       this.endCoords = null;
       this.endXY.innerText = '';
       this.selectedPlanets = [];
       this.renderPlanetList();
-    }
+    });
 
-    this.planetListContainer = document.createElement("div");
-    this.planetListContainer.innerText = "Planet list:";
-    this.planetListContainer.style.marginTop = '10px';
+    this.xyWrapper = createWrapper("Click on the map to pin selection.", [this.beginXY, this.endXY, clear]);
 
-    this.xyWrapper.appendChild(msg);
-    this.xyWrapper.appendChild(this.beginXY);
-    this.xyWrapper.appendChild(this.endXY);
-    this.xyWrapper.appendChild(clear);
-    this.xyWrapper.appendChild(this.planetListContainer);
+    this.planetListContainer = createWrapper('Planet list:');
 
-    this.userSelect = document.createElement('select');
-    this.userSelect.style.background = 'rgb(8,8,8)';
-    this.userSelect.style.padding = '5px';
-    this.userSelect.style.marginLeft = '5px';
-    this.userSelect.style.marginRight = '5px';
-    this.userSelect.style.width = '50%';
+    this.planetTypeFilter = createSelect(PLANET_TYPES, this.filterPlanet);
+    this.planetTypeFilter.style.float = "right";
+    this.artifactFilter = createSelect(ARTIFACT_FILTER, this.filterPlanet);
+    this.artifactFilter.style.float = "right";
+
+    this.userSelect = createSelect();
     this.refreshUsers();
 
     this.userInput = document.createElement('input');
@@ -58,6 +157,11 @@ class Plugin {
     this.feedback.style.marginBottom = '10px';
     this.feedback.style.textAlign = 'center';
   }
+
+  filterPlanet = () => {
+    this.selectedPlanets = df.getMyPlanets().filter(p => this.isInSelection(p)).sort((a, b) => b.planetLevel - a.planetLevel);
+    this.renderPlanetList();
+  };
 
   planetLink = (planet, clickable = true) => {
     const locationId = planet.locationId;
@@ -92,12 +196,8 @@ class Plugin {
       const pElement = this.renderPlanet(planet);
       this.planetListContainer.append(pElement);
 
-      // deleteButton for remove pair from the list
-      const delButton = document.createElement("button");
-      this.planetListContainer.append(delButton);
-      delButton.innerText = "Del";
-      delButton.style.marginLeft = "10px";
-      delButton.addEventListener("click", () => {
+      // deleteButton for remove planet from the list
+      const delButton = createButton('Del', 'auto', () => {
         for (let i = 0; i < this.selectedPlanets.length; i++) {
           if (this.selectedPlanets[i] == planet) {
             this.selectedPlanets.splice(i, 1);
@@ -106,6 +206,8 @@ class Plugin {
         }
         this.renderPlanetList(this.planetListContainer);
       });
+      delButton.style.marginLeft = "10px";
+      this.planetListContainer.append(delButton);
 
       // new line
       this.planetListContainer.append(document.createElement("br"));
@@ -188,7 +290,15 @@ class Plugin {
     const x = planet.location.coords.x, y = planet.location.coords.y;
     const x_in_range = (x - this.beginCoords.x) * (x - this.endCoords.x) <= 0;
     const y_in_range = (y - this.beginCoords.y) * (y - this.endCoords.y) <= 0;
-    return x_in_range && y_in_range;
+    let in_range =  x_in_range && y_in_range;
+    if (!in_range) return false;
+    const planetType = +this.planetTypeFilter.value, artifact = +this.artifactFilter.value;
+    if (planetType !== ANY && planetType !== planet.planetType) return false;
+    if (artifact !== ArtifactFilterType.ANY) {
+      const withArtifact = hasArtifact(planet) || canHaveArtifact(planet);
+      if ((artifact === ArtifactFilterType.WITH && !withArtifact) || (artifact === ArtifactFilterType.WITHOUT && withArtifact)) return false;
+    };
+    return true;
   }
 
   onMouseMove = () => {
@@ -216,8 +326,7 @@ class Plugin {
 
       if (this.endCoords == null) {
         this.endCoords = coords;
-        this.selectedPlanets = df.getMyPlanets().filter(p => this.isInSelection(p)).sort((a, b) => b.planetLevel - a.planetLevel);
-        this.renderPlanetList();
+        this.filterPlanet();
         return;
       }
     }
@@ -227,36 +336,22 @@ class Plugin {
     window.addEventListener('mousemove', this.onMouseMove);
     window.addEventListener('click', this.onClick);
 
-    let selectWrapper = document.createElement('div');
-    selectWrapper.style.marginBottom = '10px';
+    let planetTypeWrapper = createWrapper("Planet type filter:", [this.planetTypeFilter]);
 
-    let selectLabel = document.createElement('span');
-    selectLabel.innerText = 'Select user:';
+    let artifactFilterWrapper = createWrapper("Artifact filter:", [this.artifactFilter]);
 
-    let refreshButton = document.createElement('button');
-    refreshButton.innerText = 'refresh';
-    refreshButton.style.width = '20%';
-    refreshButton.onclick = this.refreshUsers;
+    let refreshButton = createButton('refresh', '20%', this.refreshUsers);
+    let selectWrapper = createWrapper("Select user:", [this.userSelect, refreshButton]);
 
-    selectWrapper.appendChild(selectLabel);
-    selectWrapper.appendChild(this.userSelect);
-    selectWrapper.appendChild(refreshButton);
+    let inputWrapper = createWrapper('Or enter them:', [this.userInput]);
 
-    let inputWrapper = document.createElement('div');
-    inputWrapper.style.marginBottom = '10px';
-
-    let inputLabel = document.createElement('span');
-    inputLabel.innerText = 'Or enter them:';
-
-    inputWrapper.appendChild(inputLabel);
-    inputWrapper.appendChild(this.userInput);
-
-    let giftButton = document.createElement('button');
-    giftButton.style.width = '100%';
-    giftButton.innerText = 'Gift Selected Planets!';
-    giftButton.onclick = this.giftPlanets;
+    let giftButton = createButton('Gift Selected Planets!', '100%', this.giftPlanets);
 
     container.appendChild(this.xyWrapper);
+    container.appendChild(this.planetListContainer);
+    container.appendChild(createDivider());
+    container.appendChild(planetTypeWrapper);
+    container.appendChild(artifactFilterWrapper);
     container.appendChild(selectWrapper);
     container.appendChild(inputWrapper);
     container.appendChild(this.feedback);
