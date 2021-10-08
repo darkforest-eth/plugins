@@ -71,12 +71,12 @@ class Plugin {
     planetElement.style.outline = "none";
     planetElement.style.padding = "0";
     if (clickable) {
-        planetElement.addEventListener("click", () => {
-            ui.centerLocationId(locationId);
-        });
+      planetElement.addEventListener("click", () => {
+        ui.centerLocationId(locationId);
+      });
     }
     return planetElement;
-};
+  };
 
   renderPlanet = (planet) => {
     const pElement = document.createElement("span");
@@ -98,7 +98,7 @@ class Plugin {
       delButton.innerText = "Del";
       delButton.style.marginLeft = "10px";
       delButton.addEventListener("click", () => {
-        for (let i=0; i<this.selectedPlanets.length; i++) {
+        for (let i = 0; i < this.selectedPlanets.length; i++) {
           if (this.selectedPlanets[i] == planet) {
             this.selectedPlanets.splice(i, 1);
             break;
@@ -122,7 +122,21 @@ class Plugin {
 
     this.userSelect.appendChild(empty);
 
-    ui.getAllPlayers().forEach(player => {
+    ui.getAllPlayers().sort((a, b) => {
+      if (a.twitter) {
+        if (b.twitter) {
+          return a.twitter.toLowerCase() < b.twitter.toLowerCase() ? -1 : 1
+        } else {
+          return -1
+        }
+      } else {
+        if (b.twitter) {
+          return 1
+        } else {
+          return a.address < b.address ? -1 : 1
+        }
+      }
+    }).forEach(player => {
       let option = document.createElement('option');
       option.value = player.address;
       option.innerText = player.twitter || player.address;
@@ -151,7 +165,7 @@ class Plugin {
     if (this.userInput.value) {
       let value = this.userInput.value.startsWith('@') ? this.userInput.value.slice(1) : this.userInput.value;
       let player = ui.getAllPlayers().find(player => {
-        return player.address === value || player.twitter === value;
+        return player.address === value.toLocaleLowerCase() || player.twitter === value;
       })
       if (!player) {
         this.feedback.innerText = `Unable to find that user.`;
@@ -170,6 +184,7 @@ class Plugin {
   }
 
   isInSelection = (planet) => {
+    if (!planet.location) return false;
     const x = planet.location.coords.x, y = planet.location.coords.y;
     const x_in_range = (x - this.beginCoords.x) * (x - this.endCoords.x) <= 0;
     const y_in_range = (y - this.beginCoords.y) * (y - this.endCoords.y) <= 0;
@@ -201,7 +216,7 @@ class Plugin {
 
       if (this.endCoords == null) {
         this.endCoords = coords;
-        this.selectedPlanets = df.getMyPlanets().filter(p => this.isInSelection(p));
+        this.selectedPlanets = df.getMyPlanets().filter(p => this.isInSelection(p)).sort((a, b) => b.planetLevel - a.planetLevel);
         this.renderPlanetList();
         return;
       }
