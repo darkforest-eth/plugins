@@ -104,15 +104,10 @@ function drawRectangle(ctx, coordsA, coordsB, color) {
 
 
 function refreshPlanetList() {
+	console.log("refreshPlanet");
 	if (cursorMode === CursorMode.ALL) {
 		showPlanetList = [];
 		const planets = df.getMyPlanets();
-		if (minLevel > maxLevel) {
-			let tmp = minLevel;
-			minLevel = maxLevel;
-			maxLevel = tmp;
-		}
-
 		for (let i in planets) {
 			let p = planets[i];
 			if (!p?.location?.coords) continue;
@@ -124,7 +119,6 @@ function refreshPlanetList() {
 	} else if (cursorMode === CursorMode.RANGE) {
 		if (planetRange.beginCoords === null) return;
 		if (planetRange.endCoords === null) return;
-		console.log("refreshPlanet");
 		showPlanetList = [];
 		let coordsA = planetRange.beginCoords;
 		let coordsB = planetRange.endCoords;
@@ -138,7 +132,6 @@ function refreshPlanetList() {
 			if (!p?.location?.coords) continue;
 			if (p.planetLevel < minLevel) continue;
 			if (p.planetLevel > maxLevel) continue;
-
 			let coords = p.location.coords;
 			if (coords.x >= beginX && coords.y >= beginY && coords.x <= endX && coords.y <= endY) {
 				showPlanetList.push(p);
@@ -147,11 +140,17 @@ function refreshPlanetList() {
 	}
 }
 
-
 function giftAreaPlanets() {
 	const [toAddress, setToAddress] = useState(undefined);
 	const [inMinLevel, setInMinLevel] = useState(minLevel);
 	const [inMaxLevel, setInMaxLevel] = useState(maxLevel);
+
+	let divStyle = {
+		textAlign: 'center',
+		justifyContent: "space-around",
+		width: "100%",
+		marginTop: "10px",
+	};
 
 	let warningStyle = {
 		color: 'red'
@@ -173,24 +172,25 @@ function giftAreaPlanets() {
 	let [input, setInput] = useState(undefined);
 
 	let toAddressPart = toAddress === undefined ?
-		html`<div style=${{color:'#AED6F1'}}>not choose yet</div>`:
-		html`<div style=${{color:'#F1C40F'}}>${toAddress}</div>`;
+		html`<div style=${{ color: '#AED6F1' }}>not choose yet</div>` :
+		html`<div style=${{ color: '#F1C40F' }}>${toAddress}</div>`;
 
 	let toAddressComponent =
 		html`<div>
-		
-		<div style=${{ marginTop: "16px",marginBottom:"16px" }}> 
-		
-		<input style=${{width: '250px'}}
-		placeholder=${'input lowercase address :0'}
+		<div style=${{ marginTop: "16px", marginBottom: "16px" }}> 
+		<input style=${{ width: '245px' }}
+		placeholder=${'input receiver address :0'}
 		onChange=${e => {
 				setInput(e.target.value);
-
 			}}> </input>
-		${'     '}
-		<button onClick=${() => {
+		
+			<button 
+				style=${{ marginLeft: '10px' }}
+			onClick=${() => {
 				setToAddress(input.toLowerCase());
 			}}> choose </button>
+		
+		
 		</div>
 		<button 
 			
@@ -216,17 +216,16 @@ function giftAreaPlanets() {
 		borderRadius: "3px",
 	};
 
-
 	const minLevelSelect = html`
 		<select
 		  style=${selectStyle}
 		  value=${inMinLevel}
 		  onChange=${async (e) => {
-			minLevel = Number(e.target.value);
-
+			let value = Number(e.target.value);
+			minLevel = Math.min(value, inMaxLevel);
+			maxLevel = Math.max(value, inMaxLevel);
 			refreshPlanetList();
-
-			setInMinLevel(Number(e.target.value));
+			setInMinLevel(value);
 		}
 		}
 		>
@@ -240,10 +239,11 @@ function giftAreaPlanets() {
 		  style=${selectStyle}
 		  value=${inMaxLevel}
 		  onChange=${(e) => {
-			maxLevel = Number(e.target.value);
+			let value = Number(e.target.value);
+			minLevel = Math.min(inMinLevel, value);
+			maxLevel = Math.max(inMinLevel, value);
 			refreshPlanetList();
-			setInMaxLevel(Number(e.target.value));
-
+			setInMaxLevel(value);
 		}
 		}
 		>
@@ -264,21 +264,16 @@ function giftAreaPlanets() {
 		</div>
 	`;
 
-
 	let [selectInfo, setSelectInfo] =
 		useState("select the planet(s) you want to share");
-
-
+	let [giftInfo, setGiftInfo] = useState('');
 
 	function selectSinglePlanet() {
-
 		console.log("Select Single Planet");
-
 		setCursorMode(CursorMode.SINGLE);
-
 		showPlanetList = [];
-
 		setSelectInfo("please click one planet to share");
+		setGiftInfo('');
 		return;
 	}
 
@@ -294,7 +289,9 @@ function giftAreaPlanets() {
 		console.log("Select Range Planet");
 		setCursorMode(CursorMode.RANGE);
 		showPlanetList = [];
-		setSelectInfo("determine the area of planet(s) will level filter");
+		setSelectInfo("determine the area of planet(s) with level filter");
+		setGiftInfo('');
+		return;
 	}
 
 
@@ -309,9 +306,11 @@ function giftAreaPlanets() {
 
 	function selectAllPlanet() {
 		console.log("Select All Planet");
-		setCursorMode(CursorMode.All);
-		showPlanetList= df.getMyPlanets();
-		setSelectInfo("determine the area of planet(s) with level filter");
+		setCursorMode(CursorMode.ALL);
+		showPlanetList = df.getMyPlanets();
+		console.log("test=========================");
+		setSelectInfo("determine all planet(s) with level filter");
+		setGiftInfo('');
 	}
 	let selectAllButton = html`
 	<div style=${{ marginLeft: "8px", width: "100px" }}>
@@ -326,7 +325,6 @@ function giftAreaPlanets() {
 	};
 
 	let selectComponent = html`<div>
-
 	<div style=${{ ...flexRow, marginTop: "16px" }}>
 	${selectSinglePlanetButton}
 	${selectRangeButton}
@@ -335,39 +333,33 @@ function giftAreaPlanets() {
 		${selectInfo}
 	</div>`;
 
-	let [giftInfo,setGiftInfo]=useState('');
 
-	function giftPlanet(){
+
+	function giftPlanet() {
 		console.log(showPlanetList);
-
-		for(let i in showPlanetList){
-			let p =showPlanetList[i];
+		for (let i in showPlanetList) {
+			let p = showPlanetList[i];
 			df.transferOwnership(p.locationId, toAddress);
-		
 		}
-		
-		setGiftInfo("the "+showPlanetList.length+" cicled planet(s) will be shared");
-
+		setGiftInfo("the " + showPlanetList.length + " cicled planet(s) will be shared");
 	}
 
-
 	let giftComponent = html`
-	<div style=${{ marginTop: "16px"}}>
+	<div style=${{ marginTop: "16px" }}>
 	<button
 	onClick=${giftPlanet}
 	>Gift the Planet(s)</button>
-
 	<div
-		style=${{color:"pink"}}
+		style=${{ color: "pink" }}
 	>${giftInfo}</div>
 	</div>`;
 
 	return html`
-	<div>
+	<div style=${divStyle}>
 		${toAddressComponent}
 		${selectLevelComponent}
 		${selectComponent}
-		${giftComponent }		
+		${giftComponent}		
 	</div>`;
 
 }
@@ -381,7 +373,9 @@ class Plugin {
 	constructor() {
 		minLevel = 4;
 		maxLevel = 9;
+		cursorMode === CursorMode.ALL;
 		showPlanetList = df.getMyPlanets();
+		refreshPlanetList();
 		this.container = null;
 	}
 
@@ -417,7 +411,6 @@ class Plugin {
 			let begin = planetRange.beginCoords;
 			let end = planetRange.endCoords || ui.getHoveringOverCoords();
 
-
 			drawRectangle(ctx, begin, end, "red");
 			if (begin != null && end != null) {
 				let coordsA = begin;//planetRange.beginCoords;
@@ -428,6 +421,13 @@ class Plugin {
 				let endY = Math.max(coordsA.y, coordsB.y);
 
 				const planets = df.getMyPlanets();
+
+				if (minLevel > maxLevel) {
+					let tmp = minLevel;
+					minLevel = maxLevel;
+					maxLevel = tmp;
+				}
+
 
 				for (let i in planets) {
 					let p = planets[i];
@@ -442,7 +442,6 @@ class Plugin {
 						drawRound(ctx, p, color, 0.7);
 					}
 				}
-
 			}
 		}
 		for (let i in showPlanetList) {
@@ -454,8 +453,8 @@ class Plugin {
 
 	async render(container) {
 		this.container = container;
-		container.style.width = "360px";
-		container.style.height = "440px";
+		container.style.width = "350px";
+		container.style.height = "420px";
 		window.addEventListener("click", this.onClick);
 		render(html`<${App} />`, container);
 	}
