@@ -70,7 +70,6 @@ const getPlanetMaxRank = (planet) => {
     else return 5;
 };
 
-const upgradingToggle = false;
 // Constanst for collor pre-definition
 const dfyellow = '#e8e228';
 const subbertext = '#565656';
