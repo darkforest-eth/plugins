@@ -70,9 +70,47 @@ const getPlanetMaxRank = (planet) => {
     else return 5;
 };
 
+const upgradingToggle = false;
 // Constanst for collor pre-definition
 const dfyellow = '#e8e228';
 const subbertext = '#565656';
+//--------------------------------------------------------
+// if planet is not at max rank and has enough silver
+const planetCanUpgrade = (planet) => {
+    const totalRank = planet.upgradeState.reduce((a, b) => a + b);
+    if (planet.spaceType === SpaceType.NEBULA && totalRank >= 3) return false;
+    if (planet.spaceType === SpaceType.SPACE && totalRank >= 4) return false;
+    if (planet.spaceType === SpaceType.DEEP_SPACE && totalRank >= 5) return false;
+    if (planet.spaceType === SpaceType.DEAD_SPACE && totalRank >= 5) return false;
+    return (
+        planet.planetLevel !== 0 &&
+        planet.planetType === PlanetType.PLANET &&
+        planet.silver >= silverNeededForUpgrade(planet)
+    );
+};
+
+const silverNeededForUpgrade = (planet) => {
+    const totalLevel = planet.upgradeState.reduce((a, b) => a + b);
+    return (totalLevel + 1) * 0.2 * planet.silverCap;
+};
+
+const upgradablePlanets = () => {
+    return df.getMyPlanets().filter(planetCanUpgrade);
+};
+
+// upgrades planet, using a pattern
+// just a rudimentary implementation that takes the branch that should be upgraded from the nth letter of the pattern, where n is the current rank
+const upgradePlanet = (planet, pattern) => {
+    const rank = planet.upgradeState.reduce((a, b) => a + b, 0);
+    if (pattern.length <= rank) return;
+    const upgradeBranch = ["d", "r", "s"].indexOf(pattern[rank]);
+    df.upgrade(planet.locationId, upgradeBranch);
+};
+
+const upgradeAllPlanets = (pattern) => {
+    upgradablePlanets().forEach((p) => upgradePlanet(p, pattern));
+};
+// --------------------------------------------------
 
 // Functions definitíon
 // Function to change collors according current lvl of upgrade deffault dark grey
@@ -92,7 +130,7 @@ function upgrade(planet, branch) {
     }
 }
 
-// Function to define current planetRank of planet and silver needs for next upprade
+// Function to define current planetRank of planet and silver needs for next uprade
 function SilverRequired({ planet }) {
     const maxRank = getPlanetMaxRank(planet);
     const silverPerRank = [];
@@ -189,21 +227,32 @@ function UpgradeAllButton({ Icon, branch, onFeedback }) {
 }
 
 
+// here is button for upgrademanager initalized
 // Function for top frame upgrade selected or upgrade manager
 function UpgradeSelectedPlanet({ planet }) {
     let wrapper = {
         display: 'flex',
         justifyContent: 'space-between',
     };
-
+    
     if (!planet) {
         return html`
         <div style=${wrapper}>
         <span>Upgrade Manager</span>
-        <input type="text" id=patternInput value="rrrrd" id="patternInput" style="color:black;font-size:20px;width:70px;height:25px" title='For example, if the pattern is "rrrsd", rank 3 planet that can upgrade will choose to upgrade the speed branch' ></input>
-        <button type="button" id=upgradePlanetsButton title='Upgrade all planets according to a pattern (d = defense, r = range, s = speed)' >Start Upgrading!</button>
+        <input type="text" value="rrrrd" id="patternInput" style="color:black;font-size:20px;width:70px;height:25px" title='For example, if the pattern is "rrrsd", rank 3 planet that can upgrade will choose to upgrade the speed branch' ></input>
+        <button type="button" id=upgradeManagerButton title='Upgrade all planets according to a pattern (d = defense, r = range, s = speed)' >Start Upgrading!</button>
         </div>
-      `;
+        <script type="text/javascript">
+        document.getElementById("patternInput").focus();
+
+        <!-- here is a place where I expected somehow put all from line 463-477  -->
+        document.getElementById("upgradeManagerButton").addEventListener("click", function() {
+            document.getElementById("upgradeManagerButton").innerText = "WHY?";
+
+        });
+
+        </script>
+        `;
     }
     return html`
       <div style=${wrapper}>
@@ -253,7 +302,8 @@ function formatNumberForDisplay(num, decimalCount = 1) {
     if (num < 1e12) return roundToDecimal(num / 1e9, decimalCount) + "b";
     return roundToDecimal(num / 1e12, decimalCount) + "t";
 }
-// Function for frame planet list
+
+// Function for main app 
 function App() {
     let [selectedPlanet, setSelectedPlanet] = useState(() => {
         const planet = ui.getSelectedPlanet();
@@ -394,57 +444,24 @@ class UpgradeHeadquarter {
         container.parentElement.style.minHeight = 'unset';
         container.style.width = '325px';
         container.style.minHeight = 'unset';
-        //--------------------------------------------------------
-        // if planet is not at max rank and has enough silver
-        const planetCanUpgrade = (planet) => {
-            const totalRank = planet.upgradeState.reduce((a, b) => a + b);
-            if (planet.spaceType === SpaceType.NEBULA && totalRank >= 3) return false;
-            if (planet.spaceType === SpaceType.SPACE && totalRank >= 4) return false;
-            if (planet.spaceType === SpaceType.DEEP_SPACE && totalRank >= 5) return false;
-            if (planet.spaceType === SpaceType.DEAD_SPACE && totalRank >= 5) return false;
-            return (
-                planet.planetLevel !== 0 &&
-                planet.planetType === PlanetType.PLANET &&
-                planet.silver >= silverNeededForUpgrade(planet)
-            );
-        };
 
-        const silverNeededForUpgrade = (planet) => {
-            const totalLevel = planet.upgradeState.reduce((a, b) => a + b);
-            return (totalLevel + 1) * 0.2 * planet.silverCap;
-        };
-
-        const upgradablePlanets = () => {
-            return df.getMyPlanets().filter(planetCanUpgrade);
-        };
-
-        // upgrades planet, using a pattern
-        // just a rudimentary implementation that takes the branch that should be upgraded from the nth letter of the pattern, where n is the current rank
-        const upgradePlanet = (planet, pattern) => {
-            const rank = planet.upgradeState.reduce((a, b) => a + b, 0);
-            if (pattern.length <= rank) return;
-            const upgradeBranch = ["d", "r", "s"].indexOf(pattern[rank]);
-            df.upgrade(planet.locationId, upgradeBranch);
-        };
-
-        const upgradeAllPlanets = (pattern) => {
-            upgradablePlanets().forEach((p) => upgradePlanet(p, pattern));
-        };
-
-        let upgradingToggle = true;
-        // --------------------------------------------------
         this.container = container;
-
         render(html`<${App} />`, container);
-
         container.style.width = '400px';
         let contentPane = document.createElement('div');
         container.appendChild(contentPane);
         this.renderUpgradable();
         this.loopId = setInterval(this.renderUpgradable, REFRESH_INTERVAL);
         contentPane.appendChild(this.planetList);
-
-        upgradePlanetsButton.onclick = () => {
+        
+        // ------------------------------------------------------------------------------
+        // how to call coorectly this functions any time from html button initialized on line 244? on line is 
+        // currently main function for upgrade manager working well just directly after plugin start run 
+        // but if is one time activated function to change top frame around selected planet and back unselected 
+        // button dont react any more. I miss somehow correct initialization function with destroyable button on line 244. 
+        // destroction come with selected planet...
+        let upgradingToggle = true;
+        upgradeManagerButton.onclick = () => {
             if (upgradingToggle) {
                 upgradeAllPlanets([...patternInput.value]);
                 this.upgradePlanetsInterval = window.setInterval(
@@ -454,11 +471,11 @@ class UpgradeHeadquarter {
                 window.clearInterval(this.upgradePlanetsInterval);
             }
             upgradingToggle = !upgradingToggle;
-            upgradePlanetsButton.innerText = upgradingToggle
+            upgradeManagerButton.innerText = upgradingToggle
                 ? "Start Upgrading!"
                 : "Stop Upgrading";
         };
-        patternInput.focus();
+        //-----------------------------------------------------
     }
 
 
