@@ -246,7 +246,8 @@ function UpgradeSelectedPlanet({ planet }) {
         <script type="text/javascript">
         document.getElementById("patternInput").focus();
 
-        <!-- here is a place where I expected somehow put lines 463-477  -->
+        <!-- here is a place where I expected somehow put function according lines 463-477  -->
+        
         document.getElementById("upgradeManagerButton").addEventListener("click", function() {
             document.getElementById("upgradeManagerButton").innerText = "WHY?";
 <!--------------------------------------------------------------------------------------- -->
