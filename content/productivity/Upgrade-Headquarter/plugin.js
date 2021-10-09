@@ -73,6 +73,8 @@ const getPlanetMaxRank = (planet) => {
 // Constanst for collor pre-definition
 const dfyellow = '#e8e228';
 const subbertext = '#565656';
+
+// Upgrade Manager global definition
 //--------------------------------------------------------
 // if planet is not at max rank and has enough silver
 const planetCanUpgrade = (planet) => {
@@ -227,7 +229,7 @@ function UpgradeAllButton({ Icon, branch, onFeedback }) {
 
 
 // here is button for upgrademanager initalized
-// Function for top frame upgrade selected or upgrade manager
+// Function for top frame upgrade selected or if unselected upgrade manager
 function UpgradeSelectedPlanet({ planet }) {
     let wrapper = {
         display: 'flex',
@@ -244,10 +246,10 @@ function UpgradeSelectedPlanet({ planet }) {
         <script type="text/javascript">
         document.getElementById("patternInput").focus();
 
-        <!-- here is a place where I expected somehow put all from line 463-477  -->
+        <!-- here is a place where I expected somehow put lines 463-477  -->
         document.getElementById("upgradeManagerButton").addEventListener("click", function() {
             document.getElementById("upgradeManagerButton").innerText = "WHY?";
-
+<!--------------------------------------------------------------------------------------- -->
         });
 
         </script>
@@ -453,12 +455,12 @@ class UpgradeHeadquarter {
         this.loopId = setInterval(this.renderUpgradable, REFRESH_INTERVAL);
         contentPane.appendChild(this.planetList);
         
-        // ------------------------------------------------------------------------------
-        // how to call coorectly this functions any time from html button initialized on line 244? on line is 
-        // currently main function for upgrade manager working well just directly after plugin start run 
-        // but if is one time activated function to change top frame around selected planet and back unselected 
-        // button dont react any more. I miss somehow correct initialization function with destroyable button on line 244. 
-        // destroction come with selected planet...
+// ------------------------------------------------------------------------------
+        // how to call corectly this functions any time from html button initialized on line 244? 
+        // currently main function for upgrade manager working well just directly after plugin start run with main render.
+        // but if is one time activated function to change top frame with selection planet and back unselected 
+        // button dont react any more. (Button is desroyed and reinvoke) I miss somehow correct initialization function with destroyable button on line 244. 
+        
         let upgradingToggle = true;
         upgradeManagerButton.onclick = () => {
             if (upgradingToggle) {
@@ -480,6 +482,7 @@ class UpgradeHeadquarter {
 
     destroy() {
         render(null, this.container);
+        window.clearInterval(this.upgradePlanetsInterval);
         if (this.loopId) {
             clearInterval(this.loopId)
         }
