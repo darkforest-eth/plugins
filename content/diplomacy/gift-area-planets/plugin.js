@@ -1,9 +1,14 @@
 //
 // Gift Area Planets
+//
+// author: https://twitter.com/ddy_mainland
 // 
-// 	gift the planet(s) circled with level filter and area filter to your friends :)
-// 	
+// Gift the planet(s) with colorful circle(s) on the map. 
+// You can choose one of the receiver's planets and determine the address of just in the address. 
+// For planet filter, this plugin supports level filter and have three modes:
+// set Single Planet, set Range Planet(s) and set All Planet(s).
 // 
+//
 
 
 import { PlanetLevel, PlanetType, PlanetTypeNames } from
