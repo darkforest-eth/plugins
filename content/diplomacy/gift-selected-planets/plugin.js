@@ -1,6 +1,6 @@
 // Gift Selected Planets
-// Easily transfer planets to others.
-// Select start/end coordinates to filter the planets.
+// Draw rectangle to select planets, filter by planet type and artifacts, then easily transfer them to others
+
 import {
   PlanetType,
   PlanetTypeNames
