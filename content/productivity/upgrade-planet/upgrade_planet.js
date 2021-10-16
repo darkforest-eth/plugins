@@ -1,5 +1,6 @@
 //
 // Auto Upgrade Planet
+//
 // Move silver to selected planet then upgrade it automatically
 //
 // Written by goldenfiredo, @goldenfiredo
