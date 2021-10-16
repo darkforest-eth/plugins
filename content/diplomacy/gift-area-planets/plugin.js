@@ -2,12 +2,12 @@
 // Gift Area Planets
 //
 // author: https://twitter.com/ddy_mainland
-// 
-// Gift the planet(s) with colorful circle(s) on the map. 
-// You can choose one of the receiver's planets and determine the address of just in the address. 
+//
+// Gift the planet(s) with colorful circle(s) on the map.
+// You can choose one of the receiver's planets and determine the address of just in the address.
 // For planet filter, this plugin supports level filter and have three modes:
 // set Single Planet, set Range Planet(s) and set All Planet(s).
-// 
+//
 //
 
 
@@ -149,6 +149,9 @@ function giftAreaPlanets() {
 	const [toAddress, setToAddress] = useState(undefined);
 	const [inMinLevel, setInMinLevel] = useState(minLevel);
 	const [inMaxLevel, setInMaxLevel] = useState(maxLevel);
+	const [selectInfo, setSelectInfo] =
+		useState("select the planet(s) you want to share");
+	const [giftInfo, setGiftInfo] = useState('');
 
 	let divStyle = {
 		textAlign: 'center',
@@ -193,6 +196,7 @@ function giftAreaPlanets() {
 				style=${{ marginLeft: '10px' }}
 			onClick=${() => {
 				setToAddress(input.toLowerCase());
+				setGiftInfo('');
 			}}> choose </button>
 		
 		
@@ -269,10 +273,6 @@ function giftAreaPlanets() {
 		</div>
 	`;
 
-	let [selectInfo, setSelectInfo] =
-		useState("select the planet(s) you want to share");
-	let [giftInfo, setGiftInfo] = useState('');
-
 	function selectSinglePlanet() {
 		console.log("Select Single Planet");
 		setCursorMode(CursorMode.SINGLE);
@@ -338,15 +338,13 @@ function giftAreaPlanets() {
 		${selectInfo}
 	</div>`;
 
-
-
 	function giftPlanet() {
 		console.log(showPlanetList);
 		for (let i in showPlanetList) {
 			let p = showPlanetList[i];
 			df.transferOwnership(p.locationId, toAddress);
 		}
-		setGiftInfo("the " + showPlanetList.length + " cicled planet(s) will be shared");
+		setGiftInfo("the " + showPlanetList.length + " circled planet(s) will be shared");
 	}
 
 	let giftComponent = html`
@@ -470,6 +468,8 @@ class Plugin {
 }
 
 export default Plugin;
+
+
 
 
 
