@@ -111,8 +111,31 @@ const upgradePlanet = (planet, pattern) => {
 const upgradeAllPlanets = (pattern) => {
     upgradablePlanets().forEach((p) => upgradePlanet(p, pattern));
 };
-// --------------------------------------------------
 
+let upgradeManagerButtonText = "Start Upgrading!";
+let TempPattern = "rrrrs";
+let upgradingToggle = true;
+let upgradePlanetsInterval = [];
+
+const upgradeManagerButtonOnclick = () => {
+    if (upgradingToggle) {
+        TempPattern = patternInput.value;
+        upgradeAllPlanets([...TempPattern]);
+        upgradePlanetsInterval = window.setInterval(
+            () => upgradeAllPlanets([...TempPattern]), 1e3 * 60);
+        
+    }
+    else {
+        window.clearInterval(upgradePlanetsInterval);
+    }
+    upgradingToggle = !upgradingToggle;
+    upgradeManagerButton.innerText = upgradingToggle
+        ? "Start Upgrading!"
+        : "Stop Upgrading";
+    upgradeManagerButtonText = upgradeManagerButton.innerText;
+};
+
+// --------------------------------------------------
 // Functions definitíon
 // Function to change collors according current lvl of upgrade deffault dark grey
 function Subber({ children }) {
@@ -227,32 +250,22 @@ function UpgradeAllButton({ Icon, branch, onFeedback }) {
     `;
 }
 
-
-// here is button for upgrademanager initalized
 // Function for top frame upgrade selected or if unselected upgrade manager
 function UpgradeSelectedPlanet({ planet }) {
     let wrapper = {
         display: 'flex',
         justifyContent: 'space-between',
     };
-    
+
     if (!planet) {
         return html`
         <div style=${wrapper}>
         <span>Upgrade Manager</span>
-        <input type="text" value="rrrrd" id="patternInput" style="color:black;font-size:20px;width:70px;height:25px" title='For example, if the pattern is "rrrsd", rank 3 planet that can upgrade will choose to upgrade the speed branch' ></input>
-        <button type="button" id=upgradeManagerButton title='Upgrade all planets according to a pattern (d = defense, r = range, s = speed)' >Start Upgrading!</button>
+        <input type="text" value=${TempPattern} id="patternInput" style="color:black;font-size:20px;width:70px;height:25px" title='For example, if the pattern is "rrrsd", rank 3 planet that can upgrade will choose to upgrade the speed branch' ></input>
+        <button type="button" id=upgradeManagerButton onclick=${upgradeManagerButtonOnclick} title='Upgrade all planets according to a pattern (d = defense, r = range, s = speed)' >${upgradeManagerButtonText}</button>
         </div>
         <script type="text/javascript">
         document.getElementById("patternInput").focus();
-
-        <!-- here is a place where I expected somehow put function according lines 463-477  -->
-        
-        document.getElementById("upgradeManagerButton").addEventListener("click", function() {
-            document.getElementById("upgradeManagerButton").innerText = "WHY?";
-<!--------------------------------------------------------------------------------------- -->
-        });
-
         </script>
         `;
     }
@@ -263,6 +276,9 @@ function UpgradeSelectedPlanet({ planet }) {
         <${UpgradeButton} Icon=${Range} planet=${planet} branch=${UpgradeBranchName.Range} />
         <${UpgradeButton} Icon=${Speed} planet=${planet} branch=${UpgradeBranchName.Speed} />
       </div>
+      <script type="text/javascript">
+
+      </script>
     `;
 }
 
@@ -455,35 +471,13 @@ class UpgradeHeadquarter {
         this.renderUpgradable();
         this.loopId = setInterval(this.renderUpgradable, REFRESH_INTERVAL);
         contentPane.appendChild(this.planetList);
-        
-// ------------------------------------------------------------------------------
-        // how to call corectly this functions any time from html button initialized on line 244? 
-        // currently main function for upgrade manager working well just directly after plugin start run with main render.
-        // but if is one time activated function to change top frame with selection planet and back unselected 
-        // button dont react any more. (Button is desroyed and reinvoke) I miss somehow correct initialization function with destroyable button on line 244. 
-        
-        let upgradingToggle = true;
-        upgradeManagerButton.onclick = () => {
-            if (upgradingToggle) {
-                upgradeAllPlanets([...patternInput.value]);
-                this.upgradePlanetsInterval = window.setInterval(
-                    () => upgradeAllPlanets([...patternInput.value]), 1e3 * 60);
-            }
-            else {
-                window.clearInterval(this.upgradePlanetsInterval);
-            }
-            upgradingToggle = !upgradingToggle;
-            upgradeManagerButton.innerText = upgradingToggle
-                ? "Start Upgrading!"
-                : "Stop Upgrading";
-        };
-        //-----------------------------------------------------
+
     }
 
 
     destroy() {
         render(null, this.container);
-        window.clearInterval(this.upgradePlanetsInterval);
+        window.clearInterval(upgradePlanetsInterval);
         if (this.loopId) {
             clearInterval(this.loopId)
         }
