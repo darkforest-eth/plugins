@@ -406,6 +406,8 @@ class Plugin {
 				//console.log(planetRange);
 				refreshPlanetList();
 			}
+		}else if (cursorMode === CursorMode.ALL){
+			refreshPlanetList();
 		}
 	}
 
