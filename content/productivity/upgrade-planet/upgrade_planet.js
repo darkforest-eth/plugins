@@ -13,14 +13,12 @@ import {
 } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
 import {
-  canStatUpgrade,
   canPlanetUpgrade,
   getPlanetRank,
 } from 'https://plugins.zkga.me/utils/utils.js';
 
 import {
   PlanetType,
-  UpgradeBranchName,
   SpaceType
 } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
@@ -154,22 +152,21 @@ function sendSilver(planet, rankSpan) {
 
 }
 
-function upgradePlanet(target) {
+function upgradePlanetPattern(planet, pattern) {
+  const rank = planet.upgradeState.reduce((a, b) => a + b, 0);
+  if (pattern.length <= rank) return;
+  const upgradeBranch = ["d", "r", "s"].indexOf(pattern[rank]);
+  df.upgrade(planet.locationId, upgradeBranch);
+}
+
+function upgradePlanet(target, patternInput) {
   let planet = df.getPlanetWithId(target.locationId);
   if (isUpgrading(planet)) {
     return;
   }
 
   if (planet && canPlanetUpgrade(planet)) {
-    if (canStatUpgrade(planet, UpgradeBranchName.Defense)) {
-      df.upgrade(planet.locationId, UpgradeBranchName.Defense)
-    } else if (canStatUpgrade(planet, UpgradeBranchName.Range)) {
-      df.upgrade(planet.locationId, UpgradeBranchName.Range)
-    } else if (canStatUpgrade(planet, UpgradeBranchName.Speed)) {
-      df.upgrade(planet.locationId, UpgradeBranchName.Speed)
-    } else {
-
-    }
+    upgradePlanetPattern(planet, ([...patternInput.value]));
   }
 }
 
@@ -191,6 +188,7 @@ function App() {
   
   function select() {
     setTarget(selectedPlanet);
+    rankSpan.innerHTML = 'rank: ' + getPlanetRank(selectedPlanet);
   }
 
   function stop() {
@@ -211,7 +209,7 @@ function App() {
     selectBtn.style = 'opacity: 1';
     startBtn.disabled = false;
     startBtn.style = 'opacity: 1';
-    rankSpan.innerHTML = '';
+    patternInput.disabled = false;
   }
 
   function start() {
@@ -222,6 +220,7 @@ function App() {
     selectBtn.style = 'opacity: 0.5';
     startBtn.disabled = true;
     startBtn.style = 'opacity: 0.5';
+    patternInput.disabled = true;
 
     if (sendIntervalId != '') {
       clearInterval(sendIntervalId);
@@ -232,8 +231,8 @@ function App() {
     if (upgradeIntervalId != '') {
       clearInterval(upgradeIntervalId);
     }
-    upgradeIntervalId = setInterval(upgradePlanet, 0.5 * 60 * 1000, target);
-    upgradePlanet(target);
+    upgradeIntervalId = setInterval(upgradePlanet, 0.5 * 60 * 1000, target, patternInput);
+    upgradePlanet(target, patternInput);
   }
 
   function locate() {
@@ -246,10 +245,13 @@ function App() {
         <button id=selectBtn onClick=${select}>Select a planet to upgrade</button>
       </div>
       ${allowUpgrade(target) ? html`
-        <br /><span style=${{ marginLeft: '5px' }}>${planetShort(target.locationId)}   </span>
-        <button onClick=${locate}>locate</button>
-        <br /><span style=${{ marginLeft: '5px' }} id=rankSpan></span>`
-         : html`<br /><span style=${{ marginLeft: '5px' }}>No planet selected or selected planet cannot be upgraded</span>`
+      <span style=${{ marginLeft: '5px' }}>${planetShort(target.locationId)}</span>
+      <button onClick=${locate}>locate</button><br />
+      <br /><span style=${{ marginLeft: '5px' }} id=patternSpan>upgrade pattern: 
+      <input type="text" value="rrrrs" id="patternInput" style="color:black;font-size:20px;width:70px;height:25px;marginLeft: 3px" title='For example, if the pattern is "rrrsd", a rank 3 planet that can upgrade will choose to upgrade the speed branch' ></input>
+      </span>
+      <br /><span style=${{ marginLeft: '5px' }} id=rankSpan></span>`
+       : html`<br /><span style=${{ marginLeft: '5px' }}>No planet selected or selected planet cannot be upgraded</span>`
       }
       <br />
       <br />
