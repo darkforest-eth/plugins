@@ -20,7 +20,9 @@ import {
 import {
   PlanetType,
   SpaceType
-} from "https://cdn.skypack.dev/@darkforest_eth/types"
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
+
+const { getPlanetName } = df.getProcgenUtils();
 
 const minSilverPercent = 95;
 const minEnergyPercent = 95;
@@ -188,7 +190,6 @@ function App() {
   
   function select() {
     setTarget(selectedPlanet);
-    rankSpan.innerHTML = 'rank: ' + getPlanetRank(selectedPlanet);
   }
 
   function stop() {
@@ -245,8 +246,8 @@ function App() {
         <button id=selectBtn onClick=${select}>Select a planet to upgrade</button>
       </div>
       ${allowUpgrade(target) ? html`
-      <span style=${{ marginLeft: '5px' }}>${planetShort(target.locationId)}</span>
-      <button onClick=${locate}>locate</button><br />
+      <br /><span style=${{ marginLeft: '5px' }}>${getPlanetName(target)}</span>
+      <button onClick=${locate} style=${{ marginLeft: '25px' }}>locate</button><br />
       <br /><span style=${{ marginLeft: '5px' }} id=patternSpan>upgrade pattern: 
       <input type="text" value="rrrrs" id="patternInput" style="color:black;font-size:20px;width:70px;height:25px;marginLeft: 3px" title='For example, if the pattern is "rrrsd", a rank 3 planet that can upgrade will choose to upgrade the speed branch' ></input>
       </span>
@@ -278,7 +279,7 @@ class Plugin {
 
   async render(container) {
     container.parentElement.style.minHeight = 'unset';
-    container.style.width = '380px';
+    container.style.width = '300px';
     container.style.minHeight = 'unset';
 
     this.container = container;
