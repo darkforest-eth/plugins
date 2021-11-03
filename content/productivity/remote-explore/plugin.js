@@ -167,6 +167,7 @@ function MinerUI({
       } else {
         ui?.removeExtraMinerLocation?.(miner.id);
       }
+      df.minerManager.emit(NEW_CHUNK, chunk, miningTimeMillis);
     };
     miner.on(NEW_CHUNK, calcHash);
 
