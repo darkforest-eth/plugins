@@ -149,7 +149,7 @@ function Gold({ children }) {
 
 // Function to start upgrade
 function upgrade(planet, branch) {
-    if (planet && canPlanetUpgrade(planet) && canStatUpgrade(planet, branch)) {
+    if (planet && canPlanetUpgrade(planet) && canStatUpgrade(planet, branch) && planet.unconfirmedUpgrades.length < 1) {
         df.upgrade(planet.locationId, branch)
     }
 }
