@@ -94,6 +94,7 @@ class Plugin {
     )
     .filter(p => (
         p.owner == df.account &&
+        p.locationId !== fromPlanet.locationId &&
         p.planetType !== PlanetType.SILVER_BANK &&
         (isSpaceRip(p) || p.planetLevel <= this.maxMiddlePlanetLevel)
     ))
@@ -206,7 +207,7 @@ class Plugin {
 
 
   globalAutoMove() {
-    let n = 0;
+    let n = df.getUnconfirmedMoves().length;
     let rips = df.getMyPlanets()
     .filter(p => (
         isSpaceRip(p)
