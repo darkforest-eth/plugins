@@ -243,8 +243,7 @@ async render(container) {
           
 
           let containerFriendly = document.createElement("div");
-          containerFriendly.appendChild(sourceColorFriendly); 
-          containerFriendly.appendChild(sourceColorOwner);
+          
           
 
         let addButtonFriendly = document.createElement('button');
@@ -397,21 +396,25 @@ async render(container) {
             
         };
         
-
+         
+        
         container.appendChild(addButtonFriendly);
         container.appendChild(clearButtonFriendly);
+        container.appendChild(sourceColorFriendly);
         container.appendChild(sourceContainerFriendly);
-        container.appendChild(containerFriendly);
+        container.appendChild(sourceColorOwner);
 
-        container.appendChild(sourceColorNeutral);
+        
         container.appendChild(addButtonNeutral);
         container.appendChild(clearButtonNeutral);
+        container.appendChild(sourceColorNeutral);
         container.appendChild(sourceContainerNeutral);
         
 
-        container.appendChild(sourceColorEnemy);
+        
         container.appendChild(addButtonEnemy);
         container.appendChild(clearButtonEnemy);
+        container.appendChild(sourceColorEnemy);
         container.appendChild(sourceContainerEnemy);
         
         container.appendChild(clearButton);
