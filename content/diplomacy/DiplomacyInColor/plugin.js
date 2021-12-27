@@ -12,7 +12,7 @@ let playersNeutral = [];
 
 let playersFriendly = [];
 
-class Plugin {
+class Diplomacy {
     constructor() {
         this.highlightStyle = 0;
         this.rangePercent = 8;
@@ -171,7 +171,7 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
 }
 
 
-render(container) {
+async render(container) {
     container.style.width = '500px';
     container.style.heigth = '600px';
 
@@ -376,14 +376,25 @@ render(container) {
         RefreshButton.onclick = () => {
             RefreshActive = !RefreshActive;
             if (RefreshActive){
+              let planetsFriendly = Array.from(df.getAllPlanets()).filter(p => (
+                playersFriendly.includes(p.owner)));
+                console.log('Friendly planets list ' + planetsFriendly);
+            let planetsNeutral = Array.from(df.getAllPlanets()).filter(p => (
+                playersNeutral.includes(p.owner)));
+                console.log('Neutral planets list ' + planetsNeutral);
+              //      console.log(planetsNeutral);
+            let planetsEnemy = Array.from(df.getAllPlanets()).filter(p => (p.owner !== df.account &&
+                playersEnemy.includes(p.owner))); 
+                console.log('Enemy planets list ' + planetsEnemy);
+                
                 RefreshButton.innerHTML = 'Stop';
             }else{
+              
+            
                 RefreshButton.innerHTML = 'Refresh';
             }
 
-            if (RefreshButton.innerHTML === 'Stop'){
-
-            }
+            
         };
         
 
@@ -455,19 +466,18 @@ render(container) {
       }
       
       draw(ctx) {
-        const origGlobalAlpha = ctx.globalAlpha;
+          const origGlobalAlpha = ctx.globalAlpha;
         const origFillStyle = ctx.fillStyle;
         const origSrokeStyle = ctx.strokeStyle;
         const viewport = ui.getViewport();
         const planetsOwner = df.getMyPlanets();
         const planets = df.getAllPlanets();
-
-        const planetsFriendly = Array.from(df.getAllPlanets()).filter(p => (
+        let planetsFriendly = Array.from(df.getAllPlanets()).filter(p => (
             playersFriendly.includes(p.owner)));
-        const planetsNeutral = Array.from(df.getAllPlanets()).filter(p => (
+        let planetsNeutral = Array.from(df.getAllPlanets()).filter(p => (
             playersNeutral.includes(p.owner)));
           //      console.log(planetsNeutral);
-        const planetsEnemy = Array.from(df.getAllPlanets()).filter(p => (p.owner !== df.account &&
+        let planetsEnemy = Array.from(df.getAllPlanets()).filter(p => (
             playersEnemy.includes(p.owner))); 
               //  console.log(planetsEnemy);
         // paint bigger ones first
@@ -733,6 +743,7 @@ render(container) {
               ctx.closePath();
             }
           }
+        
       }
 
       
@@ -746,4 +757,4 @@ render(container) {
         this.sliderGlobalAlpha.removeEventListener('input', this.globalAlphaHandler);
       }
 }
-    export default Plugin;
+    export default Diplomacy;
