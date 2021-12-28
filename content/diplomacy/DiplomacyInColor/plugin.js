@@ -175,7 +175,7 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
 }
 
 
-async render(container) {
+    render(container) {
     container.style.width = '450px';
     container.style.heigth = '620px';
 
