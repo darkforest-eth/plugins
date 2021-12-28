@@ -1,6 +1,6 @@
 // Diplomacy in color map
 // Introduction: Selected player planet and choose your Diplomacy Ambassador reaction with "Add Friendly" "Neutral" or "Enemy" button , 
-// Select color and some basic artibutes for Ambassador HeatAreas. (Friendly , Neutral or Enemy)
+// Select color and some basic atributes for Ambassador HeatAreas. (Friendly , Neutral or Enemy)
 
 // By 9STX6
 // Remixed  highlight-my-planets (Heatmap plugin and circle)  
