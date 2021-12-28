@@ -1,12 +1,17 @@
+// Diplomacy in color map
+// Introduction: Selected player planet and choose your Diplomacy Ambassador reaction with "Add Friendly" "Neutral" or "Enemy" button , 
+// Select color and some basic artibutes for Ambassador HeatAreas. (Friendly , Neutral or Enemy)
+
+// By 9STX6
+// Remixed  highlight-my-planets (Heatmap plugin and circle)  
+
 import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
 var removeAllChildNodes = (parent) => {
     while (parent.firstChild) {
         parent.removeChild(parent.firstChild);
     }
 };
-let playersEnemy = [
-    
-];
+let playersEnemy = [];
 // EMPTY_ADDRESS,
 let playersNeutral = [];
 
@@ -19,7 +24,6 @@ class Diplomacy {
         this.alpha = 0;
         this.globalAlpha = 1;
         this.ownColor = '#ffffff';
-        
         this.FriendlyColor = '#00FF00';
         this.NeutralColor = '#FFFF00';
         this.EnemyColor = '#FF0000' ;
