@@ -5,7 +5,7 @@
 // By 9STX6
 // Remixed  highlight-my-planets (Heatmap plugin and circle)  
 
-import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
+//import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
 var removeAllChildNodes = (parent) => {
     while (parent.firstChild) {
         parent.removeChild(parent.firstChild);
@@ -226,7 +226,8 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
             
           ].join('<br />');
          
-
+          this.colorPickerFriendlyColor = sourceColorFriendly.querySelector('label.FriendlyColor input');
+          this.colorPickerFriendlyColor.addEventListener('input', this.FriendlyColorHandler);
 
           let sourceColorNeutral = document.createElement("div"); 
           sourceColorNeutral.innerText = "Current Enemy source: none";
@@ -236,6 +237,8 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
             
           ].join('<br />');
           
+          this.colorPickerNeutralColor = sourceColorNeutral.querySelector('label.NeutralColor input');
+          this.colorPickerNeutralColor.addEventListener('input', this.NeutralColorHandler);
 
 
           let sourceColorEnemy = document.createElement("div"); 
@@ -245,9 +248,8 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
             this.getColorPicker('EnemyColor', 'Enemy Color:', this.EnemyColor),
           ].join('<br />');
           
-
-          let containerFriendly = document.createElement("div");
-          
+          this.colorPickerEnemyColor = sourceColorEnemy.querySelector('label.EnemyColor input');
+          this.colorPickerEnemyColor.addEventListener('input', this.EnemyColorHandler);          
           
 
         let addButtonFriendly = document.createElement('button');
@@ -313,26 +315,6 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
             }
         };
 
-        let clearButton = document.createElement('button');
-        clearButton.style.width = '45%';
-        clearButton.style.marginBottom = '10px';
-        clearButton.innerHTML = 'Clean ALL';
-        clearButton.onclick = () => {
-            playersFriendly = [];
-            playersNeutral = [];
-            playersEnemy = [];
-           // playersEnemy.push(EMPTY_ADDRESS);
-            console.log(playersFriendly);
-            console.log(playersNeutral);
-            console.log(playersEnemy);
-            console.log("Clean");
-            this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
-            this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
-            this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
-            sourceContainerFriendly.innerText = "Current Friendly source: none";
-            sourceContainerNeutral.innerText = "Current Neutral source: none";
-        };
-
         let clearButtonFriendly = document.createElement('button');
         clearButtonFriendly.style.width = '45%';
         clearButtonFriendly.style.marginBottom = '10px';
@@ -372,33 +354,49 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
             this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
             sourceContainerEnemy.innerText = "Current Enemy source: none"
         };
-        let RefreshActive = false;
-        let RefreshButton = document.createElement('button');
-        RefreshButton.style.width = '45%';
-        RefreshButton.style.marginBottom = '10px';
-        RefreshButton.innerHTML = 'Refresh';
-        RefreshButton.onclick = () => {
-            RefreshActive = !RefreshActive;
-            if (RefreshActive){
-              let planetsFriendly = Array.from(df.getAllPlanets()).filter(p => (
-                playersFriendly.includes(p.owner)));
-                console.log('Friendly planets list ' + planetsFriendly);
-            let planetsNeutral = Array.from(df.getAllPlanets()).filter(p => (
-                playersNeutral.includes(p.owner)));
-                console.log('Neutral planets list ' + planetsNeutral);
-              //      console.log(planetsNeutral);
-            let planetsEnemy = Array.from(df.getAllPlanets()).filter(p => (p.owner !== df.account &&
-                playersEnemy.includes(p.owner))); 
-                console.log('Enemy planets list ' + planetsEnemy);
-                
-                RefreshButton.innerHTML = 'Stop';
-            }else{
-              
-            
-                RefreshButton.innerHTML = 'Refresh';
+        
+        let LoadButton = document.createElement('button');
+        LoadButton.style.width = '45%';
+        LoadButton.style.marginBottom = '10px';
+        LoadButton.innerHTML = 'Load Diplomacy';
+        LoadButton.onclick = () => {
+          let inputFile = document.createElement('input');
+          inputFile.type = 'file';
+          inputFile.onchange = () => {
+            try {
+              var file = inputFile.files.item(0);
+              var reader = new FileReader();
+              reader.onload = () => {
+                const obj = JSON.parse(reader.result);
+                playersFriendly = obj.playersFriendly;
+                playersNeutral = obj.playersNeutral;
+                playersEnemy = obj.playersEnemy;
+                this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
+                this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
+                this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
+              };
+              reader.readAsText(file);
+            } catch (err) {
+              console.error(err);
+              return;
             }
+          }
+          inputFile.click();
+        };
 
-            
+
+        let SaveButton = document.createElement('button');
+        SaveButton.style.width = '45%';
+        SaveButton.style.marginBottom = '10px';
+        SaveButton.innerHTML = 'Save Diplomacy';
+        SaveButton.onclick = () => {
+            let save = JSON.stringify({playersFriendly,playersNeutral,playersEnemy});
+            var blob = new Blob([save], { type: 'application/json' }),
+            anchor = document.createElement('a');
+            anchor.download = new Date().toLocaleString() + "_" + df.getAccount() + '_DiplomacyAmbassador.json';
+            anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+            anchor.dataset.downloadurl = ['application/json', anchor.download, anchor.href].join(':');
+            anchor.click();   
         };
         
          
@@ -422,8 +420,8 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
         container.appendChild(sourceColorEnemy);
         container.appendChild(sourceContainerEnemy);
         
-       // container.appendChild(clearButton);
-       // container.appendChild(RefreshButton);
+        container.appendChild(LoadButton);
+        container.appendChild(SaveButton);
           
         
         
@@ -468,7 +466,7 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
         this.FriendlyColor = this.colorPickerFriendlyColor.value;
       }
       NeutralColorHandler() {
-        this.NeutralColor = this.colorPickerOwnNeutralColor.value;
+        this.NeutralColor = this.colorPickerNeutralColor.value;
       }
       EnemyColorHandler() {
         this.EnemyColor = this.colorPickerEnemyColor.value;
@@ -480,7 +478,7 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
         const origSrokeStyle = ctx.strokeStyle;
         const viewport = ui.getViewport();
         const planetsOwner = df.getMyPlanets();
-        const planets = df.getAllPlanets();
+       // const planets = df.getAllPlanets();
         let planetsFriendly = Array.from(df.getAllPlanets()).filter(p => (
             playersFriendly.includes(p.owner)));
         let planetsNeutral = Array.from(df.getAllPlanets()).filter(p => (
@@ -754,10 +752,6 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
           }
         
       }
-
-      
-    
-
 
     destroy() {
         this.selectHighlightStyle.removeEventListener('select', this.highlightStyleHandler);
