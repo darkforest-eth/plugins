@@ -493,11 +493,11 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
         // planets.sort((a, b) => b.range - a.range);
         // planets =  planetsFriendly;
         if(this.highlightStyle == 0) for (const p of planetsOwner) {
-    
+          if (!p.location) continue;
           // draw range circle
-          const { x, y } = viewport.worldToCanvasCoords(p.location.coords);
+          let { x, y } =  viewport.worldToCanvasCoords(p.location.coords);
           const hsl = this.hexToHsl(this.ownColor);
-    
+          
           const fac = Math.max(0, Math.log2(this.rangePercent / 5));
           const range = fac * p.range;
           const trueRange = viewport.worldToCanvasDist(range);
@@ -558,9 +558,9 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
           }
         }
         if (this.highlightStyle == 0) for (const p of planetsFriendly) {
-    
+          if (!p.location) continue;
             // draw range circle
-            const { x, y } = viewport.worldToCanvasCoords(p.location.coords);
+            let { x, y } =  viewport.worldToCanvasCoords(p.location.coords);
             const hsl = this.hexToHsl(this.FriendlyColor);
       
             const fac = Math.max(0, Math.log2(this.rangePercent / 5));
@@ -623,9 +623,9 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
             }
           }
           if (this.highlightStyle == 0) for (const p of planetsNeutral) {
-    
+            if (!p.location) continue;
             // draw range circle
-            const { x, y } = viewport.worldToCanvasCoords(p.location.coords);
+            let { x, y } = viewport.worldToCanvasCoords(p.location.coords);
             const hsl = this.hexToHsl(this.NeutralColor);
       
             const fac = Math.max(0, Math.log2(this.rangePercent / 5));
@@ -688,9 +688,9 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
             }
           }
           if (this.highlightStyle == 0) for (const p of planetsEnemy) {
-    
+            if (!p.location) continue;
             // draw range circle
-            const { x, y } = viewport.worldToCanvasCoords(p.location.coords);
+            let { x, y } = viewport.worldToCanvasCoords(p.location.coords);
             const hsl = this.hexToHsl(this.EnemyColor);
       
             const fac = Math.max(0, Math.log2(this.rangePercent / 5));
