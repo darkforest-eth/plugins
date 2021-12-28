@@ -370,7 +370,7 @@ async render(container) {
             console.log("Cleaned Enemy list");
             
             this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
-            sourceContainerNeutral.innerText = "Current Enemy source: none"
+            sourceContainerEnemy.innerText = "Current Enemy source: none"
         };
         let RefreshActive = false;
         let RefreshButton = document.createElement('button');
