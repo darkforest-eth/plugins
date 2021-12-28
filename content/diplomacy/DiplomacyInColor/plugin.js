@@ -176,8 +176,8 @@ renderSourceListEnemy(sourceContainerEnemy, playersEnemy) {
 
 
 async render(container) {
-    container.style.width = '500px';
-    container.style.heigth = '600px';
+    container.style.width = '450px';
+    container.style.heigth = '620px';
 
     let sourceContainerFriendly = document.createElement("div");
     sourceContainerFriendly.innerText = "Current Friendly source: none";
@@ -370,6 +370,7 @@ async render(container) {
             console.log("Cleaned Enemy list");
             
             this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
+            sourceContainerNeutral.innerText = "Current Enemy source: none"
         };
         let RefreshActive = false;
         let RefreshButton = document.createElement('button');
@@ -401,12 +402,12 @@ async render(container) {
         };
         
          
-        
+        container.appendChild(sourceColorOwner);
         container.appendChild(addButtonFriendly);
         container.appendChild(clearButtonFriendly);
         container.appendChild(sourceColorFriendly);
         container.appendChild(sourceContainerFriendly);
-        container.appendChild(sourceColorOwner);
+        
 
         
         container.appendChild(addButtonNeutral);
@@ -421,8 +422,8 @@ async render(container) {
         container.appendChild(sourceColorEnemy);
         container.appendChild(sourceContainerEnemy);
         
-        container.appendChild(clearButton);
-        container.appendChild(RefreshButton);
+       // container.appendChild(clearButton);
+       // container.appendChild(RefreshButton);
           
         
         
@@ -433,6 +434,7 @@ async render(container) {
     
         //I couldn't find a better way...
         if(this.highlightStyle == 0) {
+          
           document.querySelector('label.alpha').style.display = "inline-block";
           document.querySelector('label.range').style.display = "inline-block";
           document.querySelector('label.globalAlpha').style.display = "inline-block";
