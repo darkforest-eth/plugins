@@ -474,7 +474,7 @@ async render(container) {
         this.EnemyColor = this.colorPickerEnemyColor.value;
       }
       
-      draw(ctx) {
+      async draw(ctx) {
           const origGlobalAlpha = ctx.globalAlpha;
         const origFillStyle = ctx.fillStyle;
         const origSrokeStyle = ctx.strokeStyle;
