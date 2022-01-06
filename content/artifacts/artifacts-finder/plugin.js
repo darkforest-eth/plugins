@@ -1,7 +1,7 @@
 // Artifacts Finder
 //
-// This plugin offers a button to auto prospect artifacts every 5 minutes and find after prospect finish.
-// To stop simply close the plugin
+// This plugin offers a button to auto-prospect artifacts every few minutes, then to find after prospecting has finished.
+// To stop simply close the plugin.
 // Simple is Power!
 
 // Author: SnowTiger
@@ -16,11 +16,20 @@ import {
   BiomeNames
 } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
-// prospect artifacts every 5 minutes
-let AUTO_INTERVAL = 1000 * 60 * 5;
-// max 10 prospecting actions at the same time
-let MAX_PROSPECTING = 10;
 
+// ---------------
+// USER CONFIGURABLE PARAMETERS HERE
+
+// Set prospecting and finding loop interval in minutes
+const LOOP_INTERVAL_MINUTES = 2;
+
+// Set maximum number of simultaneous prospecting actions (finds don't have limit)
+const MAX_PLANET_ACTIONS = 10;
+
+// ---------------
+
+
+const LOOP_INTERVAL_MS = 1000 * 60 * LOOP_INTERVAL_MINUTES;
 
 function blocksLeftToProspectExpiration(
   currentBlockNumber,
@@ -120,7 +129,7 @@ class ArtifactsFinder {
   }
 
   prospectArtifacts() {
-    if (this.pendingPlanets.length >= MAX_PROSPECTING) {
+    if (this.pendingPlanets.length >= MAX_PLANET_ACTIONS) {
       return;
     }
     let currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
@@ -132,7 +141,7 @@ class ArtifactsFinder {
     });
     planets.forEach(async planet => {
       if (!this.finding) return;
-      while (this.pendingPlanets.length >= MAX_PROSPECTING) {
+      while (this.pendingPlanets.length >= MAX_PLANET_ACTIONS) {
         await sleep(2000);
         if (!this.finding) return;
       }
@@ -168,8 +177,8 @@ class ArtifactsFinder {
       this.logs.appendChild(createDom("div", "Start Finding"));
       this.prospectArtifacts();
       setTimeout(this.findArtifacts.bind(this), 0);
-      this.prospectTimerId = setInterval(this.prospectArtifacts.bind(this), AUTO_INTERVAL);
-      this.findTimerId = setInterval(this.findArtifacts.bind(this), 10000);
+      this.prospectTimerId = setInterval(this.prospectArtifacts.bind(this), LOOP_INTERVAL_MS);
+      this.findTimerId = setInterval(this.findArtifacts.bind(this), LOOP_INTERVAL_MS);
       this.findArtifactsButton.innerText = " Cancel Finding ";
     } else {
       this.findArtifactsButton.innerText = ' Start Find ';
