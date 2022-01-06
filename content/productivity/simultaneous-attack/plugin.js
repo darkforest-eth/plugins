@@ -1,6 +1,12 @@
 // Simultaneous attack
 //
-// attack thing with many thing at the same time
+// Attack or reinforce a planet by automatically scheduling up to 6 moves to arrive at the same time
+
+
+// User configurable parameters
+const DEFAULT_ENERGY_PERCENT = 75;
+const RECALCULATION_INTERVAL_SECONDS = 15;
+
 
 var pg = df.getProcgenUtils();
 
@@ -45,7 +51,7 @@ var planetRatelimited = (planet) => {
 // attacks from the sources to the planet
 // does not take tx or gwei or anything like that into account, but in my testing (which did not include 40 gwei gas prices) the moves only landed a max of 3-4 seconds apart
 // returns the timeoutId of the scheduled moves, in case they need to be cancelled
-var simultaneousAttack = (target, sources) => {
+const simultaneousAttack = (target, sources, energyPercent) => {
     const attackTimeouts = [];
     const planetsMoveLengths = sources.map((p) => {
         return { "planet": p, "time": df.getTimeForMove(p.locationId, target.locationId) };
@@ -64,7 +70,7 @@ var simultaneousAttack = (target, sources) => {
             // maybe somehow show the plugin user this error?
             if (Math.floor(energyArriving) <= 0)
                 return;
-            df.move(attacker.locationId, target.locationId, Math.floor(attacker.energy * 0.5), 0);
+            df.move(attacker.locationId, target.locationId, Math.floor(attacker.energy * energyPercent * 0.01), 0);
             // waits for the duration of the longest move - the duration of the move itself to be sent. * 1k is to convert seconds to ms
         }, (longestMove - planetMove.time) * 1e3));
     }
@@ -75,7 +81,7 @@ class SimultaneousAttack {
     constructor() {
         this.planetAttackers = [];
         this.moveTimeoutIds = [];
-        this.planetEnergySendingPercent = 50;
+        this.planetEnergySendingPercent = DEFAULT_ENERGY_PERCENT;
     }
     async render(container) {
         // thingamabob which shows you current selected target planet
@@ -130,9 +136,11 @@ class SimultaneousAttack {
         planetAttackersContainer.style.marginBottom = "20px";
         // label for showing you how much % energy you are sending
         const planetSendingPercent = document.createElement("div");
-        planetSendingPercent.innerText = "Sending 50.0% energy";
-        // slider for changing how much energy you send. default is 50%
+        const percentLabelText = pcv => `Sending ${pcv.toFixed(1)}% energy`
+        planetSendingPercent.innerText = percentLabelText(this.planetEnergySendingPercent);
+        // slider for changing how much energy you send
         const planetSendingPercentSlider = document.createElement("input");
+        planetSendingPercentSlider.value = this.planetEnergySendingPercent;
         planetSendingPercentSlider.type = "range";
         planetSendingPercentSlider.max = "100";
         // step is .5 so it's twice as good as the client 8)
@@ -140,7 +148,7 @@ class SimultaneousAttack {
         planetSendingPercentSlider.addEventListener("input", () => {
             const percentValue = parseFloat(planetSendingPercentSlider.value);
             this.planetEnergySendingPercent = percentValue;
-            planetSendingPercent.innerText = `Sending ${percentValue.toFixed(1)}% energy`;
+            planetSendingPercent.innerText = percentLabelText(percentValue);
             this.updateDamageCalculations(energyCalculations);
         });
         // container for showing how much energy arrives and how much dmg it will do
@@ -150,11 +158,11 @@ class SimultaneousAttack {
         const attackButton = document.createElement("button");
         attackButton.innerText = "Attack!";
         attackButton.addEventListener("click", () => {
-            this.moveTimeoutIds.push(...simultaneousAttack(df.getPlanetWithId(this.planetTarget), this.planetAttackers.map((p) => df.getPlanetWithId(p))));
+            this.moveTimeoutIds.push(...simultaneousAttack(df.getPlanetWithId(this.planetTarget), this.planetAttackers.map((p) => df.getPlanetWithId(p)), this.planetEnergySendingPercent));
         });
 
-        // re-calculate every 15 sec
-        this.calculationsInterval = setInterval(() => this.updateDamageCalculations(energyCalculations), 15 * 1000);
+        // re-calculate every few seconds
+        this.calculationsInterval = setInterval(() => this.updateDamageCalculations(energyCalculations), RECALCULATION_INTERVAL_SECONDS * 1000);
 
         // haha wall of text >:D
         container.appendChild(targetPlanetContainer);
