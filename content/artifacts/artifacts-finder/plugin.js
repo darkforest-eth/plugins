@@ -178,7 +178,7 @@ class ArtifactsFinder {
       this.prospectArtifacts();
       setTimeout(this.findArtifacts.bind(this), 0);
       this.prospectTimerId = setInterval(this.prospectArtifacts.bind(this), LOOP_INTERVAL_MS);
-      this.findTimerId = setInterval(this.findArtifacts.bind(this), LOOP_INTERVAL_MS);
+      this.findTimerId = setInterval(this.findArtifacts.bind(this), 10000);
       this.findArtifactsButton.innerText = " Cancel Finding ";
     } else {
       this.findArtifactsButton.innerText = ' Start Find ';
