@@ -126,7 +126,7 @@ const prospectExpired = (plugin, planet) => {
 const distanceToPlanetSquared = planet => planet.location ? (viewport.centerWorldCoords.x - planet.location.coords.x) ** 2 + (viewport.centerWorldCoords.y - planet.location.coords.y) ** 2 : MAX_DISTANCE;
 const distanceInRange = (plugin, planet) => distanceToPlanetSquared(planet) <= plugin.getSelectValue(RANGE_MAX) ** 2;
 const levelInRange = (plugin, planet) => plugin.getSelectValue(LEVEL_MIN) <= planet.planetLevel && planet.planetLevel <= plugin.getSelectValue(LEVEL_MAX);
-const mainChecks = (plugin, planet) => levelInRange(plugin, planet) && distanceInRange(plugin, planet);
+const mainChecks = (plugin, planet) => levelInRange(plugin, planet) && distanceInRange(plugin, planet) && !planet.destroyed;
 const planetTypeMatches = (plugin, planet) => {
   const type = plugin.getSelectValue(PLANET_TYPE);
   return type === ALL_PLANET_TYPES || type === planet.planetType;
