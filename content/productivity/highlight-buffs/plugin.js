@@ -126,12 +126,12 @@ const prospectExpired = (plugin, planet) => {
 const distanceToPlanetSquared = planet => planet.location ? (viewport.centerWorldCoords.x - planet.location.coords.x) ** 2 + (viewport.centerWorldCoords.y - planet.location.coords.y) ** 2 : MAX_DISTANCE;
 const distanceInRange = (plugin, planet) => distanceToPlanetSquared(planet) <= plugin.getSelectValue(RANGE_MAX) ** 2;
 const levelInRange = (plugin, planet) => plugin.getSelectValue(LEVEL_MIN) <= planet.planetLevel && planet.planetLevel <= plugin.getSelectValue(LEVEL_MAX);
-const distanceAndLevelInRange = (plugin, planet) => levelInRange(plugin, planet) && distanceInRange(plugin, planet);
+const mainChecks = (plugin, planet) => levelInRange(plugin, planet) && distanceInRange(plugin, planet);
 const planetTypeMatches = (plugin, planet) => {
   const type = plugin.getSelectValue(PLANET_TYPE);
   return type === ALL_PLANET_TYPES || type === planet.planetType;
 };
-const filter2xStat = (statIdx, upgradeIdx=-1) => (plugin, planet) => distanceAndLevelInRange(plugin, planet) && planetTypeMatches(plugin, planet) && (planet.bonus && planet.bonus[statIdx] || planet.upgradeState && planet.upgradeState[upgradeIdx]);
+const filter2xStat = (statIdx, upgradeIdx=-1) => (plugin, planet) => mainChecks(plugin, planet) && planetTypeMatches(plugin, planet) && (planet.bonus && planet.bonus[statIdx] || planet.upgradeState && planet.upgradeState[upgradeIdx]);
 
 // Filters for each highlight type
 const filter2xEnergyCap = filter2xStat(StatIdx.EnergyCap);
@@ -139,10 +139,10 @@ const filter2xEnergyGro = filter2xStat(StatIdx.EnergyGro);
 const filter2xDefense = filter2xStat(StatIdx.Defense, 0);  // defense rank upgrades are on planet.upgradeState[0]
 const filter2xSpeed = filter2xStat(StatIdx.Speed, 2);  // speed rank upgrades are on planet.upgradeState[2]
 const filter2xRange = filter2xStat(StatIdx.Range, 1);  // range rank upgrades are on planet.upgradeState[1]
-const filterRip = (plugin, planet) => distanceAndLevelInRange(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
+const filterRip = (plugin, planet) => mainChecks(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
 const filterArtifact = (plugin, planet) => {
   // Filter out planets of wrong size
-  if (!distanceAndLevelInRange(plugin, planet)) return false;
+  if (!mainChecks(plugin, planet)) return false;
 
   // Include any planet with an artifact circling (and is big enough)
   if (planet.heldArtifactIds.length > 0) return true;
