@@ -18,6 +18,8 @@ const NUMBER_OF_HOURS_BACK = 24;
 
 const WINDOW_WIDTH = '310px';
 const WINDOW_HEIGHT = '500px';
+const BUTTON_WIDTH = '200px';
+const BUTTON_HEIGHT = '32px';
 
 const COL_DEFAULT = '#000000'; 
 const COL_TOTAL = '#444444';
@@ -80,7 +82,7 @@ const getResultsDiv = (content, bgCol=COL_DEFAULT) => {
 
 class YouSnoozeYouLose {
   constructor() {
-    this.userInput = this.createInput('Enter player address');
+    this.userInput = this.createInput('Click a planet');
     this.searching = false;
     this.movesResults = [];
     this.resultRows = document.createElement("div");
@@ -130,9 +132,16 @@ class YouSnoozeYouLose {
     console.log("Searching for snoozers...");
 
     // Search for player based on input
-    const userInputValue = this.userInput.value;
+    let userInputValue = this.userInput.value;
     if (!userInputValue) {
-      this.resultRows.append(getResultsDiv('No player specified', COL_ERR));
+      const planet = ui.getSelectedPlanet();
+      if (planet) {
+        userInputValue = planet.owner;
+        this.userInput.value = userInputValue;
+        this.resultRows.append(getResultsDiv('Planet owner selected'));
+      } else {
+        this.resultRows.append(getResultsDiv('Click a planet, or enter player Twitter handle or Eth address', COL_ERR));
+      }
     } else {
 
       // Search for player based on Twitter or address
@@ -141,7 +150,8 @@ class YouSnoozeYouLose {
         return player.address === useValue || player.twitter === useValue;
       })
       if (!player) {
-        this.resultRows.append(getResultsDiv('Player could not be found', COL_ERR));
+        this.resultRows.append(getResultsDiv(`Player '${useValue.slice(0, 20) + (useValue.slice(20)?'...':'')}' could not be found`, COL_ERR));
+        this.userInput.value = '';
       } else {
 
         // Player found, search last 24 hours by 1 hour bands
@@ -210,6 +220,8 @@ class YouSnoozeYouLose {
     const searchButton = document.createElement('button');
     searchButton.innerText = 'Check for snoozing!';
     searchButton.onclick = this.doSearch.bind(this);
+    searchButton.style.width = BUTTON_WIDTH;
+    searchButton.style.height = BUTTON_HEIGHT;
     const searchRow = document.createElement('div');
     searchRow.style.margin = '15px 0px 10px 0px';
     searchRow.appendChild(searchButton);
