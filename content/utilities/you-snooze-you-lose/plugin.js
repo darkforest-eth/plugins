@@ -3,6 +3,7 @@
 // Find out when players are asleep, and punish them severely!
 //
 // author: https://twitter.com/davidryan59 (dryan.eth)
+// thanks: Bulmenisaurus, 9STX6 for assistance
 
 
 // -----------------------------
