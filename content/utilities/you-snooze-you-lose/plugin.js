@@ -12,10 +12,13 @@
 const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-4";
 // const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/cha0sg0d/death-of-the-universe";
 
+const ALL_TWITTERS_URL = 'https://api.zkga.me/twitter/all-twitters';
+
 const PLUGIN_NAME = "You Snooze, You Lose!";
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
 const MAX_GRAPH_QL_COUNT = 1000;  // GraphQL will retrieve up to 1000 objects in one go
 const NUMBER_OF_HOURS_BACK = 24;
+const PLAYER_CHARS = 20;
 
 const WINDOW_WIDTH = '310px';
 const WINDOW_HEIGHT = '500px';
@@ -83,6 +86,8 @@ const getResultsDiv = (content, bgCol=COL_DEFAULT) => {
 
 class YouSnoozeYouLose {
   constructor() {
+    this.twitters = {};
+    this.fetchTwitters();
     this.userInput = this.createInput('Click a planet');
     this.searching = false;
     this.movesResults = [];
@@ -90,6 +95,14 @@ class YouSnoozeYouLose {
     if (DEV_MODE) this.resultRows.style.background = "#FF0000";
     console.log(`Initialised ${PLUGIN_NAME} plugin:`);
     console.dir(this);
+  }
+
+  fetchTwitters = () => {
+    fetch(ALL_TWITTERS_URL)
+    .then(response => response.json())
+    .then(twitters => {
+      this.twitters = twitters;
+    });
   }
 
   createInput = placeholder => {
@@ -138,6 +151,7 @@ class YouSnoozeYouLose {
       const planet = ui.getSelectedPlanet();
       if (planet) {
         userInputValue = planet.owner;
+        if (this.twitters[userInputValue]) userInputValue = this.twitters[userInputValue];
         this.userInput.value = userInputValue;
         this.resultRows.append(getResultsDiv('Planet owner selected'));
       } else {
@@ -151,7 +165,7 @@ class YouSnoozeYouLose {
         return player.address === useValue || player.twitter === useValue;
       })
       if (!player) {
-        this.resultRows.append(getResultsDiv(`Player '${useValue.slice(0, 20) + (useValue.slice(20)?'...':'')}' could not be found`, COL_ERR));
+        this.resultRows.append(getResultsDiv(`Player '${useValue.slice(0, PLAYER_CHARS) + (useValue.slice(PLAYER_CHARS)?'...':'')}' could not be found`, COL_ERR));
         this.userInput.value = '';
       } else {
 
