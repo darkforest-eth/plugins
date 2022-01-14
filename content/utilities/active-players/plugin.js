@@ -2,7 +2,7 @@
 //
 // Get a list of which players have sent the most moves recently
 //
-// author: https://twitter.com/davidryan59
+// author: https://twitter.com/davidryan59 (dryan.eth)
 
 
 // -----------------------------
