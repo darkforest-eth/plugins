@@ -8,7 +8,7 @@
 // -----------------------------
 // Constants and user editable parameters
 
-const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-4";
+const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-5";
 // const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/cha0sg0d/death-of-the-universe";
 
 const PLUGIN_NAME = "Active Players";
