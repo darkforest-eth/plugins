@@ -18,7 +18,7 @@ const SS3 = 1;
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
 const PLAYER_DISPLAY_CHARS = 20;
 
-const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-4";
+const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-5";
 // const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/cha0sg0d/death-of-the-universe";
 
 const ALL_TWITTERS_URL = 'https://api.zkga.me/twitter/all-twitters';
