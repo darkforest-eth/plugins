@@ -25,6 +25,7 @@ const PLANET_LEVELS = Object.values(PlanetLevel).map((level) => ({
 const PLANET_ANY_TYPE = -1;
 const ARTIFACT_ANY_TYPE = -1;
 const ARTIFACT_ANY_RARITY = -1;
+const BONUS_ANY = -1;
 
 const PLANET_TYPES = [
   { value: PLANET_ANY_TYPE, text: "Any" },
@@ -40,9 +41,9 @@ const OwnerType = {
 
 const OWNER_TYPES_MAPPING = [
   { value: OwnerType.ANYONE, text: "Anyone" },
-  { value: OwnerType.UNCLAIMED, text: "Unclaimed" },
-  { value: OwnerType.CLAIMED_BY_OTHERS, text: "Claimed by others" },
-  { value: OwnerType.CLAIMED_BY_MYSELF, text: "Claimed by myself" },
+  { value: OwnerType.UNCLAIMED, text: "Nobody" },
+  { value: OwnerType.CLAIMED_BY_OTHERS, text: "Owned by others" },
+  { value: OwnerType.CLAIMED_BY_MYSELF, text: "Owned by myself" },
 ];
 
 const ARTIFACT_TYPES = [
@@ -61,6 +62,37 @@ const ARTIFACT_RARITIES = [
   ...Object.values(ArtifactRarity).filter((rarity) => rarity !== ArtifactRarity.Unknown).map((rarity) => ({ value: rarity, text: ArtifactRarityNames[rarity] }))
 ];
 
+const BONUS = [
+  {
+    value: BONUS_ANY,
+    text: "Any",
+  },
+  {
+    value: 0,
+    text: "Double Energy Cap",
+  },
+  {
+    value: 1,
+    text: "Double Energy Growth",
+  },
+  {
+    value: 2,
+    text: "Double Range",
+  },
+  {
+    value: 3,
+    text: "Double Speed",
+  },
+  {
+    value: 4,
+    text: "Double Defense",
+  },
+  {
+    value: 5,
+    text: "Half Junk",
+  },
+];
+
 function CreateSelectFilter({ items, selectedValue, onSelect }) {
   const selectStyle = {
     background: "rgb(8,8,8)",
@@ -71,16 +103,16 @@ function CreateSelectFilter({ items, selectedValue, onSelect }) {
   };
 
   return html`
-    <select
-      style=${selectStyle}
-      value=${selectedValue}
-      onChange=${(e) => onSelect(Number(e.target.value))}
-    >
-      ${items.map(
-        ({ value, text }) => html`<option value=${value}>${text}</option>`
-      )}
-    </select>
-  `;
+      <select
+        style=${selectStyle}
+        value=${selectedValue}
+        onChange=${(e) => onSelect(Number(e.target.value))}
+      >
+        ${items.map(
+    ({ value, text }) => html`<option value=${value}>${text}</option>`
+  )}
+      </select>
+    `;
 }
 
 function LevelFilter({ levels, selectedLevels, onSelectLevel }) {
@@ -112,28 +144,28 @@ function LevelFilter({ levels, selectedLevels, onSelectLevel }) {
   };
 
   const button = ({ value, text, onClick, selected = false }) => html`
-    <div
-      style=${selected ? buttonSelectedStyle : buttonStyle}
-      onClick=${() => onClick(value)}
-    >
-      ${text}
-    </div>
-  `;
+      <div
+        style=${selected ? buttonSelectedStyle : buttonStyle}
+        onClick=${() => onClick(value)}
+      >
+        ${text}
+      </div>
+    `;
   const inRange = (value) =>
     value <= Math.max(...selectedLevels) &&
     value >= Math.min(...selectedLevels);
   return html`
-    <div style=${buttonsRow}>
-      ${levels.map(({ value, text }) =>
-        button({
-          value,
-          text,
-          onClick: onSelectLevel,
-          selected: inRange(value),
-        })
-      )}
-    </div>
-  `;
+      <div style=${buttonsRow}>
+        ${levels.map(({ value, text }) =>
+    button({
+      value,
+      text,
+      onClick: onSelectLevel,
+      selected: inRange(value),
+    })
+  )}
+      </div>
+    `;
 }
 
 function createDivider() {
@@ -165,27 +197,28 @@ function createButton({ loading, onClick, ctaText }) {
 
   const [hover, setHover] = useState(false);
   return html` <button
-    disabled=${loading}
-    style=${{
+      disabled=${loading}
+      style=${{
       ...buttonStyle,
       ...(hover ? hoverStyle : {}),
     }}
-    onClick=${onClick}
-    onMouseEnter=${() => setHover(true)}
-    onMouseLeave=${() => setHover(false)}
-  >
-    ${ctaText}
-  </button>`;
+      onClick=${onClick}
+      onMouseEnter=${() => setHover(true)}
+      onMouseLeave=${() => setHover(false)}
+    >
+      ${ctaText}
+    </button>`;
 }
 
 // @ts-ignore
 let eligiblePlanets = [];
 
-function App({}) {
+function App({ }) {
   const [selectedLevels, setSelectedLevels] = useState([1, 9]);
   const [selectedPlanetType, setSelectedPlanetType] = useState(-1);
   const [selectedArtifactType, setSelectedArtifactType] = useState(-1);
   const [selectedArtifactRarity, setSelectedArtifactRarity] = useState(-1);
+  const [selectedBonus, setSelectedBonus] = useState(-1);
   const [selectedOwnerType, setSelectedOwnerType] = useState(
     OwnerType.CLAIMED_BY_MYSELF
   );
@@ -244,6 +277,14 @@ function App({}) {
         continue;
       }
 
+      // check bonus
+      if (
+        selectedBonus != BONUS_ANY &&
+        !planet.bonus[selectedBonus]
+      ) {
+        continue;
+      }
+
       // if artifact type or rarity selected, then we require a planet contain a artifact satisfying
       // requirements
       const mustHoldArtifacts =
@@ -280,6 +321,7 @@ function App({}) {
     selectedOwnerType,
     selectedArtifactType,
     selectedArtifactRarity,
+    selectedBonus,
   ]);
 
   const resetEligiblePlanets = useCallback(() => {
@@ -304,77 +346,70 @@ function App({}) {
   };
 
   const planetLevelFilter = html`<div style=${{ marginBottom: "3px" }}>
-      Planet Level Ranges
-    </div>
-    <${LevelFilter}
-      levels=${PLANET_LEVELS}
-      selectedLevels=${selectedLevels}
-      onSelectLevel=${(level) => {
-        if (selectedLevels.length == 2) {
-          setSelectedLevels([level]);
-        } else {
-          setSelectedLevels([level, selectedLevels[0]]);
-        }
-      }}
-    />`;
+        Planet Level Ranges
+      </div>
+      <${LevelFilter}
+        levels=${PLANET_LEVELS}
+        selectedLevels=${selectedLevels}
+        onSelectLevel=${(level) => {
+      if (selectedLevels.length == 2) {
+        setSelectedLevels([level]);
+      } else {
+        setSelectedLevels([level, selectedLevels[0]]);
+      }
+    }}
+      />`;
 
   const planetTypeFilter = html`<div>
-    <div style=${{ marginBottom: "3px" }}>Planet Type</div>
-    <${CreateSelectFilter}
-      items=${PLANET_TYPES}
-      selectedValue=${selectedPlanetType}
-      onSelect=${setSelectedPlanetType}
-    />
-  </div>`;
+      <div style=${{ marginBottom: "3px" }}>Planet Type</div>
+      <${CreateSelectFilter}
+        items=${PLANET_TYPES}
+        selectedValue=${selectedPlanetType}
+        onSelect=${setSelectedPlanetType}
+      />
+    </div>`;
 
   const ownerTypeFilter = html`
-    <div>
-      <div style=${{ marginBottom: "3px" }}>Owner Type</div>
-      <${CreateSelectFilter}
-        items=${OWNER_TYPES_MAPPING}
-        selectedValue=${selectedOwnerType}
-        onSelect=${setSelectedOwnerType}
-      />
-    </div>
-  `;
-
-  const planetUnionFilters = html`
-    <div
-      style=${{
-        ...flexRow,
-        justifyContent: "space-between",
-        marginTop: "10px",
-      }}
-    >
-      ${planetTypeFilter} ${ownerTypeFilter}
-    </div>
-  `;
+      <div>
+        <div style=${{ marginBottom: "3px" }}>Owner Type</div>
+        <${CreateSelectFilter}
+          items=${OWNER_TYPES_MAPPING}
+          selectedValue=${selectedOwnerType}
+          onSelect=${setSelectedOwnerType}
+        />
+      </div>
+    `;
 
   const artifactTypeFilter = html`<div>
-    <div style=${{ marginBottom: "3px" }}>Artifacts Type</div>
-    <${CreateSelectFilter}
-      items=${ARTIFACT_TYPES}
-      selectedValue=${selectedArtifactType}
-      onSelect=${setSelectedArtifactType}
-    />
-  </div>`;
+      <div style=${{ marginBottom: "3px" }}>Artifacts Type</div>
+      <${CreateSelectFilter}
+        items=${ARTIFACT_TYPES}
+        selectedValue=${selectedArtifactType}
+        onSelect=${setSelectedArtifactType}
+      />
+    </div>`;
 
   const artifactRarityFilter = html`
-    <div>
-      <div style=${{ marginBottom: "3px" }}>Min Rarity</div>
-      <${CreateSelectFilter}
-        items=${ARTIFACT_RARITIES}
-        selectedValue=${selectedArtifactRarity}
-        onSelect=${setSelectedArtifactRarity}
-      />
-    </div>
-  `;
+      <div>
+        <div style=${{ marginBottom: "3px" }}>Min Rarity</div>
+        <${CreateSelectFilter}
+          items=${ARTIFACT_RARITIES}
+          selectedValue=${selectedArtifactRarity}
+          onSelect=${setSelectedArtifactRarity}
+        />
+      </div>
+    `;
 
-  const artifactFilters = html`<div
-    style=${{ ...flexRow, justifyContent: "space-between", marginTop: "10px" }}
-  >
-    ${artifactTypeFilter} ${artifactRarityFilter}
-  </div>`;
+  const bonusFilter = html`
+      <div>
+        <div style=${{ marginBottom: "3px" }}>Bonus</div>
+        <${CreateSelectFilter}
+          items=${BONUS}
+          selectedValue=${selectedBonus}
+          onSelect=${setSelectedBonus}
+        />
+      </div>
+    `;
 
   const [loading, setLoading] = useState(false);
 
@@ -385,30 +420,41 @@ function App({}) {
   };
 
   const submitButton = html`<${createButton}
-    loading=${loading}
-    onClick=${highlightPlanet}
-    ctaText=${"Submit"}
-  />`;
+      loading=${loading}
+      onClick=${highlightPlanet}
+      ctaText=${"Submit"}
+    />`;
 
   const resetButton = html`<${createButton}
-    onClick=${resetEligiblePlanets}
-    ctaText=${"Reset"}
-  />`;
+      onClick=${resetEligiblePlanets}
+      ctaText=${"Reset"}
+    />`;
+
+  function row(...children) {
+    return html`<div
+      style=${{ ...flexRow, justifyContent: "space-between", marginTop: "10px" }}
+    >
+      ${children}
+    </div>`;
+  }
 
   return html`
-    ${planetLevelFilter} ${planetUnionFilters} ${artifactFilters}
-    <${createDivider} />
-    <div
-      style=${{
-        ...flexRow,
-        justifyContent: "space-around",
-        width: "100%",
-        marginTop: "10px",
-      }}
-    >
-      ${submitButton} ${resetButton}
-    </div>
-  `;
+      ${planetLevelFilter}
+      ${row(planetTypeFilter, ownerTypeFilter)}
+      ${row(artifactTypeFilter, artifactRarityFilter)}
+      ${row(bonusFilter)}
+      <${createDivider} />
+      <div
+        style=${{
+      ...flexRow,
+      justifyContent: "space-around",
+      width: "100%",
+      marginTop: "10px",
+    }}
+      >
+        ${submitButton} ${resetButton}
+      </div>
+    `;
 }
 
 //@ts-ignore
