@@ -1,11 +1,22 @@
 // EnergyCurve Display
 //
-// Shows the energy curve of the selected planet.
+// Shows the energy curves of the selected planet.
 // You can hover over the curve to set a point and find out
 // when exactly this point will be reached.
 //
 // Can be used to find out when a foundry reaches 95%.
 // Helps to understand how energy growth works.
+//
+// There are 2 curves.
+// You can switch between them by pressing the C button.
+//
+// SCurve: energy over time.
+// How much energy the planet has.
+//
+// BellCurve: energy generation over time.
+// How much energy the planet produces per second.
+//
+// You can hover over the fields in the table to get a description.
 
 
 import {
@@ -81,15 +92,23 @@ function createCurvePoints(planet, canvasSize, pointCount=300) {
 	fakePlanet.energyCap = planet.energyCap;
 	fakePlanet.energyGrowth = planet.energyGrowth;
 	fakePlanet.lastUpdated = planet.lastUpdated;
-	let points = [];
+	let pointsSCurve = [];
+	let pointsBellCurve = [];
 	let energyArr = [];
+	let energyIncrArr = [];
+	let energyPercentIncrArr = [];
 	let maxDuration = Math.round(getEnergyCurveAtPercent(fakePlanet, 0.99));
 	let timeIncrease = maxDuration / pointCount;
+	let lastEnergy = null;
 	for (let time=timeIncrease; time < maxDuration; time += timeIncrease) {
 		let energy = modelEnergyGrowth(fakePlanet.energy, planet.energyGrowth, planet.energyCap, time);
-		energy /= planet.energyCap;
-		energyArr.push(energy);
+		energyArr.push(energy / planet.energyCap);
+		if (lastEnergy !== null) {
+			energyIncrArr.push(energy - lastEnergy);
+		}
+		lastEnergy = energy;
 	}
+	// create s curve points
 	for (let i=0; i < energyArr.length; ++i) {
 		let p = {};
 		p.x = i / energyArr.length;
@@ -97,9 +116,53 @@ function createCurvePoints(planet, canvasSize, pointCount=300) {
 		p.x *= canvasSize;
 		p.y *= canvasSize;
 		p.y = canvasSize - p.y;
-		points[i] = p;
+		pointsSCurve[i] = p;
 	}
-	return points;
+	// create bell curve points
+	let maxEnergyIncr = 0;
+	let lowestEnergyIncr = null;
+	for (let i=0; i < energyIncrArr.length; ++i) {
+		let incr = energyIncrArr[i];
+		if (lowestEnergyIncr === null || incr < lowestEnergyIncr)
+			lowestEnergyIncr = incr;
+		if (incr > maxEnergyIncr)
+			maxEnergyIncr = incr;
+	}
+	maxEnergyIncr -= lowestEnergyIncr;
+	for (let i=0; i < energyIncrArr.length; ++i) {
+		let p = {};
+		p.x = i / energyIncrArr.length;
+		energyPercentIncrArr[i] = (energyIncrArr[i]-lowestEnergyIncr) / maxEnergyIncr;
+		p.y = energyPercentIncrArr[i];
+		p.x *= canvasSize;
+		p.y *= canvasSize;
+		p.y = canvasSize - p.y;
+		pointsBellCurve[i] = p;
+	}
+	// add padding to the points so the lines have some distance to the edge of the image
+	let padding = { left:0, right:0, top:0, bot:0 };
+	padding.left = canvasSize * 0.02;
+	padding.right = canvasSize * 0.02;
+	padding.top = canvasSize * 0.02;
+	padding.bot = canvasSize * 0.02;
+	addPaddingToPoints(pointsSCurve, canvasSize, padding);
+	addPaddingToPoints(pointsBellCurve, canvasSize, padding);
+	
+	return { "pointsSCurve":pointsSCurve, "pointsBellCurve":pointsBellCurve,
+	         "energyIncrArr":energyIncrArr, "energyPercentIncrArr": energyPercentIncrArr };
+}
+
+function addPaddingToPoints(points, canvasSize, padding={ left:0, right:0, top:0, bot:0 }) {
+	function doIt(points, canvasSize, low, high, pointAttribName) {
+		let newSize = canvasSize - (low+high);
+		let factor = newSize / canvasSize;
+		for (let p of points) {
+			p[pointAttribName] *= factor; 
+			p[pointAttribName] += low; 
+		}
+	}
+	doIt(points, canvasSize, padding.left, padding.right, "x");
+	doIt(points, canvasSize, padding.top, padding.bot, "y");
 }
 
 function drawMultiplePointLine(ctx, points, color, thickness=3) {
@@ -113,13 +176,8 @@ function drawMultiplePointLine(ctx, points, color, thickness=3) {
 	ctx.stroke();
 }
 
-function saveCanvas(canvas) {
-	let img = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream"); 
-	window.location.href=img;
-}
-
 const PI2 = Math.PI * 2;
-function drawCircle(ctx, x, y, radius, thickness=0.8, color="#FFF") {
+function drawCircle(ctx, x, y, radius, color="#FFF") {
 	ctx.beginPath();
 	ctx.strokeStyle = color;
 	ctx.fillStyle = color;
@@ -127,14 +185,31 @@ function drawCircle(ctx, x, y, radius, thickness=0.8, color="#FFF") {
 	ctx.fill();
 }
 
-function CurveImage(size, planet, color="#FFF") {
+// if you want to download the image of a curve
+function downloadImageFromUrl(url) {
+	url = url.replace("image/png", "image/octet-stream");
+	window.location.href = url;
+}
+
+function CurveImage(size, planet, showSCurveOrBellCurve, color="#FFF") {
 	let o = {};
 	
 	o.size = size;
 	o.planet = planet;
 	o.color = color;
+	
 	o.points = null;
-	o.dataUrl = null;
+	o.pointsSCurve = null;
+	o.pointsBellCurve = null;
+	
+	o.energyIncrArr = null;
+	o.energyPercentIncrArr = null;
+	
+	o.url = null;
+	o.urlSCurve = null;
+	o.urlBellCurve = null;
+	
+	o.showSCurveOrBellCurve = showSCurveOrBellCurve; // if true show sCurve else show bellCurve
 	
 	o.create = function() {
 		const canvas = document.createElement('canvas');
@@ -142,9 +217,36 @@ function CurveImage(size, planet, color="#FFF") {
 		canvas.height = o.size;
 		const ctx = canvas.getContext('2d');
 
-		o.points = createCurvePoints(o.planet, o.size);
-		drawMultiplePointLine(ctx, o.points, o.color);
-		o.dataUrl = canvas.toDataURL("image/png"); 
+		const r = createCurvePoints(o.planet, o.size);
+		o.pointsSCurve = r.pointsSCurve;
+		o.pointsBellCurve = r.pointsBellCurve;
+		o.energyIncrArr = r.energyIncrArr;
+		o.energyPercentIncrArr = r.energyPercentIncrArr;
+		
+		drawMultiplePointLine(ctx, o.pointsSCurve, o.color);
+		o.urlSCurve = canvas.toDataURL("image/png"); 
+		
+		ctx.fillStyle = "#00000000";
+		ctx.clearRect(0, 0, o.size, o.size);
+		
+		drawMultiplePointLine(ctx, o.pointsBellCurve, o.color);
+		o.urlBellCurve = canvas.toDataURL("image/png"); 
+//		downloadImageFromUrl(o.urlBellCurve);
+		
+		o.setMode();
+	}
+	
+	// optional argument - true = show sCurve, false = show bellCurve
+	o.setMode = function(showSCurveOrBellCurve=null) {
+		if (showSCurveOrBellCurve !== null)
+			o.showSCurveOrBellCurve = showSCurveOrBellCurve;
+		if (o.showSCurveOrBellCurve) {
+			o.url = o.urlSCurve;
+			o.points = o.pointsSCurve;
+		} else {
+			o.url = o.urlBellCurve;
+			o.points = o.pointsBellCurve;
+		}
 	}
 	
 	o.getClosestPointToPoint = function(point) {
@@ -163,12 +265,31 @@ function CurveImage(size, planet, color="#FFF") {
 		return { point: o.points[closestI], percent: closestI/o.points.length };
 	}
 	
-	o.getClosestPointToPercent = function(percent) {
+	o.getClosestPointToX = function(x) {
+		let closestI = -1;
+		let closestDist = 999999;
+		for (let i=0; i < o.points.length; ++i) {
+			let p = o.points[i];
+			let dist = p.x - x;
+			if (dist < 0) dist = -dist;
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestI = i;
+			}
+		}
+		return o.points[closestI];
+	}
+	
+	o.getClosestIndexToPercent = function(percent) {
 		if (percent > 1) percent = 1;
 		if (percent < 0) percent = 0;
 		let i = Math.round(o.points.length*percent);
 		if (i === o.points.length) --i;
-		return o.points[i];
+		return i;
+	}
+	
+	o.getClosestPointToPercent = function(percent) {
+		return o.points[o.getClosestIndexToPercent(percent)];
 	}
 	
 	return o;
@@ -181,6 +302,8 @@ function PluginObj() {
 	const curvImgSize = 400;
 	let curvImgElement = null; // HTML element
 	
+	let sCurveOrBellCurve = true;
+	
 	let canvas = null;
 	let ctxCurvImgOverlay = null;
 	
@@ -192,6 +315,9 @@ function PluginObj() {
 	
 	o.divPlanetDesc = null;
 	
+	o.divButtons = null;
+	o.butToggleCurve = null;
+	
 	o.divNumbers = null;
 	o.tdCurrentEnergy = null;
 	o.tdCurrentEnergyPercent = null;
@@ -202,7 +328,9 @@ function PluginObj() {
 	o.divPredictedText = null;
 	
 	let currentEnergyPoint = null;
+	let currentEnergyIndex = null;
 	let predictedEnergyPoint = null;
+	let predictedEnergyIndex = null;
 	
 	let colorPredicted = "#7E8";
 	let colorTime = "#5BB";
@@ -223,8 +351,22 @@ function PluginObj() {
 		div.style.height = (curvImgSize+windowPadding+textHeight*3)+'px';
 		div.style.backgroundColor = "#000";
 		
+		o.divButtons = document.createElement("div");
+		o.divButtons.style.position = "relative";
+		o.divButtons.width = "0px";
+		o.divButtons.height = "0px";
+		div.appendChild(o.divButtons);
+		
+		o.butToggleCurve = document.createElement("button");
+		o.butToggleCurve.innerHTML = "C";
+		o.butToggleCurve.style.position = "absolute";
+		o.butToggleCurve.style.right = "0px";
+   		o.butToggleCurve.addEventListener('click', o.toggleCurve);
+		o.divButtons.appendChild(o.butToggleCurve);
+		
 		o.divPlanetDesc = document.createElement("div");
 		o.divPlanetDesc.innerHTML = "select a planet";
+		o.divPlanetDesc.style.paddingBottom = "5px";
 		div.appendChild(o.divPlanetDesc);
 		
 		curvImgElement = document.createElement("img");
@@ -288,6 +430,7 @@ function PluginObj() {
 		div.appendChild(o.divPredictedText);
 		
 		o.clearTable();
+		o.setTooltips();
 		if (ui.selectedPlanet) o.selectPlanet(ui.selectedPlanet);
 	}
 	
@@ -315,16 +458,39 @@ function PluginObj() {
 		intervUpdate = null;
 	}
 	
+	o.setTooltips = function() {
+		if (sCurveOrBellCurve) {
+			o.butToggleCurve.title = "Switch to energy generation to time curve"
+			o.tdCurrentEnergy.title = "how much energy the planet currently has";
+			o.tdCurrentEnergyPercent.title = "current energy / energyCap";
+			o.tdPredictedEnergy.title = "how much energy the planet will have at the predicted point";
+			o.tdPredictedEnergyPercent.title = "predicted energy / energyCap";
+		} else {
+			o.butToggleCurve.title = "Switch to energy to time curve"
+			o.tdCurrentEnergy.title = "how much energy the planet currently generates per second";
+			o.tdCurrentEnergyPercent.title = "current energy generation / maximum energy generation";
+			o.tdPredictedEnergy.title = "predicted energy generation per second";
+			o.tdPredictedEnergyPercent.title = "predicted energy generation / maximum energy generation";
+		}
+	}
+	
+	o.toggleCurve = function() {
+		sCurveOrBellCurve = !sCurveOrBellCurve;
+		curvImg.setMode(sCurveOrBellCurve);
+		curvImgElement.src = curvImg.url;
+		if (predictedEnergyPoint) {
+			predictedEnergyPoint = curvImg.getClosestPointToX(predictedEnergyPoint.x);
+		}
+		o.update();
+		o.setTooltips();
+	}
+	
 	o.selectPlanet = function(planet) {
 		o.selectedPlanet = planet;
-		if (planet === null) {
-			return;
-		}
+		if (planet === null) return;
 		o.displayedPlanet = planet;
 		
-		curvImg = CurveImage(curvImgSize, planet);
-		curvImg.create();
-		curvImgElement.src = curvImg.dataUrl;
+		o.resetPrediction();
 		
 		let str = "";
 		str += PlanetTypeNames[o.displayedPlanet.planetType];
@@ -332,25 +498,33 @@ function PluginObj() {
 		str += ' <span style="color:#990">'+getPlanetName(planet)+"</span>";
 		o.divPlanetDesc.innerHTML = str;
 		
-		predictedEnergyPoint = null;
+		if (planet.energyGrowth) {
+			curvImg = CurveImage(curvImgSize, planet, sCurveOrBellCurve);
+			curvImg.create();
+			curvImgElement.src = curvImg.url;
+		} else {
+			curvImgElement.src = "";
+		}
 		
 		o.startUpdating();
 		o.update();
 	}
 	
-	o.unselectPlanet = function() {
-		o.divPlanetDesc.innerHTML = "select a planet";
-		o.clearTable();
+	o.resetPrediction = function() {
 		predictedEnergyPoint = null;
-		currentEnergyPoint = null;
-		o.stopUpdating();
-		ctxCurvImgOverlay.clearRect(0, 0, curvImgSize, curvImgSize);
+		predictedEnergyIndex = null;
+		predictedEnergy = 0;
+		predictedEnergyPercent = 0;
+		predictedTimeSec = 0;
+		predictedTime = null;
 	}
 	
 	o.mouseOverCurve = function(mouse) {
 		if (!o.displayedPlanet) return;
+		if (!o.displayedPlanet.energyGrowth) return;
 		const { point, percent } = curvImg.getClosestPointToPoint(mouse);
 		predictedEnergyPoint = point;
+		predictedEnergyIndex = curvImg.getClosestIndexToPercent(percent);
 		predictedEnergy = o.displayedPlanet.energyCap * percent;
 		predictedEnergyPercent = percent;
 		predictedTimeSec = getEnergyCurveAtPercent(o.displayedPlanet, predictedEnergyPercent);
@@ -361,14 +535,18 @@ function PluginObj() {
 		drawPoints();
 	}
 	
-	function drawPoints() {
+	function clearPointCanvas() {
 		ctxCurvImgOverlay.fillStyle = "#00000000";
 		ctxCurvImgOverlay.clearRect(0, 0, curvImgSize, curvImgSize);
-		if (currentEnergyPoint)
+	}
+	
+	function drawPoints() {
+		clearPointCanvas();
+		if (currentEnergyPoint && o.displayedPlanet.energyGrowth)
 			drawCircle(ctxCurvImgOverlay, currentEnergyPoint.x, currentEnergyPoint.y, 6);
 		if (predictedEnergyPoint) {
-			drawCircle(ctxCurvImgOverlay, predictedEnergyPoint.x, predictedEnergyPoint.y, 8, 0.8, colorPredicted);
-			drawCircle(ctxCurvImgOverlay, predictedEnergyPoint.x, predictedEnergyPoint.y, 2, 0.8, "#000");
+			drawCircle(ctxCurvImgOverlay, predictedEnergyPoint.x, predictedEnergyPoint.y, 8, colorPredicted);
+			drawCircle(ctxCurvImgOverlay, predictedEnergyPoint.x, predictedEnergyPoint.y, 2, "#000");
 		}
 	}
 	
@@ -378,8 +556,11 @@ function PluginObj() {
 	
 	o.update = function() {
 		o.displayedPlanet = df.getPlanetWithId(o.displayedPlanet.locationId);
-		let p = o.displayedPlanet;
-		currentEnergyPoint = curvImg.getClosestPointToPercent(p.energy / p.energyCap);
+		let percent = o.displayedPlanet.energy / o.displayedPlanet.energyCap;
+		if (curvImg) {
+			currentEnergyPoint = curvImg.getClosestPointToPercent(percent);
+			currentEnergyIndex = curvImg.getClosestIndexToPercent(percent);
+		}
 		o.setTdCurrentEnergy();
 		o.setTdPredictedEnergy();
 		drawPoints();
@@ -394,13 +575,49 @@ function PluginObj() {
 	}
 	
 	o.setTdCurrentEnergy = function() {
-		o.tdCurrentEnergy.innerHTML = formatNumberForDisplay(o.displayedPlanet.energy);
-		o.tdCurrentEnergyPercent.innerHTML = getPercent(o.displayedPlanet.energy, o.displayedPlanet.energyCap);
+		if (!o.displayedPlanet) {
+			o.tdCurrentEnergy.innerHTML = "";
+			o.tdCurrentEnergyPercent.innerHTML = "";
+			return;
+		}
+		if (sCurveOrBellCurve) {
+			o.tdCurrentEnergy.innerHTML = formatNumberForDisplay(o.displayedPlanet.energy);
+			o.tdCurrentEnergyPercent.innerHTML = getPercent(o.displayedPlanet.energy, o.displayedPlanet.energyCap);
+		} else {
+			if (!o.displayedPlanet.energyGrowth) {
+				o.tdCurrentEnergy.innerHTML = "0";
+				o.tdCurrentEnergyPercent.innerHTML = "0%";
+				return;
+			}
+			let energyGen = curvImg.energyIncrArr[currentEnergyIndex];
+			o.tdCurrentEnergy.innerHTML = formatNumberForDisplay(energyGen);
+			let percent = roundToDecimal(curvImg.energyPercentIncrArr[currentEnergyIndex] * 100, 1);
+			o.tdCurrentEnergyPercent.innerHTML = percent + "%";
+		}
 	}
 	
 	o.setTdPredictedEnergy = function() {
-		o.tdPredictedEnergy.innerHTML = formatNumberForDisplay(predictedEnergy);
-		o.tdPredictedEnergyPercent.innerHTML = (Math.round(predictedEnergyPercent*1000)/10)+"%";
+		if (!o.displayedPlanet || !o.displayedPlanet.energyGrowth) {
+			o.tdPredictedEnergy.innerHTML = "";
+			o.tdPredictedEnergyPercent.innerHTML = "";
+			o.tdPredictedTime.innerHTML = "";
+			o.divPredictedText.innerHTML = "";
+			return;
+		}
+		if (sCurveOrBellCurve) {
+			o.tdPredictedEnergy.innerHTML = formatNumberForDisplay(predictedEnergy);
+			o.tdPredictedEnergyPercent.innerHTML = (Math.round(predictedEnergyPercent*1000)/10).toFixed(1)+"%";
+		} else {
+			if (predictedEnergyIndex === null) {
+				o.tdPredictedEnergy.innerHTML = "";
+				o.tdPredictedEnergyPercent.innerHTML = "";
+			} else {
+				let energyGen = curvImg.energyIncrArr[predictedEnergyIndex];
+				o.tdPredictedEnergy.innerHTML = formatNumberForDisplay(energyGen);
+				let percent = roundToDecimal(curvImg.energyPercentIncrArr[predictedEnergyIndex] * 100, 1);
+				o.tdPredictedEnergyPercent.innerHTML = percent+"%";
+			}	
+		}
 		
 		if (!predictedTime) o.tdPredictedTime.innerHTML = "";
 		else o.tdPredictedTime.innerHTML = dateToTimeStr(predictedTime);
@@ -408,8 +625,9 @@ function PluginObj() {
 		if (predictedTimeSec > 0) {
 			let sec = Math.round((predictedTime.getTime()-Date.now()) / 1000);
 			let str = 'Planet will reach <span style="color:'+colorPredicted+'">';
-			str += o.tdPredictedEnergyPercent.innerText+"</span> energy in ";
-			str += '<span style="color:'+colorTime+'">'+formatSeconds(sec)+'</span>';
+			str += o.tdPredictedEnergyPercent.innerText+"</span> energy";
+			if (!sCurveOrBellCurve) str += "Gen";
+			str += ' in <span style="color:'+colorTime+'">'+formatSeconds(sec)+'</span>';
 			o.divPredictedText.innerHTML = str;
 		} else o.divPredictedText.innerHTML = "";
 	}
