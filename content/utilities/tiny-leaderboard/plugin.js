@@ -14,7 +14,9 @@ const reverseOrdering = false;
 
 // ---------------------------------------------------------------
 
-let roundEndTime = new Date().getTime(); // for init set it to current time
+import { getPlayerColor } from "https://cdn.skypack.dev/@darkforest_eth/procedural";
+
+let roundEndTime = df.getTokenMintEndTimeSeconds()*1000;
 
 function formatDuration(durationMs) {
 	if (durationMs < 0) return '';
@@ -28,11 +30,6 @@ function formatDuration(durationMs) {
 
 function timestampSection(value) {
 	return value.toString().padStart(2, '0');
-}
-
-async function downloadRoundEndTime() {
-    let roundEnd = await df.contractsAPI.scoreContract.roundEnd();
-    roundEndTime = new Date(parseInt(roundEnd._hex, 16)*1000).getTime();
 }
 
 function getStrTimeUntilRoundEnds() {
@@ -57,11 +54,6 @@ async function downloadLeaderboard() {
 		.then(response => response.json())
 }
 
-// return example: 'hsl(285,100%,70%)'
-function getPlayerColor(ethAddress) {
-	return df.getProcgenUtils().getPlayerColor(ethAddress);
-}
-
 function Plugin() {
 	var o = {};
 	o.div;
@@ -74,9 +66,6 @@ function Plugin() {
 	o.centerPlayer = df.account;
 
 	o.init = function() {
-		downloadRoundEndTime().then(()=> {
-			o.div_timer.title = new Date(roundEndTime).toString();
-		});
 		o.updateTimerInterv = setInterval(o.updateTimer, 1000);
 		o.updateInterv = setInterval(o.updateLeaderboard, 1000 * updateTimeInSeconds);
 		o.updateTimer();
@@ -92,6 +81,7 @@ function Plugin() {
 		o.div_timer.style.fontSize = "x-large";
 		o.div_timer.style.textAlign = "center";
 		o.div_timer.style["margin-top"] = "-10px";
+		o.div_timer.title = new Date(roundEndTime).toString();
 		container.appendChild(o.div_timer);
 
 		container.appendChild(document.createElement('hr'));
