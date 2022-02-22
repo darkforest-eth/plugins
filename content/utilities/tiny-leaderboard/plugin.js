@@ -105,7 +105,8 @@ function Plugin() {
 	}
 	
 	o.onMouseClick = function() {
-		let newPlayer = ui.selectedPlanet ? ui.selectedPlanet.owner : df.account;
+		let selectedPlanet = ui.getSelectedPlanet();
+		let newPlayer = selectedPlanet ? selectedPlanet.owner : df.account;
 		if (newPlayer === o.centerPlayer) return;
 		if (newPlayer === emptyAddress) return;
 		o.centerPlayer = newPlayer;
