@@ -20,6 +20,11 @@ import {
   PlanetLevelNames,
 } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
+import {
+  getPlanetName
+} from "https://cdn.skypack.dev/@darkforest_eth/procedural";
+
+
 // Max concurrent ( withdraws + moves) num
 const MAX_CONCURRENT_NUM = 5;
 
@@ -32,7 +37,6 @@ const MIN_DISTRIBUTE_PERCENT = 90;
 // Trigger auto silver move and withdraw every 30 seconds
 const AUTO_SECONDS = 30;
 
-var pg = df.getProcgenUtils();
 
 // removes all the child nodes of an element
 var removeAllChildNodes = (parent) => {
@@ -43,9 +47,9 @@ var removeAllChildNodes = (parent) => {
 
 // makes a (sometimes) clickable planet link
 var planetLink = (locationId, clickable = true) => {
-    const planet = df.getPlanetWithId(locationId);
+    const planet = df.entityStore.getPlanetWithId(locationId);
     const planetElement = document.createElement(clickable ? "button" : "span");
-    planetElement.innerText = `L${planet.planetLevel}R${planet.upgradeState.reduce((a, b) => a + b, 0)} ${pg.getPlanetName(planet)}`;
+    planetElement.innerText = `L${planet.planetLevel}R${planet.upgradeState.reduce((a, b) => a + b, 0)} ${getPlanetName(planet)}`;
     planetElement.title = locationId;
     planetElement.style.textDecoration = "underline";
     planetElement.style.background = "none";
@@ -80,7 +84,7 @@ class Plugin {
   sendAndWithdraw(planetSource, planetTarget) {
     console.log(`${this.planetSource} => ${this.planetTarget}`);
     if (planetTarget) {
-      if (isSpaceRift(df.getPlanetWithId(planetTarget))) {
+      if (isSpaceRift(df.entityStore.getPlanetWithId(planetTarget))) {
         withdrawSilver(planetTarget);
       }
       if (planetSource) {
@@ -99,7 +103,7 @@ class Plugin {
       const planetSource = item[0];
       const planetTarget = item[1];
       if (planetTarget) {
-        if (isSpaceRift(df.getPlanetWithId(planetTarget))) {
+        if (isSpaceRift(df.entityStore.getPlanetWithId(planetTarget))) {
           if (withdrawSilver(planetTarget) != 0) {
             i++;
           }
@@ -343,8 +347,8 @@ class Plugin {
 }
 
 function sendSilver(fromId, toId, maxDistributeEnergyPercent = 99) {
-  const from = df.getPlanetWithId(fromId);
-  const to   = df.getPlanetWithId(toId);
+  const from = df.entityStore.getPlanetWithId(fromId);
+  const to   = df.entityStore.getPlanetWithId(toId);
 
   // Rejected if has more than 5 pending arrivals. Transactions are reverted when more arrives. You can't increase it
   const unconfirmed = getUnconfirmedsForPlanet(to);
@@ -400,7 +404,7 @@ function sendSilver(fromId, toId, maxDistributeEnergyPercent = 99) {
 }
 
 function withdrawSilver(fromId) {
-  const from = df.getPlanetWithId(fromId);
+  const from = df.entityStore.getPlanetWithId(fromId);
   const silver = Math.floor(from.silver);
   if (silver === 0) {
     return 0;
