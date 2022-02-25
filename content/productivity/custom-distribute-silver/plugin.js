@@ -47,7 +47,7 @@ var removeAllChildNodes = (parent) => {
 
 // makes a (sometimes) clickable planet link
 var planetLink = (locationId, clickable = true) => {
-    const planet = df.entityStore.getPlanetWithId(locationId);
+    const planet = df.getPlanetWithId(locationId);
     const planetElement = document.createElement(clickable ? "button" : "span");
     planetElement.innerText = `L${planet.planetLevel}R${planet.upgradeState.reduce((a, b) => a + b, 0)} ${getPlanetName(planet)}`;
     planetElement.title = locationId;
@@ -84,7 +84,7 @@ class Plugin {
   sendAndWithdraw(planetSource, planetTarget) {
     console.log(`${this.planetSource} => ${this.planetTarget}`);
     if (planetTarget) {
-      if (isSpaceRift(df.entityStore.getPlanetWithId(planetTarget))) {
+      if (isSpaceRift(df.getPlanetWithId(planetTarget))) {
         withdrawSilver(planetTarget);
       }
       if (planetSource) {
@@ -103,7 +103,7 @@ class Plugin {
       const planetSource = item[0];
       const planetTarget = item[1];
       if (planetTarget) {
-        if (isSpaceRift(df.entityStore.getPlanetWithId(planetTarget))) {
+        if (isSpaceRift(df.getPlanetWithId(planetTarget))) {
           if (withdrawSilver(planetTarget) != 0) {
             i++;
           }
@@ -347,8 +347,8 @@ class Plugin {
 }
 
 function sendSilver(fromId, toId, maxDistributeEnergyPercent = 99) {
-  const from = df.entityStore.getPlanetWithId(fromId);
-  const to   = df.entityStore.getPlanetWithId(toId);
+  const from = df.getPlanetWithId(fromId);
+  const to   = df.getPlanetWithId(toId);
 
   // Rejected if has more than 5 pending arrivals. Transactions are reverted when more arrives. You can't increase it
   const unconfirmed = getUnconfirmedsForPlanet(to);
@@ -404,7 +404,7 @@ function sendSilver(fromId, toId, maxDistributeEnergyPercent = 99) {
 }
 
 function withdrawSilver(fromId) {
-  const from = df.entityStore.getPlanetWithId(fromId);
+  const from = df.getPlanetWithId(fromId);
   const silver = Math.floor(from.silver);
   if (silver === 0) {
     return 0;
