@@ -2,7 +2,8 @@
 //
 // attack thing with many thing at the same time
 
-var pg = df.getProcgenUtils();
+import {getPlanetName} from "https://cdn.skypack.dev/@darkforest_eth/procedural";
+const pg = {getPlanetName: getPlanetName}
 
 // removes all the child nodes of an element
 var removeAllChildNodes = (parent) => {
@@ -64,7 +65,7 @@ var simultaneousAttack = (target, sources) => {
             // maybe somehow show the plugin user this error?
             if (Math.floor(energyArriving) <= 0)
                 return;
-            df.move(attacker.locationId, target.locationId, Math.floor(attacker.energy * 0.5), 0);
+            df.move(attacker.locationId, target.locationId, Math.floor(attacker.energy * 0.5), 0, null, false);
             // waits for the duration of the longest move - the duration of the move itself to be sent. * 1k is to convert seconds to ms
         }, (longestMove - planetMove.time) * 1e3));
     }
