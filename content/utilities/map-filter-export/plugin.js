@@ -27,6 +27,9 @@ import { PlanetLevel,PlanetType,SpaceType } from
 import { html, render, useState } from
   "https://unpkg.com/htm/preact/standalone.module.js";
 
+import { getPlayerColor } from 
+  "https://cdn.skypack.dev/@darkforest_eth/procedural";
+
 let showPlanets = [];  
 
 export const isPlanet = planet => planet.planetType === PlanetType.PLANET;
@@ -45,11 +48,6 @@ export const destroyedFilter = plt =>{
 }
 
 export const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
-
-
-export function getPlayerColor(ethAddress) {
-  return df.getProcgenUtils().getPlayerColor(ethAddress);
-}
 
 function  drawRound(ctx, p, color,width=1) {
     if (!p) return '(???,???)';
