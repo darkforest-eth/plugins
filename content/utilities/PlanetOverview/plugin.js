@@ -236,20 +236,6 @@ class OverviewPlanets {
             }
         };
 
-        // Button "Update" for table
-        const updateButton = document.createElement("button");
-        updateButton.innerText = "Update";
-        updateButton.title = "Refresh immediately";
-        updateButton.style.marginRight = "10px";
-        updateButton.addEventListener("click", () => {
-            try {
-                dynamicLabel.innerText = `Top ${this.topX} of PlanetType: ${this.planetType} up Lvl: ${this.minLevel}`;
-                this.renderPlanets();
-            } catch (err) {
-                console.error("Unable to update", err);
-            }
-        });
-
         // Button "Un.Trans" for label info status of the transactions
         const unconfirmedButton = document.createElement("button");
         unconfirmedButton.innerText = "Un.Trans";
@@ -330,7 +316,6 @@ class OverviewPlanets {
         // Grafic append
         container.appendChild(planetType);
         container.appendChild(minPlanetLevel);
-        container.appendChild(updateButton);
         container.appendChild(unconfirmedButton);
         container.appendChild(topSlider);
         container.appendChild(dynamicLabel);
