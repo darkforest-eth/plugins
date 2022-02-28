@@ -17,6 +17,9 @@ import { PlanetLevel, PlanetType, PlanetTypeNames } from
 import { html, render, useState } from
 	"https://unpkg.com/htm/preact/standalone.module.js";
 
+import { getPlayerColor } from 
+  "https://cdn.skypack.dev/@darkforest_eth/procedural";
+
 let minLevel = 4;
 let maxLevel = 9;
 
@@ -62,10 +65,6 @@ const PLANET_LEVELS = Object.values(PlanetLevel).map((level) => ({
 	value: level,
 	text: level.toString(),
 }));
-
-function getPlanetColor(ethAddress) {
-	return df.getProcgenUtils().getPlayerColor(ethAddress);
-}
 
 function drawRound(ctx, p, color, alpha) {
 	if (!p) return '(???,???)';
@@ -443,7 +442,7 @@ class Plugin {
 					let coords = p.location.coords;
 					if (coords.x >= beginX && coords.y >= beginY && coords.x <= endX && coords.y <= endY) {
 
-						let color = getPlanetColor(p.owner);
+						let color = getPlayerColor(p.owner);
 						drawRound(ctx, p, color, 0.7);
 					}
 				}
@@ -451,7 +450,7 @@ class Plugin {
 		}
 		for (let i in showPlanetList) {
 			let p = showPlanetList[i];
-			let color = getPlanetColor(p.owner);
+			let color = getPlayerColor(p.owner);
 			drawRound(ctx, p, color, 1);
 		}
 	}
