@@ -3,19 +3,46 @@
 // The highlight my planets plugin help you find your small planets.
 // (Thanks to Heatmap plugin)
 
+const defaultSettings = {
+  version: 1,
+  highlightStyle: 0,
+  rangePercent: 8,
+  alpha: 0,
+  globalAlpha: 1,
+  ownColor: '#ffffff'
+}
+
+const SettingsStorage = {
+  key: 'highlight-my-planets.settings',
+  read() {
+    const value = localStorage.getItem(this.key);
+    if (value) {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        console.log(`Failed to parse ${this.key} from localstorage`);
+        localStorage.removeItem(this.key);
+      }
+    }
+
+    return defaultSettings;
+  },
+  save(settings) {
+    localStorage.setItem(this.key, JSON.stringify(settings));
+  }
+}
+
 class Plugin {
   constructor() {
-    this.highlightStyle = 0;
-    this.rangePercent = 8;
-    this.alpha = 0;
-    this.globalAlpha = 1;
-    this.ownColor = '#ffffff';
+    this.settings = SettingsStorage.read();
+    console.log(this.settings);
 
     this.highlightStyleHandler = this.highlightStyleHandler.bind(this);
     this.rangeHandler = this.rangeHandler.bind(this);
     this.alphaHandler = this.alphaHandler.bind(this);
     this.globalAlphaHandler = this.globalAlphaHandler.bind(this);
     this.ownColorHandler = this.ownColorHandler.bind(this);
+    this.useDefaultsHandler = this.useDefaultsHandler.bind(this);
   }
 
   hexToHsl(H) {
@@ -77,10 +104,18 @@ class Plugin {
           value=${selectedValue}
         >
           ${items.map(
-            ({ value, text }) => {return `<option value=${value}>${text}</option>`}
+            ({ value, text }) => (
+              value === selectedValue
+                ? `<option value=${value} selected="selected">${text}</option>`
+                : `<option value=${value}>${text}</option>`
+            )
           )}
         </select>
       </label>`;
+  }
+
+  getUseDefaultsButton(className, text) {
+    return `<br /><div class="content"><df-row><df-shortcut-button class="${className}">${text}</df-shortcut-button></df-row></div>`;
   }
 
   async render(div) {
@@ -89,11 +124,12 @@ class Plugin {
     //div.style.minHeight = '100px';
 
     div.innerHTML = [
-      this.getColorPicker('ownColor', 'Color:', this.ownColor),
-      this.getSelect('highlight', 'Highligh:', [{value: 0, text: "Heatmap"}, {value: 1, text: "Circle"}], this.highlightStyle),
-      this.getSliderHtml('range', 'Planet Range:', 1, 100, 1, this.rangePercent),
-      this.getSliderHtml('alpha', 'Gradient Alpha:', 0, 1, 0.01, this.alpha),
-      this.getSliderHtml('globalAlpha', 'Global Alpha:', 0, 1, 0.01, this.globalAlpha)
+      this.getColorPicker('ownColor', 'Color:', this.settings.ownColor),
+      this.getSelect('highlight', 'Highlight:', [{value: 0, text: "Heatmap"}, {value: 1, text: "Circle"}], this.settings.highlightStyle),
+      this.getSliderHtml('range', 'Planet Range:', 1, 100, 1, this.settings.rangePercent),
+      this.getSliderHtml('alpha', 'Gradient Alpha:', 0, 1, 0.01, this.settings.alpha),
+      this.getSliderHtml('globalAlpha', 'Global Alpha:', 0, 1, 0.01, this.settings.globalAlpha),
+      this.getUseDefaultsButton('useDefaults', 'Use Defaults')
     ].join('<br />');
 
     this.selectHighlightStyle = div.querySelector('label.highlight select');
@@ -113,40 +149,58 @@ class Plugin {
 
     this.colorPickerOwnColor = div.querySelector('label.ownColor input');
     this.colorPickerOwnColor.addEventListener('input', this.ownColorHandler);
+    
+    this.useDefaultsButton = div.querySelector('df-shortcut-button.useDefaults');
+    this.useDefaultsButton.addEventListener('click', this.useDefaultsHandler)
+    this.highlightStyleHandler();
   }
 
   highlightStyleHandler() {
-    this.highlightStyle = this.selectHighlightStyle.value;
-
-    //I couldn't find a better way...
-    if(this.highlightStyle == 0) {
-      document.querySelector('label.alpha').style.display = "inline-block";
-      document.querySelector('label.range').style.display = "inline-block";
-      document.querySelector('label.globalAlpha').style.display = "inline-block";
-    } else {
-      document.querySelector('label.alpha').style.display = "none";
-      document.querySelector('label.range').style.display = "none";
-      document.querySelector('label.globalAlpha').style.display = "none";
-    }
+    this.settings.highlightStyle = Number(this.selectHighlightStyle.value);
+    
+    const displayMode = this.settings.highlightStyle === 0
+      ? 'inline-block'
+      : 'none';
+    document.querySelector('label.alpha').style.display = displayMode;
+    document.querySelector('label.range').style.display = displayMode;
+    document.querySelector('label.globalAlpha').style.display = displayMode;
   }
 
   rangeHandler() {
-    this.rangePercent = parseInt(this.sliderRange.value);
+    this.settings.rangePercent = parseInt(this.sliderRange.value);
     this.valueRange.innerHTML = `${this.sliderRange.value}%`;
   }
 
   alphaHandler() {
-    this.alpha = parseFloat(this.sliderAlpha.value);
+    this.settings.alpha = parseFloat(this.sliderAlpha.value);
     this.valueAlpha.innerHTML = `${this.sliderAlpha.value}`;
   }
 
   globalAlphaHandler() {
-    this.globalAlpha = parseFloat(this.sliderGlobalAlpha.value);
+    this.settings.globalAlpha = parseFloat(this.sliderGlobalAlpha.value);
     this.valueGlobalAlpha.innerHTML = `${this.sliderGlobalAlpha.value}`;
   }
 
   ownColorHandler() {
-    this.ownColor = this.colorPickerOwnColor.value;
+    this.settings.ownColor = this.colorPickerOwnColor.value;
+  }
+
+  useDefaultsHandler() {
+    console.log('use defaults...');
+    this.sliderRange.value = defaultSettings.rangePercent;
+    this.sliderRange.dispatchEvent(new Event('input'));
+
+    this.sliderAlpha.value = defaultSettings.alpha;
+    this.sliderAlpha.dispatchEvent(new Event('input'));
+
+    this.sliderGlobalAlpha.value = defaultSettings.globalAlpha;
+    this.sliderGlobalAlpha.dispatchEvent(new Event('input'));
+
+    this.colorPickerOwnColor.value = defaultSettings.ownColor;
+    this.colorPickerOwnColor.dispatchEvent(new Event('input'));
+
+    this.selectHighlightStyle.value = defaultSettings.highlightStyle.toString();
+    this.selectHighlightStyle.dispatchEvent(new Event('change'));
   }
 
   draw(ctx) {
@@ -155,26 +209,27 @@ class Plugin {
     const origSrokeStyle = ctx.strokeStyle;
     const viewport = ui.getViewport();
     const planets = df.getMyPlanets();
+    const settings = this.settings;
 
     // paint bigger ones first
     // planets.sort((a, b) => b.range - a.range);
 
-    if(this.highlightStyle == 0) for (const p of planets) {
+    if (settings.highlightStyle === 0) for (const p of planets) {
 
       // draw range circle
       const { x, y } = viewport.worldToCanvasCoords(p.location.coords);
-      const hsl = this.hexToHsl(this.ownColor);
+      const hsl = this.hexToHsl(settings.ownColor);
 
-      const fac = Math.max(0, Math.log2(this.rangePercent / 5));
+      const fac = Math.max(0, Math.log2(settings.rangePercent / 5));
       const range = fac * p.range;
       const trueRange = viewport.worldToCanvasDist(range);
 
-      ctx.globalAlpha = this.globalAlpha;
+      ctx.globalAlpha = settings.globalAlpha;
       ctx.beginPath();
       ctx.arc(x, y, trueRange, 0, 2 * Math.PI);
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, trueRange);
       gradient.addColorStop(0, `hsla(${hsl}, 1)`);
-      gradient.addColorStop(1, `hsla(${hsl}, ${this.alpha})`);   
+      gradient.addColorStop(1, `hsla(${hsl}, ${settings.alpha})`);   
       ctx.fillStyle = gradient;
       ctx.fill();
 
@@ -184,8 +239,8 @@ class Plugin {
       ctx.globalAlpha = origGlobalAlpha;
     } else {
 
-      ctx.fillStyle = this.ownColor;
-      ctx.strokeStyle = this.ownColor;
+      ctx.fillStyle = settings.ownColor;
+      ctx.strokeStyle = settings.ownColor;
       
       for (let planet of planets) {
         if (!planet.location) continue;
@@ -230,6 +285,7 @@ class Plugin {
     this.sliderRange.removeEventListener('input', this.rangeHandler);
     this.sliderAlpha.removeEventListener('input', this.alphaHandler);
     this.sliderGlobalAlpha.removeEventListener('input', this.globalAlphaHandler);
+    SettingsStorage.save(this.settings);
   }
   
 }
