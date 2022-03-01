@@ -186,7 +186,6 @@ class Plugin {
   }
 
   useDefaultsHandler() {
-    console.log('use defaults...');
     this.sliderRange.value = defaultSettings.rangePercent;
     this.sliderRange.dispatchEvent(new Event('input'));
 
