@@ -35,7 +35,6 @@ const SettingsStorage = {
 class Plugin {
   constructor() {
     this.settings = SettingsStorage.read();
-    console.log(this.settings);
 
     this.highlightStyleHandler = this.highlightStyleHandler.bind(this);
     this.rangeHandler = this.rangeHandler.bind(this);
