@@ -17,7 +17,7 @@ let playersNeutral = [];
 
 let playersFriendly = [];
 
-class Diplomacy {
+class DiplomacyAmbassador {
   constructor() {
     this.highlightStyle = 0;
     this.rangePercent = 8;
@@ -264,8 +264,6 @@ class Diplomacy {
       if (selected) {
         let tempID = selected.owner;
         playersFriendly.push(tempID);
-        console.log("added Friendly " + tempID);
-        console.log(playersFriendly);
         this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
       }
       else {
@@ -285,8 +283,6 @@ class Diplomacy {
       if (selected) {
         let tempID = selected.owner;
         playersNeutral.push(tempID);
-        console.log("added Neutral " + tempID);
-        console.log(playersNeutral);
         this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
       }
       else {
@@ -306,8 +302,6 @@ class Diplomacy {
       if (selected) {
         let tempID = selected.owner;
         playersEnemy.push(tempID);
-        console.log("added Enemy " + tempID);
-        console.log(playersEnemy);
         this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
       }
       else {
@@ -321,9 +315,6 @@ class Diplomacy {
     clearButtonFriendly.innerHTML = 'Clean Friendly';
     clearButtonFriendly.onclick = () => {
       playersFriendly = [];
-      console.log(playersFriendly);
-      console.log("Cleaned Friendly list");
-
       this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
       sourceContainerFriendly.innerText = "Current Friendly source: none";
     };
@@ -334,9 +325,6 @@ class Diplomacy {
     clearButtonNeutral.innerHTML = 'Clean Neutral';
     clearButtonNeutral.onclick = () => {
       playersNeutral = [];
-      console.log(playersNeutral);
-      console.log("Cleaned Neutral list");
-
       this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
       sourceContainerNeutral.innerText = "Current Neutral source: none";
     };
@@ -347,10 +335,6 @@ class Diplomacy {
     clearButtonEnemy.innerHTML = 'Clean Enemy';
     clearButtonEnemy.onclick = () => {
       playersEnemy = [];
-      //playersEnemy.push(EMPTY_ADDRESS);
-      console.log(playersEnemy);
-      console.log("Cleaned Enemy list");
-
       this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
       sourceContainerEnemy.innerText = "Current Enemy source: none"
     };
@@ -478,18 +462,12 @@ class Diplomacy {
     const origSrokeStyle = ctx.strokeStyle;
     const viewport = ui.getViewport();
     const planetsOwner = df.getMyPlanets();
-    // const planets = df.getAllPlanets();
     let planetsFriendly = Array.from(df.getAllPlanets()).filter(p => (
       playersFriendly.includes(p.owner)));
     let planetsNeutral = Array.from(df.getAllPlanets()).filter(p => (
       playersNeutral.includes(p.owner)));
-    //      console.log(planetsNeutral);
     let planetsEnemy = Array.from(df.getAllPlanets()).filter(p => (
       playersEnemy.includes(p.owner)));
-    //  console.log(planetsEnemy);
-    // paint bigger ones first
-    // planets.sort((a, b) => b.range - a.range);
-    // planets =  planetsFriendly;
     if (this.highlightStyle == 0) for (const p of planetsOwner) {
       if (!p.location) continue;
       // draw range circle
@@ -746,7 +724,6 @@ class Diplomacy {
           2 * Math.PI
         );
         ctx.fill();
-        // ctx.stroke();
         ctx.closePath();
       }
     }
@@ -760,4 +737,4 @@ class Diplomacy {
     this.sliderGlobalAlpha.removeEventListener('input', this.globalAlphaHandler);
   }
 }
-export default Diplomacy;
+export default DiplomacyAmbassador;
