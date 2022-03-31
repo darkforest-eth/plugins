@@ -34,17 +34,21 @@ import {
   PlanetLevelNames,
 } from "https://cdn.skypack.dev/@darkforest_eth/types";
 
+//port v6r5
+import { getPlanetName } from "https://cdn.skypack.dev/@darkforest_eth/procedural";
+const pg = { getPlanetName: getPlanetName }
+
 // Constanst definitíon
 const planetType = [];
 const minLevel = [];
 const middle = [];
-const { getPlanetName, getOwnerColor } = df.getProcgenUtils();
+
 
 // Default refresh 30 seconds
 let REFRESH_INTERVAL = 1000 * 30;
 
 // Plugin Overview Default
-class Overview {
+class OverviewPlanets {
   constructor() {
     this.container = null;
     this.loopId = null;
@@ -101,7 +105,7 @@ class Overview {
         continue;
       }
       const row = document.createElement("tr");
-      row.style.color = getOwnerColor(planet);
+      row.style.color = "violet";
       row.onclick = () => {
         ui.centerLocationId(planet.locationId);
       };
@@ -135,20 +139,18 @@ class Overview {
           fullEnergyDate.substr(16, 8),
         ];
 
-      let planetName = getPlanetName(planet).substr(0, 10);
-      row.innerHTML = `<td>${
-        idx + 1
-      }.</td><td>${planetName}</td><td style="text-align: center">${
-        planet.planetLevel
-      }</td><td>${formatNumberForDisplay(
-        getSilver(planet)
-      )} / ${formatNumberForDisplay(
-        planet.silverCap
-      )}=${silverPercent}%</td><td>${fullSilverTime}</td><td>${formatNumberForDisplay(
-        Math.round(planet.energy)
-      )} / ${formatNumberForDisplay(
-        planet.energyCap
-      )}=${energyPercent}%</td><td>${fullEnergyTime}</td>`;
+      let planetName = pg.getPlanetName(planet).substr(0, 10);
+      row.innerHTML = `<td>${idx + 1
+        }.</td><td>${planetName}</td><td style="text-align: center">${planet.planetLevel
+        }</td><td>${formatNumberForDisplay(
+          getSilver(planet)
+        )} / ${formatNumberForDisplay(
+          planet.silverCap
+        )}=${silverPercent}%</td><td>${fullSilverTime}</td><td>${formatNumberForDisplay(
+          Math.round(planet.energy)
+        )} / ${formatNumberForDisplay(
+          planet.energyCap
+        )}=${energyPercent}%</td><td>${fullEnergyTime}</td>`;
       this.tbody.appendChild(row);
     }
 
@@ -234,31 +236,6 @@ class Overview {
       }
     };
 
-    // Button "Update" for table
-    const updateButton = document.createElement("button");
-    updateButton.innerText = "Update";
-    updateButton.title = "Refresh immediately";
-    updateButton.style.marginRight = "10px";
-    updateButton.addEventListener("click", () => {
-      try {
-        dynamicLabel.innerText = `Top ${this.topX} of PlanetType: ${this.planetType} up Lvl: ${this.minLevel}`;
-        this.renderPlanets();
-      } catch (err) {
-        console.error("Unable to update", err);
-      }
-    });
-
-    // Button "Un.Trans" for label info status of the transactions
-    const unconfirmedButton = document.createElement("button");
-    unconfirmedButton.innerText = "Un.Trans";
-    unconfirmedButton.title = "Logs unconfirmed transactions to the console (F12)";
-    unconfirmedButton.style.marginRight = "10px";
-    unconfirmedButton.addEventListener("click", () => {
-      unconfirmedLabel();
-      unconfirmedConsole();
-      this.renderPlanets();
-    });
-
     // Slider for count of total list lines
     const topSlider = document.createElement("input");
     topSlider.title = "Select count of top revealed planets (default: 10, range: 0-100)";
@@ -328,8 +305,6 @@ class Overview {
     // Grafic append
     container.appendChild(planetType);
     container.appendChild(minPlanetLevel);
-    container.appendChild(updateButton);
-    container.appendChild(unconfirmedButton);
     container.appendChild(topSlider);
     container.appendChild(dynamicLabel);
     container.appendChild(myPLanetsLabel);
@@ -350,4 +325,4 @@ class Overview {
   }
 }
 
-export default Overview;
+export default OverviewPlanets;
