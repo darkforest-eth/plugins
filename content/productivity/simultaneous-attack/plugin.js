@@ -1,14 +1,13 @@
 // Simultaneous attack
 //
 // Attack or reinforce a planet by automatically scheduling up to 6 moves to arrive at the same time
-
+import {
+    getPlanetName
+} from "https://cdn.skypack.dev/@darkforest_eth/procedural";
 
 // User configurable parameters
 const DEFAULT_ENERGY_PERCENT = 75;
 const RECALCULATION_INTERVAL_SECONDS = 15;
-
-
-var pg = df.getProcgenUtils();
 
 // removes all the child nodes of an element
 var removeAllChildNodes = (parent) => {
@@ -22,7 +21,7 @@ var removeAllChildNodes = (parent) => {
 var planetLink = (locationId, clickable = true) => {
     const planet = df.getPlanetWithId(locationId);
     const planetElement = document.createElement(clickable ? "button" : "span");
-    planetElement.innerText = `L${planet.planetLevel}R${planet.upgradeState.reduce((a, b) => a + b, 0)} ${pg.getPlanetName(planet)}`;
+    planetElement.innerText = `L${planet.planetLevel}R${planet.upgradeState.reduce((a, b) => a + b, 0)} ${getPlanetName(planet)}`;
     planetElement.title = locationId;
     planetElement.style.textDecoration = "underline";
     planetElement.style.background = "none";
