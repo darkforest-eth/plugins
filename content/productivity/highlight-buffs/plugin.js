@@ -6,6 +6,10 @@
 
 import { PlanetType, PlanetTypeNames, PlanetLevel, PlanetLevelNames } from "https://cdn.skypack.dev/@darkforest_eth/types";
 
+// Half Junk is probably only available in Dark Forest v0.6 Round 5 "Space Junk"
+// Use this to hide/show the Half Junk highlight button
+const ENABLE_HALF_JUNK_BUTTON = true;
+
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
 
 const viewport = ui.getViewport();
@@ -49,6 +53,7 @@ const StatIdx = {
   Range: 2,
   Speed: 3,
   Defense: 4,
+  HalfJunk: 5,
 }
 
 // Make smaller planets visible at long range by making highlight bigger
@@ -106,15 +111,17 @@ const periodMsHighlight2xEnergyGro = 1451;
 const periodMsHighlight2xDefense = 1543;
 const periodMsHighlight2xSpeed = 1657;
 const periodMsHighlight2xRange = 1753;
+const periodMsHighlightHalfJunk = 1831;
 
 // Set up colours for each of the highlights. Use similar colours to asteroid colour for 2x buffs.
+const colsHighlightArtifact = [255, 100, 100];
+const colsHighlightRip = [80, 200, 255];
 const colsHighlight2xEnergyCap = [255, 160, 60];
 const colsHighlight2xEnergyGro = [120, 255, 120];
 const colsHighlight2xDefense = [180, 140, 255];
 const colsHighlight2xSpeed = [255, 100, 255];
 const colsHighlight2xRange = [225, 225, 80];
-const colsHighlightRip = [80, 200, 255];
-const colsHighlightArtifact = [255, 100, 100];
+const colsHighlightHalfJunk = [180, 150, 130];
 
 // Helper functions for filters
 const prospectExpired = (plugin, planet) => {
@@ -126,12 +133,12 @@ const prospectExpired = (plugin, planet) => {
 const distanceToPlanetSquared = planet => planet.location ? (viewport.centerWorldCoords.x - planet.location.coords.x) ** 2 + (viewport.centerWorldCoords.y - planet.location.coords.y) ** 2 : MAX_DISTANCE;
 const distanceInRange = (plugin, planet) => distanceToPlanetSquared(planet) <= plugin.getSelectValue(RANGE_MAX) ** 2;
 const levelInRange = (plugin, planet) => plugin.getSelectValue(LEVEL_MIN) <= planet.planetLevel && planet.planetLevel <= plugin.getSelectValue(LEVEL_MAX);
-const distanceAndLevelInRange = (plugin, planet) => levelInRange(plugin, planet) && distanceInRange(plugin, planet);
+const mainChecks = (plugin, planet) => levelInRange(plugin, planet) && distanceInRange(plugin, planet) && !planet.destroyed;
 const planetTypeMatches = (plugin, planet) => {
   const type = plugin.getSelectValue(PLANET_TYPE);
   return type === ALL_PLANET_TYPES || type === planet.planetType;
 };
-const filter2xStat = (statIdx, upgradeIdx=-1) => (plugin, planet) => distanceAndLevelInRange(plugin, planet) && planetTypeMatches(plugin, planet) && (planet.bonus && planet.bonus[statIdx] || planet.upgradeState && planet.upgradeState[upgradeIdx]);
+const filter2xStat = (statIdx, upgradeIdx=-1) => (plugin, planet) => mainChecks(plugin, planet) && planetTypeMatches(plugin, planet) && (planet.bonus && planet.bonus[statIdx] || planet.upgradeState && planet.upgradeState[upgradeIdx]);
 
 // Filters for each highlight type
 const filter2xEnergyCap = filter2xStat(StatIdx.EnergyCap);
@@ -139,10 +146,11 @@ const filter2xEnergyGro = filter2xStat(StatIdx.EnergyGro);
 const filter2xDefense = filter2xStat(StatIdx.Defense, 0);  // defense rank upgrades are on planet.upgradeState[0]
 const filter2xSpeed = filter2xStat(StatIdx.Speed, 2);  // speed rank upgrades are on planet.upgradeState[2]
 const filter2xRange = filter2xStat(StatIdx.Range, 1);  // range rank upgrades are on planet.upgradeState[1]
-const filterRip = (plugin, planet) => distanceAndLevelInRange(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
+const filterHalfJunk = filter2xStat(StatIdx.HalfJunk);
+const filterRip = (plugin, planet) => mainChecks(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
 const filterArtifact = (plugin, planet) => {
   // Filter out planets of wrong size
-  if (!distanceAndLevelInRange(plugin, planet)) return false;
+  if (!mainChecks(plugin, planet)) return false;
 
   // Include any planet with an artifact circling (and is big enough)
   if (planet.heldArtifactIds.length > 0) return true;
@@ -387,6 +395,7 @@ class Plugin {
       planetsWith2xEnergyGro: {label: "Energy Gro", filter: filter2xEnergyGro, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xEnergyGro, cols: colsHighlight2xEnergyGro},
       planetsWith2xRange: {label: "Range", filter: filter2xRange, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xRange, cols: colsHighlight2xRange},
     };
+    if (ENABLE_HALF_JUNK_BUTTON) this.highlightData['planetsWithHalfJunk'] = {label: "Half Junk", filter: filterHalfJunk, array: [TOGGLE_OFF], periodMs: periodMsHighlightHalfJunk, cols: colsHighlightHalfJunk};
     this.highlightList = Object.keys(this.highlightData);
     console.log(`Initialised ${PLUGIN_NAME} plugin:`);
     console.dir(this);
