@@ -20,6 +20,11 @@ import {
   PlanetLevelNames,
 } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
+import {
+  getPlanetName
+} from "https://cdn.skypack.dev/@darkforest_eth/procedural";
+
+
 // Max concurrent ( withdraws + moves) num
 const MAX_CONCURRENT_NUM = 5;
 
@@ -32,7 +37,6 @@ const MIN_DISTRIBUTE_PERCENT = 90;
 // Trigger auto silver move and withdraw every 30 seconds
 const AUTO_SECONDS = 30;
 
-var pg = df.getProcgenUtils();
 
 // removes all the child nodes of an element
 var removeAllChildNodes = (parent) => {
@@ -45,7 +49,7 @@ var removeAllChildNodes = (parent) => {
 var planetLink = (locationId, clickable = true) => {
     const planet = df.getPlanetWithId(locationId);
     const planetElement = document.createElement(clickable ? "button" : "span");
-    planetElement.innerText = `L${planet.planetLevel}R${planet.upgradeState.reduce((a, b) => a + b, 0)} ${pg.getPlanetName(planet)}`;
+    planetElement.innerText = `L${planet.planetLevel}R${planet.upgradeState.reduce((a, b) => a + b, 0)} ${getPlanetName(planet)}`;
     planetElement.title = locationId;
     planetElement.style.textDecoration = "underline";
     planetElement.style.background = "none";
