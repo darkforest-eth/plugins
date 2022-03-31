@@ -15,7 +15,7 @@ import { PlanetLevel, PlanetType, PlanetTypeNames } from
 	"https://cdn.skypack.dev/@darkforest_eth/types";
 
 import { html, render, useState } from
-	"https://unpkg.com/htm/preact/standalone.module.js";
+	"https://unpkg.com/htm@3/preact/standalone.module.js";
 
 import { getPlayerColor } from 
   "https://cdn.skypack.dev/@darkforest_eth/procedural";
@@ -45,7 +45,7 @@ function clearRangeCoords() {
 }
 
 function setCursorMode(mode) {
-	console.log("Set Cursor Mode to: ", mode);
+//	console.log("Set Cursor Mode to: ", mode);
 	switch (mode) {
 		case CursorMode.RANGE:
 			clearRangeCoords();
@@ -108,7 +108,7 @@ function drawRectangle(ctx, coordsA, coordsB, color) {
 
 
 function refreshPlanetList() {
-	console.log("refreshPlanet");
+	// console.log("refreshPlanet");
 	if (cursorMode === CursorMode.ALL) {
 		showPlanetList = [];
 		const planets = df.getMyPlanets();
@@ -204,7 +204,7 @@ function giftAreaPlanets() {
 			
 		onClick=${() => {
 				let p = ui.getSelectedPlanet();
-				console.log(p);
+				// console.log(p);
 				setToAddress(p.owner);
 			}}>
 			choose this planet's owner as receiver
@@ -273,7 +273,7 @@ function giftAreaPlanets() {
 	`;
 
 	function selectSinglePlanet() {
-		console.log("Select Single Planet");
+		// console.log("Select Single Planet");
 		setCursorMode(CursorMode.SINGLE);
 		showPlanetList = [];
 		setSelectInfo("please click one planet to share");
@@ -290,7 +290,7 @@ function giftAreaPlanets() {
 	`;
 
 	function selectRangePlanet() {
-		console.log("Select Range Planet");
+		// console.log("Select Range Planet");
 		setCursorMode(CursorMode.RANGE);
 		showPlanetList = [];
 		setSelectInfo("determine the area of planet(s) with level filter");
@@ -309,10 +309,9 @@ function giftAreaPlanets() {
 		`;
 
 	function selectAllPlanet() {
-		console.log("Select All Planet");
+		// console.log("Select All Planet");
 		setCursorMode(CursorMode.ALL);
 		showPlanetList = df.getMyPlanets();
-		console.log("test=========================");
 		setSelectInfo("determine all planet(s) with level filter");
 		setGiftInfo('');
 	}
@@ -338,7 +337,7 @@ function giftAreaPlanets() {
 	</div>`;
 
 	function giftPlanet() {
-		console.log(showPlanetList);
+		// console.log(showPlanetList);
 		for (let i in showPlanetList) {
 			let p = showPlanetList[i];
 			df.transferOwnership(p.locationId, toAddress);
