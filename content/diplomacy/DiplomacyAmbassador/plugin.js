@@ -267,7 +267,10 @@ class DiplomacyAmbassador {
         this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
       }
       else {
-        console.log("Not planet selected");
+        df.terminal.current.println(
+          `Planet not selected`,
+          5
+        );
       }
     };
 
@@ -286,7 +289,10 @@ class DiplomacyAmbassador {
         this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
       }
       else {
-        console.log("Not planet selected");
+        df.terminal.current.println(
+          `Planet not selected`,
+          5
+        );
       }
     };
 
@@ -305,7 +311,10 @@ class DiplomacyAmbassador {
         this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
       }
       else {
-        console.log("Not planet selected");
+        df.terminal.current.println(
+          `Planet not selected`,
+          5
+        );
       }
     };
 
@@ -461,13 +470,13 @@ class DiplomacyAmbassador {
     const origFillStyle = ctx.fillStyle;
     const origSrokeStyle = ctx.strokeStyle;
     const viewport = ui.getViewport();
-    const planetsOwner = df.getMyPlanets();
+    const planetsOwner = df.getMyPlanets().filter(planet => viewport.isInViewport(planet.location.coords));
     let planetsFriendly = Array.from(df.getAllPlanets()).filter(p => (
-      playersFriendly.includes(p.owner)));
+      playersFriendly.includes(p.owner) && viewport.isInViewport(p.location.coords)));
     let planetsNeutral = Array.from(df.getAllPlanets()).filter(p => (
-      playersNeutral.includes(p.owner)));
+      playersNeutral.includes(p.owner) && viewport.isInViewport(p.location.coords)));
     let planetsEnemy = Array.from(df.getAllPlanets()).filter(p => (
-      playersEnemy.includes(p.owner)));
+      playersEnemy.includes(p.owner) && viewport.isInViewport(p.location.coords)));
     if (this.highlightStyle == 0) for (const p of planetsOwner) {
       if (!p.location) continue;
       // draw range circle
