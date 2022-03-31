@@ -3,7 +3,9 @@
 // Get a list of which players have sent the most moves recently
 //
 // author: https://twitter.com/davidryan59 (dryan.eth)
-
+import {
+  getPlayerColor
+} from "https://cdn.skypack.dev/@darkforest_eth/procedural";
 
 // -----------------------------
 // Constants and user editable parameters
@@ -18,9 +20,6 @@ const OWNER_CHARS_TO_DISPLAY = 18;
 const MAX_RECORD_COUNT = 1000;  // GraphQL will retrieve up to 1000 objects in one go
 
 // -----------------------------
-
-
-const pg = df.getProcgenUtils();
 
 const playerQuery = `{
   arrivals(
@@ -58,7 +57,7 @@ const getPlayerDisplayText = playerId => {
 
 const getPlayerElement = playerId => {
   const playerNameElement = document.createElement('span');
-  playerNameElement.style["color"] = pg.getPlayerColor(playerId);
+  playerNameElement.style["color"] = getPlayerColor(playerId);
   playerNameElement.innerText = `${getPlayerDisplayText(playerId)}`;
   return playerNameElement;
 }
