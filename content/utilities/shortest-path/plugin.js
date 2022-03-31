@@ -428,7 +428,4 @@ class Plugin {
   }
 }
 
-/**
- * And don't forget to it!
- */
 export default Plugin;
