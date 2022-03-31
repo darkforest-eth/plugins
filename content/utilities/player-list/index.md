@@ -1,6 +1,6 @@
 ---
 title: Player List
-date: 2021-10-04T19:30:00
+date: 2022-02-02T09:00:00
 subtitle: Show a list of players on your map.
-version: 0.6.4
+version: 0.6.5
 ---
