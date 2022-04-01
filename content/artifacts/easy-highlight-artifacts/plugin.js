@@ -7,13 +7,13 @@ import {
 
 import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
 import {
-  ArtifactType,
-  ArtifactTypeNames,
   ArtifactRarity,
   ArtifactRarityNames,
+  ArtifactType,
+  ArtifactTypeNames,
   PlanetLevel,
   PlanetType,
-  PlanetTypeNames
+  PlanetTypeNames,
 } from "https://cdn.skypack.dev/@darkforest_eth/types";
 
 const PIRATES = EMPTY_ADDRESS;
@@ -27,8 +27,16 @@ const ARTIFACT_ANY_TYPE = -1;
 const ARTIFACT_ANY_RARITY = -1;
 
 const PLANET_TYPES = [
-  { value: PLANET_ANY_TYPE, text: "Any" },
-  ...Object.values(PlanetType).filter((type) => type !== PlanetType.Unknown).map((type) => ({ value: type, text: PlanetTypeNames[type] }))
+  {
+    value: PLANET_ANY_TYPE,
+    text: "Any",
+  },
+  ...Object.values(PlanetType)
+    .filter((type) => type !== PlanetType.Unknown)
+    .map((type) => ({
+      value: type,
+      text: PlanetTypeNames[type],
+    })),
 ];
 
 const OwnerType = {
@@ -36,13 +44,25 @@ const OwnerType = {
   UNCLAIMED: 1,
   CLAIMED_BY_MYSELF: 2,
   CLAIMED_BY_OTHERS: 3,
-}
+};
 
 const OWNER_TYPES_MAPPING = [
-  { value: OwnerType.ANYONE, text: "Anyone" },
-  { value: OwnerType.UNCLAIMED, text: "Unclaimed" },
-  { value: OwnerType.CLAIMED_BY_OTHERS, text: "Claimed by others" },
-  { value: OwnerType.CLAIMED_BY_MYSELF, text: "Claimed by myself" },
+  {
+    value: OwnerType.ANYONE,
+    text: "Anyone",
+  },
+  {
+    value: OwnerType.UNCLAIMED,
+    text: "Unclaimed",
+  },
+  {
+    value: OwnerType.CLAIMED_BY_OTHERS,
+    text: "Claimed by others",
+  },
+  {
+    value: OwnerType.CLAIMED_BY_MYSELF,
+    text: "Claimed by myself",
+  },
 ];
 
 const ARTIFACT_TYPES = [
@@ -50,7 +70,12 @@ const ARTIFACT_TYPES = [
     value: ARTIFACT_ANY_TYPE,
     text: "Any",
   },
-  ...Object.values(ArtifactType).filter((type) => type !== ArtifactType.Unknown).map((type) => ({ value: type, text: ArtifactTypeNames[type] }))
+  ...Object.values(ArtifactType)
+    .filter((type) => type !== ArtifactType.Unknown)
+    .map((type) => ({
+      value: type,
+      text: ArtifactTypeNames[type],
+    })),
 ];
 
 const ARTIFACT_RARITIES = [
@@ -58,7 +83,12 @@ const ARTIFACT_RARITIES = [
     value: ARTIFACT_ANY_RARITY,
     text: "Any",
   },
-  ...Object.values(ArtifactRarity).filter((rarity) => rarity !== ArtifactRarity.Unknown).map((rarity) => ({ value: rarity, text: ArtifactRarityNames[rarity] }))
+  ...Object.values(ArtifactRarity)
+    .filter((rarity) => rarity !== ArtifactRarity.Unknown)
+    .map((rarity) => ({
+      value: rarity,
+      text: ArtifactRarityNames[rarity],
+    })),
 ];
 
 function CreateSelectFilter({ items, selectedValue, onSelect }) {
@@ -182,7 +212,8 @@ function createButton({ loading, onClick, ctaText }) {
 let eligiblePlanets = [];
 
 function App({}) {
-  const [selectedLevels, setSelectedLevels] = useState([1, 9]);
+  const [onlyShowZeroJunk, setOnlyShowZeroJunk] = useState(true);
+  const [selectedLevels, setSelectedLevels] = useState([0, 9]);
   const [selectedPlanetType, setSelectedPlanetType] = useState(-1);
   const [selectedArtifactType, setSelectedArtifactType] = useState(-1);
   const [selectedArtifactRarity, setSelectedArtifactRarity] = useState(-1);
@@ -217,6 +248,11 @@ function App({}) {
   const getEligiblePlanets = useCallback(() => {
     let planets = [];
     for (let planet of df.getAllPlanets()) {
+      // show planet with zero junk
+      if (onlyShowZeroJunk && planet.spaceJunk > 0) {
+        continue;
+      }
+
       // check planet level in range
       if (
         !(
@@ -280,21 +316,24 @@ function App({}) {
     selectedOwnerType,
     selectedArtifactType,
     selectedArtifactRarity,
+    onlyShowZeroJunk,
   ]);
 
   const resetEligiblePlanets = useCallback(() => {
     eligiblePlanets = [];
-    setSelectedLevels([1, 9]);
+    setSelectedLevels([0, 9]);
     setSelectedPlanetType(PLANET_ANY_TYPE);
     setSelectedArtifactRarity(ARTIFACT_ANY_RARITY);
     setSelectedArtifactType(ARTIFACT_ANY_TYPE);
     setSelectedOwnerType(OwnerType.CLAIMED_BY_MYSELF);
+    setOnlyShowZeroJunk(true);
   }, [
     setSelectedLevels,
     setSelectedPlanetType,
     setSelectedArtifactRarity,
     setSelectedArtifactType,
     setSelectedOwnerType,
+    setOnlyShowZeroJunk,
   ]);
 
   const flexRow = {
@@ -303,7 +342,20 @@ function App({}) {
     justifyContent: "space-even",
   };
 
-  const planetLevelFilter = html`<div style=${{ marginBottom: "3px" }}>
+  const zeroJunkCheckBox = html`
+    <div style=${{ display: "flex", alignItems: "center" }}>
+      <input
+        type="checkbox"
+        checked=${onlyShowZeroJunk}
+        onChange=${() => {
+          setOnlyShowZeroJunk(!onlyShowZeroJunk);
+        }}
+      />
+      <div style=${{ marginLeft: "12px" }}>No Junk</div>
+    </div>
+  `;
+
+  const planetLevelFilter = html` <div style=${{ marginBottom: "3px" }}>
       Planet Level Ranges
     </div>
     <${LevelFilter}
@@ -396,7 +448,8 @@ function App({}) {
   />`;
 
   return html`
-    ${planetLevelFilter} ${planetUnionFilters} ${artifactFilters}
+    ${zeroJunkCheckBox} ${planetLevelFilter} ${planetUnionFilters}
+    ${artifactFilters}
     <${createDivider} />
     <div
       style=${{
