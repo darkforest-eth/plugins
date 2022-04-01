@@ -7,7 +7,6 @@
 // Author: SnowTiger
 
 import {
-  energy,
   coords,
   canHaveArtifact,
 } from 'https://plugins.zkga.me/utils/utils.js';
@@ -44,7 +43,7 @@ function gear() {
 
 function whereIsGear() {
   const g = gear();
-  const pid = (!!g.onVoyageId && df.getAllVoyages().filter(v => v.eventId == g.onVoyageId).length > 0) ? undefined : g.onPlanetId;
+  const pid = (!g || (!!g.onVoyageId && df.getAllVoyages().filter(v => v.eventId == g.onVoyageId).length > 0)) ? undefined : g.onPlanetId;
   if (pid !== undefined) {
     return df.getPlanetWithId(pid);
   }
@@ -79,8 +78,10 @@ function createDom(tag, text) {
   return dom;
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function distance(from, to) {
+  let fromloc = from.location;
+  let toloc = to.location;
+  return Math.sqrt((fromloc.coords.x - toloc.coords.x) ** 2 + (fromloc.coords.y - toloc.coords.y) ** 2);
 }
 
 class ArtifactsFinder {
@@ -106,6 +107,10 @@ class ArtifactsFinder {
   findArtifacts() {
     let currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
     let prospectingPlanets = [];
+    let gearPlanet = whereIsGear();
+    if (!gearPlanet) {
+      return;
+    }
     while (this.pendingPlanets.length > 0) {
       if (!this.finding) break;
       let planet = this.pendingPlanets.shift();
@@ -113,7 +118,7 @@ class ArtifactsFinder {
         break;
       }
       planet = df.getPlanetWithId(planet.locationId);
-      if (isFindable(planet, currentBlockNumber)) {
+      if (planet.locationId === gearPlanet.locationId && isFindable(planet, currentBlockNumber)) {
         try {
           let log = {
             planet: planet,
@@ -135,25 +140,26 @@ class ArtifactsFinder {
       })
   }
 
-  prospectArtifacts() {
-    let gearId = gear().id;
+  async prospectArtifacts() {
+    let gearId = gear()?.id;
     let gearPlanet = whereIsGear();
     let currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
 
     if (!gearPlanet) {
       return;
     }
-    if (isProspectable(gearPlanet)) {
+    if (gearPlanet.owner === df.account && isProspectable(gearPlanet)) {
       if (!gearPlanet.transactions?.hasTransaction(isUnconfirmedProspectPlanetTx)) {
-        df.prospectPlanet(gearPlanet.locationId);
-        this.pendingPlanets.push(gearPlanet);
         let log = {
           planet: gearPlanet,
           action: 'Prospecting'
         }
         this.logAction(log, gearPlanet);
+        const tx = await df.prospectPlanet(gearPlanet.locationId);
+        await tx.confirmedPromise;
+        this.pendingPlanets.push(gearPlanet);
       }
-    } else if (isFindable(gearPlanet, currentBlockNumber)) {
+    } else if (gearPlanet.owner === df.account && isFindable(gearPlanet, currentBlockNumber)) {
       if (!gearPlanet.transactions?.hasTransaction(isUnconfirmedFindArtifactTx) &&
         this.pendingPlanets.filter(p => p.locationId === gearPlanet.locationId).length === 0) {
         this.pendingPlanets.push(gearPlanet);
@@ -175,7 +181,7 @@ class ArtifactsFinder {
         df.move(gearPlanet.locationId, to.locationId, 0, 0, gearId);
         let log = {
           planet: to,
-          action: 'Moving'
+          action: 'Moving to'
         }
         this.logAction(log, to);
       }
@@ -191,13 +197,13 @@ class ArtifactsFinder {
     }
   }
 
-  startFind() {
+  async startFind() {
     this.clearTimer();
     this.finding = !this.finding;
     if (this.finding) {
       this.logs.appendChild(createDom("div", "Start Finding"));
-      this.prospectArtifacts();
       setTimeout(this.findArtifacts.bind(this), 0);
+      setTimeout(this.prospectArtifacts.bind(this), 0);
       this.prospectTimerId = setInterval(this.prospectArtifacts.bind(this), AUTO_INTERVAL);
       this.findTimerId = setInterval(this.findArtifacts.bind(this), 10000);
       this.findArtifactsButton.innerText = " Cancel Finding ";
@@ -230,9 +236,3 @@ class ArtifactsFinder {
 }
 
 export default ArtifactsFinder;
-
-function distance(from, to) {
-  let fromloc = from.location;
-  let toloc = to.location;
-  return Math.sqrt((fromloc.coords.x - toloc.coords.x) ** 2 + (fromloc.coords.y - toloc.coords.y) ** 2);
-}
