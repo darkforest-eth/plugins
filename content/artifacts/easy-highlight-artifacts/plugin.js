@@ -25,6 +25,7 @@ const PLANET_LEVELS = Object.values(PlanetLevel).map((level) => ({
 const PLANET_ANY_TYPE = -1;
 const ARTIFACT_ANY_TYPE = -1;
 const ARTIFACT_ANY_RARITY = -1;
+const BONUS_ANY = -1;
 
 const PLANET_TYPES = [
   {
@@ -47,22 +48,10 @@ const OwnerType = {
 };
 
 const OWNER_TYPES_MAPPING = [
-  {
-    value: OwnerType.ANYONE,
-    text: "Anyone",
-  },
-  {
-    value: OwnerType.UNCLAIMED,
-    text: "Unclaimed",
-  },
-  {
-    value: OwnerType.CLAIMED_BY_OTHERS,
-    text: "Claimed by others",
-  },
-  {
-    value: OwnerType.CLAIMED_BY_MYSELF,
-    text: "Claimed by myself",
-  },
+  { value: OwnerType.ANYONE, text: "Anyone" },
+  { value: OwnerType.UNCLAIMED, text: "Nobody" },
+  { value: OwnerType.CLAIMED_BY_OTHERS, text: "Owned by others" },
+  { value: OwnerType.CLAIMED_BY_MYSELF, text: "Owned by myself" },
 ];
 
 const ARTIFACT_TYPES = [
@@ -89,6 +78,37 @@ const ARTIFACT_RARITIES = [
       value: rarity,
       text: ArtifactRarityNames[rarity],
     })),
+];
+
+const BONUS = [
+  {
+    value: BONUS_ANY,
+    text: "Any",
+  },
+  {
+    value: 0,
+    text: "Double Energy Cap",
+  },
+  {
+    value: 1,
+    text: "Double Energy Growth",
+  },
+  {
+    value: 2,
+    text: "Double Range",
+  },
+  {
+    value: 3,
+    text: "Double Speed",
+  },
+  {
+    value: 4,
+    text: "Double Defense",
+  },
+  {
+    value: 5,
+    text: "Half Junk",
+  },
 ];
 
 function CreateSelectFilter({ items, selectedValue, onSelect }) {
@@ -217,6 +237,7 @@ function App({}) {
   const [selectedPlanetType, setSelectedPlanetType] = useState(-1);
   const [selectedArtifactType, setSelectedArtifactType] = useState(-1);
   const [selectedArtifactRarity, setSelectedArtifactRarity] = useState(-1);
+  const [selectedBonus, setSelectedBonus] = useState(-1);
   const [selectedOwnerType, setSelectedOwnerType] = useState(
     OwnerType.CLAIMED_BY_MYSELF
   );
@@ -280,6 +301,14 @@ function App({}) {
         continue;
       }
 
+      // check bonus
+      if (
+        selectedBonus != BONUS_ANY &&
+        !planet.bonus[selectedBonus]
+      ) {
+        continue;
+      }
+
       // if artifact type or rarity selected, then we require a planet contain a artifact satisfying
       // requirements
       const mustHoldArtifacts =
@@ -316,6 +345,7 @@ function App({}) {
     selectedOwnerType,
     selectedArtifactType,
     selectedArtifactRarity,
+    selectedBonus,
     onlyShowZeroJunk,
   ]);
 
@@ -390,18 +420,6 @@ function App({}) {
     </div>
   `;
 
-  const planetUnionFilters = html`
-    <div
-      style=${{
-        ...flexRow,
-        justifyContent: "space-between",
-        marginTop: "10px",
-      }}
-    >
-      ${planetTypeFilter} ${ownerTypeFilter}
-    </div>
-  `;
-
   const artifactTypeFilter = html`<div>
     <div style=${{ marginBottom: "3px" }}>Artifacts Type</div>
     <${CreateSelectFilter}
@@ -422,11 +440,16 @@ function App({}) {
     </div>
   `;
 
-  const artifactFilters = html`<div
-    style=${{ ...flexRow, justifyContent: "space-between", marginTop: "10px" }}
-  >
-    ${artifactTypeFilter} ${artifactRarityFilter}
-  </div>`;
+  const bonusFilter = html`
+    <div>
+      <div style=${{ marginBottom: "3px" }}>Bonus</div>
+      <${CreateSelectFilter}
+        items=${BONUS}
+        selectedValue=${selectedBonus}
+        onSelect=${setSelectedBonus}
+      />
+    </div>
+  `;
 
   const [loading, setLoading] = useState(false);
 
@@ -447,9 +470,19 @@ function App({}) {
     ctaText=${"Reset"}
   />`;
 
+  function row(...children) {
+    return html`<div
+      style=${{ ...flexRow, justifyContent: "space-between", marginTop: "10px" }}
+    >
+      ${children}
+    </div>`;
+  }
+
   return html`
-    ${zeroJunkCheckBox} ${planetLevelFilter} ${planetUnionFilters}
-    ${artifactFilters}
+    ${planetLevelFilter}
+    ${row(planetTypeFilter, ownerTypeFilter)}
+    ${row(artifactTypeFilter, artifactRarityFilter)}
+    ${row(bonusFilter, zeroJunkCheckBox)}
     <${createDivider} />
     <div
       style=${{
