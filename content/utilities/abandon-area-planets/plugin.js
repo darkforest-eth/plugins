@@ -363,7 +363,7 @@ function abandonAreaPlanets() {
       try {
         await df.move(fromId, toId, forces, silver, artifactMoved, abandoning);
       } catch (error) {
-        console.error('move may be revert...');
+        console.error(`Failed to abandon planet source(${fromId}) to desination(${toId}) with error: ${error.message}`);
       }
     }
 
