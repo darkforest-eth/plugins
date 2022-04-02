@@ -3,15 +3,11 @@
 // Get a list of which players have sent the most moves recently
 //
 // author: https://twitter.com/davidryan59 (dryan.eth)
-import {
-  getPlayerColor
-} from "https://cdn.skypack.dev/@darkforest_eth/procedural";
+import { getPlayerColor } from "https://cdn.skypack.dev/@darkforest_eth/procedural";
+import { THEGRAPH_API_URL } from "https://cdn.skypack.dev/@darkforest_eth/constants";
 
 // -----------------------------
 // Constants and user editable parameters
-
-const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-5";
-// const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/cha0sg0d/death-of-the-universe";
 
 const PLUGIN_NAME = "Active Players";
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
@@ -33,7 +29,7 @@ const playerQuery = `{
   }
 }`;
 
-const getGraphQLData = async (query, graphApiUrl = GRAPH_API_URL) => {
+const getGraphQLData = async (query, graphApiUrl = THEGRAPH_API_URL) => {
   const response = await fetch(graphApiUrl, {
     method: "POST",
     body: JSON.stringify({ query }),
