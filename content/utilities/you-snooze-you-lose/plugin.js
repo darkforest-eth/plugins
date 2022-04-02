@@ -4,7 +4,8 @@
 //
 // author: https://twitter.com/davidryan59 (dryan.eth)
 // thanks: Bulmenisaurus, 9STX6, Velorum for assistance and feedback
-
+import { THEGRAPH_API_URL } from "https://cdn.skypack.dev/@darkforest_eth/constants";
+const ALL_TWITTERS_URL = 'https://api.zkga.me/twitter/all-twitters';
 
 // -----------------------------
 // Constants and user editable parameters
@@ -17,11 +18,6 @@ const SS2 = 1/3;
 const SS3 = 1;
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
 const PLAYER_DISPLAY_CHARS = 20;
-
-const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-5";
-// const GRAPH_API_URL = "https://api.thegraph.com/subgraphs/name/cha0sg0d/death-of-the-universe";
-
-const ALL_TWITTERS_URL = 'https://api.zkga.me/twitter/all-twitters';
 
 const PLUGIN_NAME = "You Snooze, You Lose!";
 const MAX_GRAPH_QL_BATCH = 1000;  // GraphQL will retrieve up to 1000 objects in one go
@@ -70,7 +66,7 @@ const getSnoozeQuery = (playerAddress, firstTimeMS, lastTimeMS) => `{
   }
 }`;
 
-const getGraphQLData = async (query, graphApiUrl = GRAPH_API_URL) => {
+const getGraphQLData = async (query, graphApiUrl = THEGRAPH_API_URL) => {
   const response = await fetch(graphApiUrl, {
     method: "POST",
     body: JSON.stringify({ query }),
