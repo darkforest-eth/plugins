@@ -2,8 +2,7 @@
 //
 // attack thing with many thing at the same time
 
-import {getPlanetName} from "https://cdn.skypack.dev/@darkforest_eth/procedural";
-const pg = {getPlanetName: getPlanetName}
+import * as pg from "https://cdn.skypack.dev/@darkforest_eth/procedural";
 
 // removes all the child nodes of an element
 var removeAllChildNodes = (parent) => {
