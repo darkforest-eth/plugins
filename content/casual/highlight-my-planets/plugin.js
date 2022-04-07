@@ -90,7 +90,7 @@ class Plugin {
 
     div.innerHTML = [
       this.getColorPicker('ownColor', 'Color:', this.ownColor),
-      this.getSelect('highlight', 'Highligh:', [{value: 0, text: "Heatmap"}, {value: 1, text: "Circle"}], this.highlightStyle),
+      this.getSelect('highlight', 'Highlight:', [{value: 0, text: "Heatmap"}, {value: 1, text: "Circle"}], this.highlightStyle),
       this.getSliderHtml('range', 'Planet Range:', 1, 100, 1, this.rangePercent),
       this.getSliderHtml('alpha', 'Gradient Alpha:', 0, 1, 0.01, this.alpha),
       this.getSliderHtml('globalAlpha', 'Global Alpha:', 0, 1, 0.01, this.globalAlpha)
@@ -154,7 +154,9 @@ class Plugin {
     const origFillStyle = ctx.fillStyle;
     const origSrokeStyle = ctx.strokeStyle;
     const viewport = ui.getViewport();
-    const planets = df.getMyPlanets();
+    const planets = df.getMyPlanets().filter(
+      planet => viewport.isInViewport(planet.location.coords)
+    )
 
     // paint bigger ones first
     // planets.sort((a, b) => b.range - a.range);

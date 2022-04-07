@@ -1,5 +1,7 @@
 // Player List
 //
+// WARNING: might lag with a big map
+//
 // Shows a list of players that appear on your map.
 // Click on a planet of a player to move that player to the top of the list. (can be disabled)
 // Click on one of the categories to sort the list by it.
@@ -22,7 +24,7 @@ const COLUMN_VISIBLE_SILVERPROD = true; // silver production - how fast a player
 const COLUMN_VISIBLE_ARTIFACTS = true; // how many common, rare, epic... artifacts a player has
 const COLUMN_VISIBLE_SCORE = true; // leaderboard score
 const COLUMN_VISIBLE_RANK = true; // leaderboard rank
-const COLUMN_VISIBLE_LASTACTIVE = true; // when was the last time a player made a move
+const COLUMN_VISIBLE_LASTACTIVE = false; // when was the last time a player made a move
 
 const windowHeight = 400;
 // players with less planets than this will not show up in the list
@@ -36,7 +38,7 @@ const updateTimeInSeconds = 60;
 const maxPlayersLastMoveGraphDL = 40;
 
 // this needs to be changed every round
-const GRAPH_API_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-4';
+const GRAPH_API_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-5';
 
 const artifactMaxType = 9;
 const artifactMaxRarity = 5;
@@ -71,6 +73,8 @@ const voyageColorHostile = "#F33";
 const voyageColorVictim = "#FF2";
 
 const emptyAddress = "0x0000000000000000000000000000000000000000";
+
+import { getPlayerColor } from "https://cdn.skypack.dev/@darkforest_eth/procedural";
 
 function roundToDecimal(num, decimalCount=1) {
 	if (decimalCount < 1) return Math.round(num);
@@ -124,11 +128,6 @@ async function downloadLeaderboard() {
 function getActiveVoyages() {
     return df.getAllVoyages()
         .filter(voyage => new Date(voyage.arrivalTime*1000) > new Date());
-}
-
-// return example: 'hsl(285,100%,70%)'
-function getPlayerColor(ethAddress) {
-	return df.getProcgenUtils().getPlayerColor(ethAddress);
 }
 
 function findBestPlanetOfPlayer(ethAddress) {
@@ -473,7 +472,8 @@ function Plugin() {
 	}
 	
 	o.onMouseClick = function() {
-		let newPlayer = ui.selectedPlanet ? ui.selectedPlanet.owner : null;
+		let selectedPlanet = ui.getSelectedPlanet();
+		let newPlayer = selectedPlanet ? selectedPlanet.owner : null;
 		if (newPlayer === emptyAddress) newPlayer = null;
 		if (newPlayer === o.planetSelectedPlayer) return;
 		o.planetSelectedPlayer = newPlayer;

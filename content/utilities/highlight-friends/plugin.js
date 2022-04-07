@@ -10,15 +10,19 @@ import { PlanetLevel } from
 import { html, render, useState } from
   "https://unpkg.com/htm/preact/standalone.module.js";
 
+import { getPlayerColor } from 
+  "https://cdn.skypack.dev/@darkforest_eth/procedural";
+
+import {
+  EMPTY_ADDRESS
+} from 'https://cdn.skypack.dev/@darkforest_eth/constants';
+
+
 function shortAddress(ethAddress) {
   let before = ethAddress.substring(0, 10);
   let zhong = '...';
   let res = before + zhong;
   return res;
-}
-
-function getPlayerColor(ethAddress) {
-  return df.getProcgenUtils().getPlayerColor(ethAddress);
 }
 
 function drawRound(ctx, p, color) {
@@ -178,7 +182,6 @@ function friendList() {
   }
 
   return html`<div  style=${divStyle} >
-
 	  <button onClick=${aimPlanet}> choose planet </button>
 	  <h1> ${chosenPlanet == undefined ? "not choose yet" : chosenPlanet.owner}</h1>
 
@@ -232,7 +235,13 @@ class Plugin {
   }
 
   draw(ctx) {
-    const planets = df.getAllOwnedPlanets();
+    const planets =  ui.getPlanetsInViewport()
+      .filter(planet => (
+        planet.owner!==EMPTY_ADDRESS && 
+        planet.destroyed === false && 
+        planet.planetLevel >= minLevel &&
+        planet.planetLevel <= maxLevel 
+      ));
 
     if (minLevel > maxLevel) {
       let tmp = minLevel;
@@ -243,8 +252,6 @@ class Plugin {
     // console.log([minLevel,maxLevel]);
 
     for (const p of planets) {
-      if (p.destroyed) continue;
-      if (p.planetLevel < minLevel || p.planetLevel > maxLevel) continue;
       if (!p?.location?.coords) continue;
 
       let flag = false;

@@ -7,19 +7,23 @@
 // Author: SnowTiger
 
 import {
-  energy,
   coords,
   canHaveArtifact,
 } from 'https://plugins.zkga.me/utils/utils.js';
 
 import {
+  ArtifactType,
+  PlanetType,
   BiomeNames
 } from "https://cdn.skypack.dev/@darkforest_eth/types"
 
-// prospect artifacts every 5 minutes
-let AUTO_INTERVAL = 1000 * 60 * 5;
-// max 10 prospecting actions at the same time
-let MAX_PROSPECTING = 10;
+import {
+  isUnconfirmedFindArtifactTx,
+  isUnconfirmedProspectPlanetTx,
+} from 'https://cdn.skypack.dev/@darkforest_eth/serde';
+
+// prospect artifacts every 1 minutes
+let AUTO_INTERVAL = 1000 * 60 * 1;
 
 
 function blocksLeftToProspectExpiration(
@@ -33,23 +37,34 @@ function prospectExpired(currentBlockNumber, prospectedBlockNumber) {
   return blocksLeftToProspectExpiration(currentBlockNumber, prospectedBlockNumber) <= 0;
 }
 
+function gear() {
+  return df.getMyArtifacts().filter(e => e.artifactType == ArtifactType.ShipGear)[0];
+}
+
+function whereIsGear() {
+  const g = gear();
+  const pid = (!g || (!!g.onVoyageId && df.getAllVoyages().filter(v => v.eventId == g.onVoyageId).length > 0)) ? undefined : g.onPlanetId;
+  if (pid !== undefined) {
+    return df.getPlanetWithId(pid);
+  }
+  return pid;
+}
+
 function isFindable(planet, currentBlockNumber) {
   return (
     currentBlockNumber !== undefined &&
-    df.isPlanetMineable(planet) &&
+    planet.planetType === PlanetType.RUINS &&
     planet.prospectedBlockNumber !== undefined &&
     !planet.hasTriedFindingArtifact &&
-    !planet.unconfirmedFindArtifact &&
     !prospectExpired(currentBlockNumber, planet.prospectedBlockNumber)
   );
 }
 
 function isProspectable(planet) {
-  return df.isPlanetMineable(planet) && planet.prospectedBlockNumber === undefined && !planet.unconfirmedProspectPlanet;
-}
-
-function enoughEnergyToProspect(p) {
-  return energy(p) >= 96;
+  return (
+    planet.planetType === PlanetType.RUINS &&
+    planet.prospectedBlockNumber === undefined
+  );
 }
 
 function createDom(tag, text) {
@@ -63,8 +78,10 @@ function createDom(tag, text) {
   return dom;
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function distance(from, to) {
+  let fromloc = from.location;
+  let toloc = to.location;
+  return Math.sqrt((fromloc.coords.x - toloc.coords.x) ** 2 + (fromloc.coords.y - toloc.coords.y) ** 2);
 }
 
 class ArtifactsFinder {
@@ -90,6 +107,10 @@ class ArtifactsFinder {
   findArtifacts() {
     let currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
     let prospectingPlanets = [];
+    let gearPlanet = whereIsGear();
+    if (!gearPlanet) {
+      return;
+    }
     while (this.pendingPlanets.length > 0) {
       if (!this.finding) break;
       let planet = this.pendingPlanets.shift();
@@ -97,7 +118,7 @@ class ArtifactsFinder {
         break;
       }
       planet = df.getPlanetWithId(planet.locationId);
-      if (isFindable(planet, currentBlockNumber)) {
+      if (planet.locationId === gearPlanet.locationId && isFindable(planet, currentBlockNumber)) {
         try {
           let log = {
             planet: planet,
@@ -119,37 +140,52 @@ class ArtifactsFinder {
       })
   }
 
-  prospectArtifacts() {
-    if (this.pendingPlanets.length >= MAX_PROSPECTING) {
+  async prospectArtifacts() {
+    let gearId = gear()?.id;
+    let gearPlanet = whereIsGear();
+    let currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
+
+    if (!gearPlanet) {
       return;
     }
-    let currentBlockNumber = df.contractsAPI.ethConnection.blockNumber;
-    let planets = Array.from(df.getMyPlanets()).filter(canHaveArtifact);
-    planets.forEach(planet => {
-      if (isFindable(planet, currentBlockNumber)) {
-        this.pendingPlanets.push(planet);
-      }
-    });
-    planets.forEach(async planet => {
-      if (!this.finding) return;
-      while (this.pendingPlanets.length >= MAX_PROSPECTING) {
-        await sleep(2000);
-        if (!this.finding) return;
-      }
-      try {
-        if (isProspectable(planet) && enoughEnergyToProspect(planet)) {
-          let log = {
-            planet: planet,
-            action: "Prospecting"
-          }
-          df.prospectPlanet(planet.locationId);
-          this.pendingPlanets.push(planet);
-          this.logAction(log, planet);
+    if (gearPlanet.owner === df.account && isProspectable(gearPlanet)) {
+      if (!gearPlanet.transactions?.hasTransaction(isUnconfirmedProspectPlanetTx)) {
+        let log = {
+          planet: gearPlanet,
+          action: 'Prospecting'
         }
-      } catch (err) {
-        console.log(err);
+        this.logAction(log, gearPlanet);
+        const tx = await df.prospectPlanet(gearPlanet.locationId);
+        await tx.confirmedPromise;
+        this.pendingPlanets.push(gearPlanet);
       }
-    });
+    } else if (gearPlanet.owner === df.account && isFindable(gearPlanet, currentBlockNumber)) {
+      if (!gearPlanet.transactions?.hasTransaction(isUnconfirmedFindArtifactTx) &&
+        this.pendingPlanets.filter(p => p.locationId === gearPlanet.locationId).length === 0) {
+        this.pendingPlanets.push(gearPlanet);
+      }
+    } else {
+      // find nearest Foundry
+      let ps = Array.from(df.getMyPlanets())
+        .filter(canHaveArtifact)
+        .filter(p => p.locationId !== gearPlanet.locationId)
+        .map(to => {
+          return [to, distance(gearPlanet, to)]
+        })
+        .sort((a, b) => a[1] - b[1]);
+      if (ps.length > 0) {
+        const to = ps[0][0];
+        ui.terminal.current?.printShellLn(
+          `df.move('${gearPlanet.locationId}', '${to.locationId}', 0, 0, '${gearId}')`
+        );
+        df.move(gearPlanet.locationId, to.locationId, 0, 0, gearId);
+        let log = {
+          planet: to,
+          action: 'Moving to'
+        }
+        this.logAction(log, to);
+      }
+    }
   }
 
   clearTimer() {
@@ -161,13 +197,13 @@ class ArtifactsFinder {
     }
   }
 
-  startFind() {
+  async startFind() {
     this.clearTimer();
     this.finding = !this.finding;
     if (this.finding) {
       this.logs.appendChild(createDom("div", "Start Finding"));
-      this.prospectArtifacts();
       setTimeout(this.findArtifacts.bind(this), 0);
+      setTimeout(this.prospectArtifacts.bind(this), 0);
       this.prospectTimerId = setInterval(this.prospectArtifacts.bind(this), AUTO_INTERVAL);
       this.findTimerId = setInterval(this.findArtifacts.bind(this), 10000);
       this.findArtifactsButton.innerText = " Cancel Finding ";
@@ -179,7 +215,7 @@ class ArtifactsFinder {
 
   async render(container) {
     let self = this;
-    container.style.width = '450px';
+    container.style.width = '550px';
     this.findArtifactsButton.innerText = ' Start Find ';
     container.appendChild(this.findArtifactsButton);
     container.appendChild(createDom('br'));
