@@ -1,11 +1,13 @@
-// Diplomacy in color map
+// Diplomacy in colored heat map
 // Introduction: Selected player planet and choose your Diplomacy Ambassador reaction with "Add Friendly" "Neutral" or "Enemy" button , 
 // Select color and some basic atributes for Ambassador HeatAreas. (Friendly , Neutral or Enemy)
+// Load / Save json file possibility
+// todo : Review and prepare strategy how to share json accross orden_gg 
 
 // By 9STX6
 // Remixed  highlight-my-planets (Heatmap plugin and circle)  
 
-
+//import { EMPTY_ADDRESS } from "https://cdn.skypack.dev/@darkforest_eth/constants";
 var removeAllChildNodes = (parent) => {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
@@ -17,7 +19,7 @@ let playersNeutral = [];
 
 let playersFriendly = [];
 
-class DiplomacyAmbassador {
+class Diplomacy {
   constructor() {
     this.highlightStyle = 0;
     this.rangePercent = 8;
@@ -70,36 +72,36 @@ class DiplomacyAmbassador {
   getSliderHtml(className, text, min, max, step, value) {
 
     return `<label class='${className}'>
-        <div style='display: inline-block; min-width: 120px'>${text}</div><input type='range'
-            value='${value}'
-            min='${min}'
-            max='${max}'
-            step='${step}'
-            style='transform: translateY(3px); margin: 0 10px;' />
-          <span>${value}</span>
-        </label>`;
+    <div style='display: inline-block; min-width: 120px'>${text}</div><input type='range'
+        value='${value}'
+        min='${min}'
+        max='${max}'
+        step='${step}'
+        style='transform: translateY(3px); margin: 0 10px;' />
+      <span>${value}</span>
+    </label>`;
   }
 
   getColorPicker(className, text, value) {
     return `<label class='${className}'>
-        <div style='display: inline-block; min-width: 120px'>${text}</div><input type='color' 
-            value='${value}'
-            style='transform: translateY(3px); margin: 0 10px;' />
-        </label>`;
+    <div style='display: inline-block; min-width: 120px'>${text}</div><input type='color' 
+        value='${value}'
+        style='transform: translateY(3px); margin: 0 10px;' />
+    </label>`;
   }
 
   getSelect(className, text, items, selectedValue) {
 
     return `<label class='${className}'>
-        <div style='display: inline-block; min-width: 120px'>${text}</div>
-          <select style='background: rgb(8,8,8); margin-top: 5px; padding: 3px 5px; border: 1px solid white; border-radius: 3px;' 
-            value=${selectedValue}
-          >
-            ${items.map(
+    <div style='display: inline-block; min-width: 120px'>${text}</div>
+      <select style='background: rgb(8,8,8); margin-top: 5px; padding: 3px 5px; border: 1px solid white; border-radius: 3px;' 
+        value=${selectedValue}
+      >
+        ${items.map(
       ({ value, text }) => { return `<option value=${value}>${text}</option>` }
     )}
-          </select>
-        </label>`;
+      </select>
+    </label>`;
   }
 
   renderSourceListFriendly(sourceContainerFriendly, playersFriendly) {
@@ -263,14 +265,17 @@ class DiplomacyAmbassador {
 
       if (selected) {
         let tempID = selected.owner;
+        playersNeutral = playersNeutral.filter(e => e !== tempID)
+        playersEnemy = playersEnemy.filter(e => e !== tempID)
         playersFriendly.push(tempID);
+        console.log("added Friendly " + tempID);
+        console.log(playersFriendly);
         this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
+        this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
+        this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
       }
       else {
-        df.terminal.current.println(
-          `Planet not selected`,
-          5
-        );
+        console.log("Not planet selected");
       }
     };
 
@@ -285,14 +290,17 @@ class DiplomacyAmbassador {
 
       if (selected) {
         let tempID = selected.owner;
+        playersFriendly = playersFriendly.filter(e => e !== tempID)
+        playersEnemy = playersEnemy.filter(e => e !== tempID)
         playersNeutral.push(tempID);
+        console.log("added Neutral " + tempID);
+        console.log(playersNeutral);
+        this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
         this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
+        this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
       }
       else {
-        df.terminal.current.println(
-          `Planet not selected`,
-          5
-        );
+        console.log("Not planet selected");
       }
     };
 
@@ -306,15 +314,19 @@ class DiplomacyAmbassador {
 
 
       if (selected) {
+        debugger;
         let tempID = selected.owner;
+        playersFriendly = playersFriendly.filter(e => e !== tempID);
+        playersNeutral = playersNeutral.filter(e => e !== tempID);
         playersEnemy.push(tempID);
+        console.log("added Enemy " + tempID);
+        console.log(playersEnemy);
+        this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
+        this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
         this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
       }
       else {
-        df.terminal.current.println(
-          `Planet not selected`,
-          5
-        );
+        console.log("Not planet selected");
       }
     };
 
@@ -324,6 +336,9 @@ class DiplomacyAmbassador {
     clearButtonFriendly.innerHTML = 'Clean Friendly';
     clearButtonFriendly.onclick = () => {
       playersFriendly = [];
+      console.log(playersFriendly);
+      console.log("Cleaned Friendly list");
+
       this.renderSourceListFriendly(sourceContainerFriendly, playersFriendly);
       sourceContainerFriendly.innerText = "Current Friendly source: none";
     };
@@ -334,6 +349,9 @@ class DiplomacyAmbassador {
     clearButtonNeutral.innerHTML = 'Clean Neutral';
     clearButtonNeutral.onclick = () => {
       playersNeutral = [];
+      console.log(playersNeutral);
+      console.log("Cleaned Neutral list");
+
       this.renderSourceListNeutral(sourceContainerNeutral, playersNeutral);
       sourceContainerNeutral.innerText = "Current Neutral source: none";
     };
@@ -344,6 +362,10 @@ class DiplomacyAmbassador {
     clearButtonEnemy.innerHTML = 'Clean Enemy';
     clearButtonEnemy.onclick = () => {
       playersEnemy = [];
+      //playersEnemy.push(EMPTY_ADDRESS);
+      console.log(playersEnemy);
+      console.log("Cleaned Enemy list");
+
       this.renderSourceListEnemy(sourceContainerEnemy, playersEnemy);
       sourceContainerEnemy.innerText = "Current Enemy source: none"
     };
@@ -470,13 +492,19 @@ class DiplomacyAmbassador {
     const origFillStyle = ctx.fillStyle;
     const origSrokeStyle = ctx.strokeStyle;
     const viewport = ui.getViewport();
-    const planetsOwner = df.getMyPlanets().filter(planet => viewport.isInViewport(planet.location.coords));
+    const planetsOwner = df.getMyPlanets();
+    // const planets = df.getAllPlanets();
     let planetsFriendly = Array.from(df.getAllPlanets()).filter(p => (
       playersFriendly.includes(p.owner)));
     let planetsNeutral = Array.from(df.getAllPlanets()).filter(p => (
       playersNeutral.includes(p.owner)));
+    //      console.log(planetsNeutral);
     let planetsEnemy = Array.from(df.getAllPlanets()).filter(p => (
       playersEnemy.includes(p.owner)));
+    //  console.log(planetsEnemy);
+    // paint bigger ones first
+    // planets.sort((a, b) => b.range - a.range);
+    // planets =  planetsFriendly;
     if (this.highlightStyle == 0) for (const p of planetsOwner) {
       if (!p.location) continue;
       // draw range circle
@@ -733,6 +761,7 @@ class DiplomacyAmbassador {
           2 * Math.PI
         );
         ctx.fill();
+        // ctx.stroke();
         ctx.closePath();
       }
     }
@@ -746,4 +775,4 @@ class DiplomacyAmbassador {
     this.sliderGlobalAlpha.removeEventListener('input', this.globalAlphaHandler);
   }
 }
-export default DiplomacyAmbassador;
+export default Diplomacy;
