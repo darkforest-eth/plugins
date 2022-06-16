@@ -26,6 +26,7 @@ const DEFAULT_RANGE_INDEX = 3;  // see below, index 3 is "Up to 10,000"
 const ENABLE_ROUND_5_OPTIONS = true;  // Half Junk, Spaceship, Capture options introduced in v0.6 Round 5
 const ENABLE_TARGET_AND_SPAWN = true;  // Target and Spawn are used in DF DAO Grand Prix
 
+const REFRESH_INTERVAL_MS = 500;  // Recalculate highlights, useful if viewport moves
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
 
 // ----------------------------------------
@@ -468,6 +469,10 @@ class Plugin {
     this.highlightList = Object.keys(this.highlightData);
     console.log(`Initialised ${PLUGIN_NAME} plugin:`);
     console.dir(this);
+
+    this.refreshHighlightsTimer = setInterval(() => {
+      setTimeout(this.recalcAllHighlights, 0);
+    }, REFRESH_INTERVAL_MS);
   }
 
   // Toggle individual draw options on or off
@@ -593,7 +598,15 @@ class Plugin {
     ctx.restore();
   }
 
-  destroy() {}
+  clearRefreshHighlights() {
+    if (this.refreshHighlightsTimer) {
+      clearInterval(this.refreshHighlightsTimer)
+    }
+  }
+
+  destroy() {
+    this.clearRefreshHighlights();
+  }
 }
 
 export default Plugin;
