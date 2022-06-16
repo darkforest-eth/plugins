@@ -12,6 +12,16 @@ const ENABLE_HALF_JUNK_BUTTON = true;
 
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
 
+// Setup initial display options here
+const DEFAULT_ELLIPSE = false
+const DEFAULT_PULSE_OPACITY = true
+const DEFAULT_LINE = true
+const DEFAULT_PULSE_RADIUS = true
+const DEFAULT_LINE_DASHED = false
+const DEFAULT_PULSE_LINE_WIDTH = true
+const DEFAULT_SYNC_PULSES = false
+const DEFAULT_PULSE_FAST = false
+
 const viewport = ui.getViewport();
 
 const PLUGIN_NAME = "Highlight Buffs";
@@ -376,14 +386,14 @@ class Plugin {
     this.ui.select = {};
     initialiseSelectWrappers(this);
     this.drawOptions = {
-      ellipse: {value: false, label: "Ellipse"},
-      pulseOpacity: {value: true, label: "Pulse Opacity"},
-      line: {value: true, label: "Line"},
-      pulseRadius: {value: true, label: "Pulse Radius"},
-      lineDashed: {value: false, label: "Line Dashed"},
-      pulseLineWidth: {value: true, label: "Pulse Line Width"},
-      sync: {value: false, label: "Sync Pulses"},
-      pulseFast: {value: false, label: "Pulse Fast"},
+      ellipse: {value: DEFAULT_ELLIPSE, label: "Ellipse"},
+      pulseOpacity: {value: DEFAULT_PULSE_OPACITY, label: "Pulse Opacity"},
+      line: {value: DEFAULT_LINE, label: "Line"},
+      pulseRadius: {value: DEFAULT_PULSE_RADIUS, label: "Pulse Radius"},
+      lineDashed: {value: DEFAULT_LINE_DASHED, label: "Line Dashed"},
+      pulseLineWidth: {value: DEFAULT_PULSE_LINE_WIDTH, label: "Pulse Line Width"},
+      sync: {value: DEFAULT_SYNC_PULSES, label: "Sync Pulses"},
+      pulseFast: {value: DEFAULT_PULSE_FAST, label: "Pulse Fast"},
     }
     this.drawOptionList = Object.keys(this.drawOptions);
     this.highlightData = {
