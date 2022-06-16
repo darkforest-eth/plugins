@@ -22,6 +22,10 @@ const DEFAULT_PULSE_LINE_WIDTH = true
 const DEFAULT_SYNC_PULSES = false
 const DEFAULT_PULSE_FAST = false
 
+const DEFAULT_LEVEL_MIN = 2;  // default minimum level of planets to highlight
+const DEFAULT_LEVEL_MAX = 9;  // default maximum level of planets to highlight
+const DEFAULT_RANGE_INDEX = 3;  // see below, index 3 is "Up to 10,000"
+
 const viewport = ui.getViewport();
 
 const PLUGIN_NAME = "Highlight Buffs";
@@ -54,7 +58,7 @@ const RANGES = [
   [500000, "Up to 500,000"],
   [999999, "Up to 999,999"]
 ];
-const DEFAULT_RANGE_MAX = RANGES[3][0];
+const DEFAULT_RANGE_MAX = RANGES[DEFAULT_RANGE_INDEX][0];
 
 // See Dark Forest Client, file: src/_types/global/GlobalTypes.ts/StatIdx
 const StatIdx = {
@@ -65,11 +69,6 @@ const StatIdx = {
   Defense: 4,
   HalfJunk: 5,
 }
-
-// Make smaller planets visible at long range by making highlight bigger
-// Additive for Fill, Multiplicative for Line
-const DEFAULT_LEVEL_MIN = 2;  // default minimum level of planets to highlight
-const DEFAULT_LEVEL_MAX = 9;  // default maximum level of planets to highlight
 
 // Miscellaneous constants
 const BASE_LINE_WIDTH_PX = 1.0;
