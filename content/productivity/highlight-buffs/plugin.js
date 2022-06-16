@@ -6,13 +6,10 @@
 
 import { PlanetType, PlanetTypeNames, PlanetLevel, PlanetLevelNames } from "https://cdn.skypack.dev/@darkforest_eth/types";
 
-// Half Junk is probably only available in Dark Forest v0.6 Round 5 "Space Junk"
-// Use this to hide/show the Half Junk highlight button
-const ENABLE_HALF_JUNK_BUTTON = true;
 
-const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
+// ----------------------------------------
+// User Configurable Options
 
-// Setup initial display options here
 const DEFAULT_ELLIPSE = false
 const DEFAULT_PULSE_OPACITY = true
 const DEFAULT_LINE = true
@@ -25,6 +22,13 @@ const DEFAULT_PULSE_FAST = false
 const DEFAULT_LEVEL_MIN = 2;  // default minimum level of planets to highlight
 const DEFAULT_LEVEL_MAX = 9;  // default maximum level of planets to highlight
 const DEFAULT_RANGE_INDEX = 3;  // see below, index 3 is "Up to 10,000"
+
+const ENABLE_HALF_JUNK_BUTTON = true;
+
+const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
+
+// ----------------------------------------
+
 
 const viewport = ui.getViewport();
 
