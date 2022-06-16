@@ -23,7 +23,8 @@ const DEFAULT_LEVEL_MIN = 2;  // default minimum level of planets to highlight
 const DEFAULT_LEVEL_MAX = 9;  // default maximum level of planets to highlight
 const DEFAULT_RANGE_INDEX = 3;  // see below, index 3 is "Up to 10,000"
 
-const ENABLE_HALF_JUNK_BUTTON = true;
+const ENABLE_HALF_JUNK_BUTTON = true;  // Junk was introduced in Dark Forest v0.6 Round 5 "Space Junk"
+const ENABLE_TARGET_AND_SPAWN = true;  // Target and Spawn are used in DF DAO Grand Prix
 
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
 
@@ -125,6 +126,8 @@ const periodMsHighlight2xDefense = 1543;
 const periodMsHighlight2xSpeed = 1657;
 const periodMsHighlight2xRange = 1753;
 const periodMsHighlightHalfJunk = 1831;
+const periodMsHighlightTarget = 1819;
+const periodMsHighlightSpawn = 1947;
 
 // Set up colours for each of the highlights. Use similar colours to asteroid colour for 2x buffs.
 const colsHighlightArtifact = [255, 100, 100];
@@ -135,6 +138,8 @@ const colsHighlight2xDefense = [180, 140, 255];
 const colsHighlight2xSpeed = [255, 100, 255];
 const colsHighlight2xRange = [225, 225, 80];
 const colsHighlightHalfJunk = [180, 150, 130];
+const colsHighlightTarget = [212, 175, 155];
+const colsHighlightSpawn = [69, 175, 155];
 
 // Helper functions for filters
 const prospectExpired = (plugin, planet) => {
@@ -161,6 +166,8 @@ const filter2xSpeed = filter2xStat(StatIdx.Speed, 2);  // speed rank upgrades ar
 const filter2xRange = filter2xStat(StatIdx.Range, 1);  // range rank upgrades are on planet.upgradeState[1]
 const filterHalfJunk = filter2xStat(StatIdx.HalfJunk);
 const filterRip = (plugin, planet) => mainChecks(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
+const filterTarget = (plugin, planet) => mainChecks(plugin, planet) && planet.isTargetPlanet;
+const filterSpawn = (plugin, planet) => mainChecks(plugin, planet) && planet.isSpawnPlanet;
 const filterArtifact = (plugin, planet) => {
   // Filter out planets of wrong size
   if (!mainChecks(plugin, planet)) return false;
@@ -409,6 +416,10 @@ class Plugin {
       planetsWith2xRange: {label: "Range", filter: filter2xRange, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xRange, cols: colsHighlight2xRange},
     };
     if (ENABLE_HALF_JUNK_BUTTON) this.highlightData['planetsWithHalfJunk'] = {label: "Half Junk", filter: filterHalfJunk, array: [TOGGLE_OFF], periodMs: periodMsHighlightHalfJunk, cols: colsHighlightHalfJunk};
+    if (ENABLE_TARGET_AND_SPAWN) {
+      this.highlightData['planetsWithTarget'] = {label: "Target", filter: filterTarget, array: [TOGGLE_OFF], periodMs: periodMsHighlightTarget, cols: colsHighlightTarget};
+      this.highlightData['planetsWithSpawn'] =  {label: "Spawn", filter: filterSpawn, array: [TOGGLE_OFF], periodMs: periodMsHighlightSpawn, cols: colsHighlightSpawn};
+    };
     this.highlightList = Object.keys(this.highlightData);
     console.log(`Initialised ${PLUGIN_NAME} plugin:`);
     console.dir(this);
