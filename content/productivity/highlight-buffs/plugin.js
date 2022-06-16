@@ -5,7 +5,7 @@
 // author: https://twitter.com/davidryan59
 
 import { PlanetType, PlanetTypeNames, PlanetLevel, PlanetLevelNames } from "https://cdn.skypack.dev/@darkforest_eth/types";
-
+import { isSpaceShip } from "https://cdn.skypack.dev/@darkforest_eth/gamelogic";
 
 // ----------------------------------------
 // User Configurable Options
@@ -23,7 +23,7 @@ const DEFAULT_LEVEL_MIN = 2;  // default minimum level of planets to highlight
 const DEFAULT_LEVEL_MAX = 9;  // default maximum level of planets to highlight
 const DEFAULT_RANGE_INDEX = 3;  // see below, index 3 is "Up to 10,000"
 
-const ENABLE_HALF_JUNK_BUTTON = true;  // Junk was introduced in Dark Forest v0.6 Round 5 "Space Junk"
+const ENABLE_ROUND_5_OPTIONS = true;  // Half Junk, Spaceship, Capture options introduced in v0.6 Round 5
 const ENABLE_TARGET_AND_SPAWN = true;  // Target and Spawn are used in DF DAO Grand Prix
 
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
@@ -34,6 +34,9 @@ const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
 const viewport = ui.getViewport();
 
 const PLUGIN_NAME = "Highlight Buffs";
+
+const emptyAddress = "0x0000000000000000000000000000000000000000";
+const ADDRESS_LOCAL_STORAGE_KEY = 'KNOWN_ADDRESSES';
 
 const WIDTH_PX_CONTAINER = "320px";
 const WIDTH_PX_HALF = "145px";
@@ -126,6 +129,8 @@ const periodMsHighlight2xDefense = 1543;
 const periodMsHighlight2xSpeed = 1657;
 const periodMsHighlight2xRange = 1753;
 const periodMsHighlightHalfJunk = 1831;
+const periodMsHighlightInvadeNoCapture = 1787;
+const periodMsHighlightSpaceship = 1699;
 const periodMsHighlightTarget = 1819;
 const periodMsHighlightSpawn = 1947;
 
@@ -138,8 +143,35 @@ const colsHighlight2xDefense = [180, 140, 255];
 const colsHighlight2xSpeed = [255, 100, 255];
 const colsHighlight2xRange = [225, 225, 80];
 const colsHighlightHalfJunk = [180, 150, 130];
+const colsHighlightInvadeNoCapture = [170, 255, 100];
+const colsHighlightSpaceship = [190, 100, 255];
 const colsHighlightTarget = [212, 175, 155];
 const colsHighlightSpawn = [69, 175, 155];
+
+// Helper functions for spaceships
+const loadAccounts = plugin => {
+  const knownAddresses = [];
+  const accounts = [];
+  const serializedAddresses = localStorage.getItem(ADDRESS_LOCAL_STORAGE_KEY);
+  if (serializedAddresses !== null) {
+      const addresses = JSON.parse(serializedAddresses);
+      for (const addressStr of addresses) {
+          knownAddresses.push(addressStr);
+      }
+  }
+  for (const addy of knownAddresses) {
+      accounts.push({ address: addy });
+  }
+  plugin.accounts = accounts;
+};
+const loadSpaceships = plugin => {
+  for (const acc of plugin.accounts) {
+      const spaceshipsOwnedByAccount = df.entityStore
+          .getArtifactsOwnedBy(acc.address)
+          .filter(artifact => isSpaceShip(artifact.artifactType));
+      plugin.spaceships = [...plugin.spaceships, ...spaceshipsOwnedByAccount];
+  }
+};
 
 // Helper functions for filters
 const prospectExpired = (plugin, planet) => {
@@ -148,6 +180,9 @@ const prospectExpired = (plugin, planet) => {
   if (planet.hasTriedFindingArtifact) return false;
   return planet.prospectedBlockNumber + 255 - df.contractsAPI.ethConnection.blockNumber <= 0;  // 256 blocks to prospect an artifact
 }
+const planetWasAlreadyInvaded = p => p.invader !== emptyAddress;
+const planetWasAlreadyCaptured = p => p.capturer !== emptyAddress;
+const planetHasRelevantSpaceship = (plugin, planet) => planet.heldArtifactIds.some(id => plugin.spaceships.some(spaceship => id === spaceship.id));
 const distanceToPlanetSquared = planet => planet.location ? (viewport.centerWorldCoords.x - planet.location.coords.x) ** 2 + (viewport.centerWorldCoords.y - planet.location.coords.y) ** 2 : MAX_DISTANCE;
 const distanceInRange = (plugin, planet) => distanceToPlanetSquared(planet) <= plugin.getSelectValue(RANGE_MAX) ** 2;
 const levelInRange = (plugin, planet) => plugin.getSelectValue(LEVEL_MIN) <= planet.planetLevel && planet.planetLevel <= plugin.getSelectValue(LEVEL_MAX);
@@ -166,6 +201,8 @@ const filter2xSpeed = filter2xStat(StatIdx.Speed, 2);  // speed rank upgrades ar
 const filter2xRange = filter2xStat(StatIdx.Range, 1);  // range rank upgrades are on planet.upgradeState[1]
 const filterHalfJunk = filter2xStat(StatIdx.HalfJunk);
 const filterRip = (plugin, planet) => mainChecks(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
+const filterInvadeNoCapture = (plugin, planet) => mainChecks(plugin, planet) && planetWasAlreadyInvaded(planet) && !planetWasAlreadyCaptured(planet);
+const filterSpaceship = (plugin, planet) => mainChecks(plugin, planet) && planetHasRelevantSpaceship(plugin, planet);
 const filterTarget = (plugin, planet) => mainChecks(plugin, planet) && planet.isTargetPlanet;
 const filterSpawn = (plugin, planet) => mainChecks(plugin, planet) && planet.isSpawnPlanet;
 const filterArtifact = (plugin, planet) => {
@@ -395,6 +432,10 @@ class Plugin {
     this.ui = {};
     this.ui.select = {};
     initialiseSelectWrappers(this);
+    this.accounts = [];
+    this.spaceships = [];
+    loadAccounts(this);
+    loadSpaceships(this);
     this.drawOptions = {
       ellipse: {value: DEFAULT_ELLIPSE, label: "Ellipse"},
       pulseOpacity: {value: DEFAULT_PULSE_OPACITY, label: "Pulse Opacity"},
@@ -415,7 +456,11 @@ class Plugin {
       planetsWith2xEnergyGro: {label: "Energy Gro", filter: filter2xEnergyGro, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xEnergyGro, cols: colsHighlight2xEnergyGro},
       planetsWith2xRange: {label: "Range", filter: filter2xRange, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xRange, cols: colsHighlight2xRange},
     };
-    if (ENABLE_HALF_JUNK_BUTTON) this.highlightData['planetsWithHalfJunk'] = {label: "Half Junk", filter: filterHalfJunk, array: [TOGGLE_OFF], periodMs: periodMsHighlightHalfJunk, cols: colsHighlightHalfJunk};
+    if (ENABLE_ROUND_5_OPTIONS) {
+      this.highlightData['planetsWithHalfJunk'] = {label: "Half Junk", filter: filterHalfJunk, array: [TOGGLE_OFF], periodMs: periodMsHighlightHalfJunk, cols: colsHighlightHalfJunk};
+      this.highlightData['planetsWithInvadeNoCapture'] = { label: "Need Capture", filter: filterInvadeNoCapture, array: [TOGGLE_OFF], periodMs: periodMsHighlightInvadeNoCapture, cols: colsHighlightInvadeNoCapture };
+      this.highlightData['planetsWithSpaceship'] = { label: "Spaceship", filter: filterSpaceship, array: [TOGGLE_OFF], periodMs: periodMsHighlightSpaceship, cols: colsHighlightSpaceship };
+    };
     if (ENABLE_TARGET_AND_SPAWN) {
       this.highlightData['planetsWithTarget'] = {label: "Target", filter: filterTarget, array: [TOGGLE_OFF], periodMs: periodMsHighlightTarget, cols: colsHighlightTarget};
       this.highlightData['planetsWithSpawn'] =  {label: "Spawn", filter: filterSpawn, array: [TOGGLE_OFF], periodMs: periodMsHighlightSpawn, cols: colsHighlightSpawn};
