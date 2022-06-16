@@ -24,7 +24,7 @@ const DEFAULT_LEVEL_MAX = 9;  // default maximum level of planets to highlight
 const DEFAULT_RANGE_INDEX = 3;  // see below, index 3 is "Up to 10,000"
 
 const ENABLE_ROUND_5_OPTIONS = true;  // Half Junk, Spaceship, Capture options introduced in v0.6 Round 5
-const ENABLE_TARGET_AND_SPAWN = true;  // Target and Spawn are used in DF DAO Grand Prix
+const ENABLE_TARGET_AND_SPAWN = false;  // Target and Spawn are used in DF DAO Grand Prix
 
 const REFRESH_INTERVAL_MS = 500;  // Recalculate highlights, useful if viewport moves
 const DEV_MODE = false;  // Put as true to highlight UI sections for debugging
