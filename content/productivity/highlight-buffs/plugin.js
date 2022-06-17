@@ -1,6 +1,6 @@
 // Highlight Buffs
 //
-// Highlight all buffs (2x modifiers), also artifact locations and spacetime rips!
+// Find all 2x buffs, artifacts, spacetime rips, and more!
 //
 // author: https://twitter.com/davidryan59
 
