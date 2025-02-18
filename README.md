@@ -1,6 +1,6 @@
 # Dark Forest Plugins
 
-In v0.5 of [Dark Forest](https://zkga.me/), we added the ability to customize the game through "Plugins". These are scripts that are run by the game and provided access to specific aspects of the game.
+In v0.5 of [Dark Forest](https://zkga.me/), we added the ability to customize the game through "Plugins". These are scripts that are run by the game and provide access to specific aspects of the game.
 
 ## WARNING
 
@@ -10,7 +10,7 @@ You should not use any plugins that you haven't written yourself or by someone y
 
 ## Utilities
 
-The Dark Forest in game api has two typical interaction points. In the Dark Forest client you'll find the documentation for the [df object](https://github.com/darkforest-eth/client/blob/master/docs/classes/Backend_GameLogic_GameManager.default.md) and the [ui object](https://github.com/darkforest-eth/client/blob/master/docs/classes/Backend_GameLogic_GameUIManager.default.md).
+The Dark Forest in-game API has two typical interaction points. In the Dark Forest client, you'll find the documentation for the [df object](https://github.com/darkforest-eth/client/blob/master/docs/classes/Backend_GameLogic_GameManager.default.md) and the [ui object](https://github.com/darkforest-eth/client/blob/master/docs/classes/Backend_GameLogic_GameUIManager.default.md).
 
 We also provide a series of utilities that plugin authors can use. These are served directly from our website (`https://plugins.zkga.me`) and you can load them in your plugins. Check out what is available in the [javascript directory](javascript/)
 
@@ -33,25 +33,25 @@ After you've created a new plugin directory, update the `index.md`, `plugin.js`,
 Feel free to add additional information to your plugin directory, such as we did with `remote-explorer`.
 
 ## Contribution Guidelines
-- Comments on top of the script explaining what is is and how to use it
-- Has to have screenshot, ideally with result of action and or the ui, should to be ~20kb in size unless you really need more
-- Check destructors cleanup all constructors, delete all new, reset all listeners and timers
-- Simple clean auditable javascript, expect to go through a little back and forth code review
-- No external scripts being loaded except for from us https://plugins.zkga.me/utils/ or a few REALLY big names from knowns cdns have been allowed so far like: https://unpkg.com/htm/preact/standalone.module.js and https://cdn.skypack.dev/lodash.range
-- No use of localstorage, overriding internal rpc timers/settings (df.contractsAPI.contractCaller), interaction with or depending on other plugins
+- Comments on top of the script explaining what it is and how to use it
+- Has to have a screenshot, ideally with a result of action and or the ui, should be ~20kb in size unless you really need more
+- Check destructors cleanup all constructors, delete all-new, reset all listeners and timers
+- Simple clean auditable javascript, expect to go through a little back-and-forth code review
+- No external scripts are being loaded except for from us https://plugins.zkga.me/utils/ or a few REALLY big names from known CDNs have been allowed so far like: https://unpkg.com/htm/preact/standalone.module.js and https://cdn.skypack.dev/lodash.range
+- No use of local storage, overriding internal rpc timers/settings (df.contractsAPI.contractCaller), interaction with or depending on other plugins
 
-Please understand these 'rules' are our best effort to be able to lightly audit code for the protection of the users. Its an impossible job but were trying anyway. If your code doesn't fit in here don't take it personally. The community has also created repos like [Awesome Dark Forest](https://github.com/snowtigersoft/awesome-darkforest) which provide no such gatekeeping and are a great way to showcase your work as well.
+Please understand these 'rules' are our best effort to be able to lightly audit code for the protection of the users. It's an impossible job but we are trying anyway. If your code doesn't fit in here don't take it personally. The community has also created repos like [Awesome Dark Forest](https://github.com/snowtigersoft/awesome-darkforest) which provide no such gatekeeping and are a great way to showcase your work as well.
 
 ## Reviewer Guidelines
 This repo always needs more help reviewing the incoming plugins PRs. Please 'watch' the repo so you get emails of all the new stuff coming in.
 
-**Note incoming PRs are obviously not reviewed so you need to be much more careful testing unmerged PRS as they could be malicious. Read the code closely before running, and if possible review untrusted code with a throwaway wallet or local copy of game** 
+**Note incoming PRs are obviously not reviewed so you need to be much more careful testing unmerged PRS as they could be malicious. Read the code closely before running, and if possible review untrusted code with a throwaway wallet or local copy of the game** 
 
 Reviewing isn't that big of a task! Anyone can do it
 * Is it documented at all?
 * Does it work like you'd expect based on documentation?
 * Does it work at all, did you test it? report back
-* Does it overlap heavily with an existing plugin, or at least say why its different and better than an old one, can you ping the original developer or people who have touched it to give some feedback
+* Does it overlap heavily with an existing plugin, or at least say why it's different and better than an old one, can you ping the original developer or people who have touched it to give some feedback
 * Make sure it follows the contribution and security guidelines 
 * Think about the general javascript code quality (but don't nitpick too hard)
 
