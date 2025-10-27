@@ -13,7 +13,7 @@
         href="https://github.com/{{ .Site.Params.Repo }}/blob/{{ .Site.Params.Branch }}/content/{{ .File.Dir }}plugin.js"
         class="card border-2 border-green-400 sm:mb-4 mb-6 hover:shadow-xl hover:bg-green-400 text-gray-400 hover:text-black transition duration-200 ease-in rounded-lg {{ lower .Section }}">
         <div class="flex flex-col justify-between h-full relative">
-          {{ if eq .Params.version "0.6.5" }}
+          {{ if eq .Params.version "0.1.1-dfares" }}
             <span
               class="bg-green-400 text-black px-3 py-1 tracking-widest text-xs absolute left-0 top-0 rounded-br rounded-tl">v{{ .Params.Version }}</span>
           {{ else }}

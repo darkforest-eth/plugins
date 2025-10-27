@@ -1,6 +1,6 @@
-baseURL = "https://plugins.zkga.me"
+baseURL = "https://dfares-plugins.netlify.app/"
 languageCode = "en-us"
-title = "Dark Forest Plugins"
+title = "Dark Forest ARES Plugins"
 Paginate = 1000
 googleAnalytics = ""
 theme = "showcase"
@@ -8,17 +8,17 @@ disableKinds = ["taxonomy", "taxonomyTerm", "RSS"]
 staticDir = ["screenshots", "static", "javascript"]
 
 [params]
-  name = "Dark Forest Plugins"
-  author = "Dark Forest Plugins"
-  description = "A showcase of Dark Forest plugins from the community!"
-  message = "Welcome to the Dark Forest Plugin showcase!"
+  name = "Dark Forest ARES Plugins"
+  author = "Dark Forest ARES Plugins"
+  description = "A showcase of Dark Forest ARES plugins from the community!"
+  message = "Welcome to the Dark Forest ARES Plugin showcase!"
   hideAutoMenu = false
-  repo = "darkforest-eth/plugins"
-  branch = "master"
+  repo = "dfarchon/plugins"
+  branch = "main"
 
 [[menu.main]]
   name = "Submit plugin"
-  url = "https://github.com/darkforest-eth/plugins#adding-your-plugin"
+  url = "https://github.com/dfarchon/plugins#adding-your-plugin"
 
 [social]
-  twitter = "https://twitter.com/darkforest_eth"
+  twitter = "https://twitter.com/dfarchon"

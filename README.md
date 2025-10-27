@@ -1,6 +1,4 @@
-# Dark Forest Plugins
-
-In v0.5 of [Dark Forest](https://zkga.me/), we added the ability to customize the game through "Plugins". These are scripts that are run by the game and provided access to specific aspects of the game.
+# Dark Forest ARES Plugins
 
 ## WARNING
 
@@ -8,11 +6,42 @@ Plugins are evaluated in the context of your game and can access all of your pri
 
 You should not use any plugins that you haven't written yourself or by someone you trust completely. You or someone you trust should control the entire pipeline (such as imported dependencies) and should review plugins before you use them.
 
+# Intro
+
+In v0.5 of [Dark Forest](https://zkga.me/), Dark Forest office team added the ability to customize the game through "Plugins". These are scripts that are run by the game and provided access to specific aspects of the game.
+
+
+
+Dark Forest ARES is a modified version of [Dark Forest v0.6](https://github.com/darkforest-eth/darkforest-v0.6).
+
+This repository is forked from [Dark Forest Plugins](https://github.com/darkforest-eth/plugins), and we will continue to maintain it.
+
+
+
+We deploy DF ARES v0.1.1 on [Redstone](https://redstone.xyz/) , more info please check [here](https://mirror.xyz/dfarchon.eth/8OS1CKPOc2L1ZgwEKmLYheeYKLljsjzxLxrPjFJ9cg8).
+
+Game Wesite: [https://dfares-redstone.netlify.app](https://dfares-redstone.netlify.app/)
+
+
+| Game Version            | Plugin Version | Packages Version                                             |
+| ----------------------- | -------------- | ------------------------------------------------------------ |
+| Dark Forest v0.6.5      | v0.6.5         | v6.7.29    @darkforest_eth/*   [link](https://www.npmjs.com/~ichub_df) |
+| Dark Forest ARES v0.1.1 | v0.1.1-dfares  | v6.8.5        @dfares/*     [link](https://www.npmjs.com/search?q=dfares) |
+
+If you want to submit the plugins, please use **v0.1.1-dfares** as the version name.
+
 ## Utilities
 
 The Dark Forest in game api has two typical interaction points. In the Dark Forest client you'll find the documentation for the [df object](https://github.com/darkforest-eth/client/blob/master/docs/classes/Backend_GameLogic_GameManager.default.md) and the [ui object](https://github.com/darkforest-eth/client/blob/master/docs/classes/Backend_GameLogic_GameUIManager.default.md).
 
-We also provide a series of utilities that plugin authors can use. These are served directly from our website (`https://plugins.zkga.me`) and you can load them in your plugins. Check out what is available in the [javascript directory](javascript/)
+| Game Version            | df object                                                    | ui object                                                    |
+| ----------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Dark Forest v0.6.5      | [link](https://github.com/darkforest-eth/client/blob/master/docs/classes/Backend_GameLogic_GameManager.default.md) | [link](https://github.com/darkforest-eth/client/blob/master/docs/classes/Backend_GameLogic_GameUIManager.default.md) |
+| Dark Forest ARES v0.1.1 | [link](https://github.com/dfarchon/DFARES-v0.1/blob/redstone/client/docs/classes/Backend_GameLogic_GameUIManager.default.md) | [link](https://github.com/dfarchon/DFARES-v0.1/blob/redstone/client/docs/classes/Backend_GameLogic_GameUIManager.default.md) |
+
+
+
+We also provide a series of utilities that plugin authors can use. These are served directly from our website (`https://dfares-plugins.netlify.app/`) and you can load them in your plugins. Check out what is available in the [javascript directory](javascript/)
 
 If we are missing a utility that would be helpful, feel free to open an issue!
 
